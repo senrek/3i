@@ -16,7 +16,7 @@ const AssessmentProgress = ({
   totalTime,
 }: AssessmentProgressProps) => {
   const progressPercentage = ((currentQuestion) / totalQuestions) * 100;
-  const timePercentage = timeRemaining && totalTime ? (timeRemaining / totalTime) * 100 : null;
+  const timePercentage = timeRemaining !== undefined && totalTime ? (timeRemaining / totalTime) * 100 : null;
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -45,7 +45,7 @@ const AssessmentProgress = ({
         <div className="pt-1">
           <Progress 
             value={timePercentage} 
-            className={`h-1 ${timePercentage < 20 ? 'bg-destructive' : 'bg-amber-500'}`}
+            className={`h-1 ${timePercentage < 20 ? 'bg-destructive' : ''}`}
           />
         </div>
       )}
