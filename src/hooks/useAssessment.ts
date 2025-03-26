@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
-import { calculateCategoryScore } from '@/utils/assessmentScoring';
+import { calculateCategoryScore, mapScoresToCareers } from '@/utils/assessmentScoring';
 
 export const useAssessment = (assessment: any, questions: any[]) => {
   const navigate = useNavigate();
@@ -68,6 +68,19 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     console.log('Personality Score:', personalityScore);
     console.log('Interest Score:', interestScore);
     console.log('Learning Style Score:', learningStyleScore);
+    
+    // Generate career recommendations based on scores
+    const careerRecommendations = mapScoresToCareers(
+      aptitudeScore,
+      personalityScore,
+      interestScore,
+      learningStyleScore
+    );
+    
+    console.log('Career Recommendations:', careerRecommendations);
+    
+    // In a real application, you would store these results in a database or state management system
+    // For now, we'll just mark the assessment as completed
     
     // Mark the assessment as completed
     setIsCompleted(true);

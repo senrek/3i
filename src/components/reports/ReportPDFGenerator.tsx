@@ -49,6 +49,9 @@ const ReportPDFGenerator = ({ reportId, userName = 'Student' }: ReportPDFGenerat
             <li>Educational Pathway Suggestions</li>
             <li>Strengths & Development Areas</li>
             <li>Learning Style Preferences</li>
+            <li>Work Nature & Key Responsibilities</li>
+            <li>Career Navigator (Education Paths)</li>
+            <li>Gap Analysis (Strengths/Weaknesses)</li>
           </ul>
         </div>
         
