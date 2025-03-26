@@ -238,10 +238,10 @@ const ReportsPage = () => {
                         <h3 className="text-sm font-medium">Education Pathways</h3>
                         <ul className="space-y-2 text-sm">
                           {[
-                            'Bachelor's degree in Computer Science or related field',
-                            'Coding bootcamps for technical foundations',
-                            'Specialized certifications in technologies',
-                            'Advanced degrees for specialized roles',
+                            "Bachelor's degree in Computer Science or related field",
+                            "Coding bootcamps for technical foundations",
+                            "Specialized certifications in technologies",
+                            "Advanced degrees for specialized roles",
                           ].map((path, index) => (
                             <li key={index} className="flex items-start gap-2">
                               <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
