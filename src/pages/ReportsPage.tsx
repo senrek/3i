@@ -285,11 +285,9 @@ const ReportsPage = () => {
                               <span className="font-medium">{gap.skill}</span>
                               <Badge 
                                 variant="outline" 
-                                className={`
-                                  ${gap.level === 'Develop' 
-                                    ? 'border-amber-500 bg-amber-500/10 text-amber-700' 
-                                    : 'border-blue-500 bg-blue-500/10 text-blue-700'}
-                                `}
+                                className={gap.level === 'Develop' 
+                                  ? 'border-amber-500 bg-amber-500/10 text-amber-700' 
+                                  : 'border-blue-500 bg-blue-500/10 text-blue-700'}
                               >
                                 {gap.level}
                               </Badge>
