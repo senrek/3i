@@ -4,14 +4,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
-import { Brain, BookOpen, Lightbulb, AlertCircle, Check } from 'lucide-react';
+import { Brain, AlertCircle } from 'lucide-react';
 import QuestionCard from '@/components/assessment/QuestionCard';
 import AssessmentProgress from '@/components/assessment/AssessmentProgress';
 import AssessmentComplete from '@/components/assessment/AssessmentComplete';
 import { assessments } from '@/data/assessments';
-import { aptitudeQuestions } from '@/data/aptitudeQuestions';
-import { personalityQuestions } from '@/data/personalityQuestions';
-import { interestQuestions } from '@/data/interestQuestions';
+import { unifiedQuestions } from '@/data/unifiedQuestions';
 
 const AssessmentTakePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,20 +32,8 @@ const AssessmentTakePage = () => {
     if (foundAssessment) {
       setAssessment(foundAssessment);
       
-      // Set questions based on assessment type
-      switch (foundAssessment.type) {
-        case 'aptitude':
-          setQuestions(aptitudeQuestions);
-          break;
-        case 'personality':
-          setQuestions(personalityQuestions);
-          break;
-        case 'interest':
-          setQuestions(interestQuestions);
-          break;
-        default:
-          setQuestions([]);
-      }
+      // Set all unified questions for the assessment
+      setQuestions(unifiedQuestions);
     } else {
       toast.error("Assessment not found");
       navigate('/assessments');
@@ -94,11 +80,47 @@ const AssessmentTakePage = () => {
     // In a real application, you would send the answers to your backend
     console.log('Assessment completed with answers:', answers);
     
+    // Calculate scores by category
+    const aptitudeQuestions = questions.filter(q => q.category === 'aptitude');
+    const personalityQuestions = questions.filter(q => q.category === 'personality');
+    const interestQuestions = questions.filter(q => q.category === 'interest');
+    const learningStyleQuestions = questions.filter(q => q.category === 'learning-style');
+    
+    const aptitudeScore = calculateCategoryScore(aptitudeQuestions, answers);
+    const personalityScore = calculateCategoryScore(personalityQuestions, answers);
+    const interestScore = calculateCategoryScore(interestQuestions, answers);
+    const learningStyleScore = calculateCategoryScore(learningStyleQuestions, answers);
+    
+    console.log('Aptitude Score:', aptitudeScore);
+    console.log('Personality Score:', personalityScore);
+    console.log('Interest Score:', interestScore);
+    console.log('Learning Style Score:', learningStyleScore);
+    
     // Mark the assessment as completed
     setIsCompleted(true);
     
     // Show success message
-    toast.success(`${assessment?.title} completed successfully!`);
+    toast.success(`Career Analysis Assessment completed successfully!`);
+  };
+  
+  const calculateCategoryScore = (categoryQuestions: any[], answers: Record<string, string>) => {
+    let score = 0;
+    let totalPossibleScore = 0;
+    
+    categoryQuestions.forEach(question => {
+      const answer = answers[question.id];
+      if (!answer) return;
+      
+      // This is a simplified scoring system - in a real application, 
+      // you would implement a more sophisticated scoring algorithm
+      if (answer === 'A') score += 3;
+      else if (answer === 'B') score += 2;
+      else if (answer === 'C') score += 1;
+      
+      totalPossibleScore += 3;
+    });
+    
+    return totalPossibleScore > 0 ? (score / totalPossibleScore) * 100 : 0;
   };
 
   const handleViewResults = () => {
@@ -133,21 +155,12 @@ const AssessmentTakePage = () => {
 
   // Assessment completed view
   if (isCompleted) {
-    // Find the next assessment that needs to be taken
-    const nextAssessmentIndex = assessments.findIndex(a => a.id === assessment.id) + 1;
-    const nextAssessment = nextAssessmentIndex < assessments.length 
-      ? assessments[nextAssessmentIndex] 
-      : undefined;
-
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
         <AssessmentComplete 
           assessmentType={assessment.title}
           onViewResults={handleViewResults}
-          nextAssessment={nextAssessment ? { 
-            id: nextAssessment.id,
-            name: nextAssessment.title
-          } : undefined}
+          nextAssessment={undefined}
         />
       </div>
     );
@@ -155,26 +168,13 @@ const AssessmentTakePage = () => {
 
   // Assessment not yet started view
   if (!isStarted) {
-    const AssessmentIcon = () => {
-      switch (assessment.type) {
-        case 'aptitude':
-          return <Brain className="h-12 w-12 text-primary" />;
-        case 'personality':
-          return <BookOpen className="h-12 w-12 text-primary" />;
-        case 'interest':
-          return <Lightbulb className="h-12 w-12 text-primary" />;
-        default:
-          return null;
-      }
-    };
-
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
         <Card className="w-full max-w-lg mx-auto border border-border/50 rounded-2xl overflow-hidden shadow-lg animate-scale-in">
           <CardHeader className="pb-2">
             <div className="flex justify-center py-4">
               <div className="rounded-full bg-primary/10 p-4">
-                <AssessmentIcon />
+                <Brain className="h-12 w-12 text-primary" />
               </div>
             </div>
             <CardTitle className="text-2xl text-center">{assessment.title}</CardTitle>
@@ -197,11 +197,13 @@ const AssessmentTakePage = () => {
             <div className="rounded-lg bg-muted p-4">
               <h3 className="text-sm font-medium mb-2">Instructions</h3>
               <ul className="text-sm text-muted-foreground space-y-1 ml-5 list-disc">
+                <li>This assessment combines questions about your aptitude, personality, interests, and learning style.</li>
                 <li>Read each question carefully before answering.</li>
                 <li>Select the option that best represents your preferences, skills, or behaviors.</li>
                 <li>Be honest in your responses for the most accurate results.</li>
                 <li>You can go back to change your answers before submitting.</li>
                 <li>Your responses will be used to generate personalized career recommendations.</li>
+                <li>After completion, you'll receive a comprehensive career analysis report.</li>
               </ul>
             </div>
           </CardContent>

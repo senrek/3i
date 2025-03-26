@@ -45,8 +45,7 @@ const AssessmentProgress = ({
         <div className="pt-1">
           <Progress 
             value={timePercentage} 
-            className="h-1" 
-            indicatorClassName={`${timePercentage < 20 ? 'bg-destructive' : 'bg-amber-500'}`}
+            className={`h-1 ${timePercentage < 20 ? 'bg-destructive' : 'bg-amber-500'}`}
           />
         </div>
       )}

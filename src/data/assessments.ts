@@ -1,5 +1,5 @@
 
-import { Brain, BookOpen, Lightbulb } from 'lucide-react';
+import { Brain } from 'lucide-react';
 
 export interface Assessment {
   id: string;
@@ -8,35 +8,17 @@ export interface Assessment {
   icon: React.ElementType;
   duration: number; // in minutes
   questionCount: number;
-  type: 'aptitude' | 'personality' | 'interest';
+  type: 'unified';
 }
 
 export const assessments: Assessment[] = [
   {
-    id: "aptitude",
-    title: "Aptitude Assessment",
-    description: "Discover your natural abilities and cognitive strengths.",
+    id: "career-analysis",
+    title: "Career Analysis for Class 11-12 Assessment",
+    description: "Comprehensive assessment to discover your aptitude, personality traits, and interests for targeted career recommendations.",
     icon: Brain,
-    duration: 15,
-    questionCount: 10,
-    type: 'aptitude'
-  },
-  {
-    id: "personality",
-    title: "Personality Assessment",
-    description: "Understand your work style and workplace preferences.",
-    icon: BookOpen,
-    duration: 10,
-    questionCount: 10,
-    type: 'personality'
-  },
-  {
-    id: "interest",
-    title: "Interest Assessment",
-    description: "Identify areas of work that align with your passions.",
-    icon: Lightbulb,
-    duration: 12,
-    questionCount: 10,
-    type: 'interest'
+    duration: 45,
+    questionCount: 105,
+    type: 'unified'
   }
 ];
