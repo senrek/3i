@@ -3,23 +3,27 @@ import React, { useState, useEffect } from 'react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import ReportHeader from '@/components/reports/ReportHeader';
 import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
 import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
 
+// Define a proper type for scores
+interface ReportScores {
+  aptitude: number;
+  personality: number;
+  interest: number;
+  learningStyle: number;
+  careerRecommendations: any[];
+}
+
 interface ReportData {
   id: string;
   completedAt: string;
   assessmentCompleted: boolean;
-  scores: {
-    aptitude: number;
-    personality: number;
-    interest: number;
-    learningStyle: number;
-    careerRecommendations: any[];
-  } | null;
+  scores: ReportScores | null;
   userName: string;
 }
 
@@ -55,11 +59,25 @@ const ReportsPage = () => {
             ? `${userData.first_name} ${userData.last_name}` 
             : user.email || 'User';
           
+          // Ensure scores has the right structure
+          let validScores: ReportScores | null = null;
+          
+          if (assessments.scores) {
+            // Make sure we have all the required properties
+            validScores = {
+              aptitude: (assessments.scores.aptitude as number) || 0,
+              personality: (assessments.scores.personality as number) || 0,
+              interest: (assessments.scores.interest as number) || 0,
+              learningStyle: (assessments.scores.learningStyle as number) || 0,
+              careerRecommendations: (assessments.scores.careerRecommendations as any[]) || []
+            };
+          }
+          
           setReportData({
             id: assessments.id,
-            completedAt: assessments.completed_at,
+            completedAt: assessments.completed_at || new Date().toISOString(),
             assessmentCompleted: true,
-            scores: assessments.scores,
+            scores: validScores,
             userName
           });
         } else {
@@ -88,14 +106,26 @@ const ReportsPage = () => {
     fetchReportData();
   }, [user]);
 
-  // Format date for display
+  // Format date for display - with error handling
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return 'Invalid Date';
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Error';
+    }
   };
 
   return (
@@ -111,7 +141,7 @@ const ReportsPage = () => {
             formatDate={formatDate} 
           />
 
-          {reportData?.assessmentCompleted && (
+          {reportData?.assessmentCompleted && reportData?.scores && (
             <>
               <ReportPDFGenerator 
                 reportId={reportData.id} 
@@ -119,19 +149,17 @@ const ReportsPage = () => {
                 scores={reportData.scores}
               />
               
-              {reportData.scores && (
-                <ReportTabs 
-                  reportId={reportData.id} 
-                  skillData={[
-                    { name: 'Analytical', value: reportData.scores.aptitude, fullMark: 100 },
-                    { name: 'Communication', value: Math.round(reportData.scores.personality * 0.8), fullMark: 100 },
-                    { name: 'Technical', value: Math.round(reportData.scores.aptitude * 0.9), fullMark: 100 },
-                    { name: 'Creativity', value: Math.round(reportData.scores.interest * 0.7), fullMark: 100 },
-                    { name: 'Leadership', value: Math.round(reportData.scores.personality * 0.6), fullMark: 100 },
-                    { name: 'Problem Solving', value: Math.round(reportData.scores.aptitude * 0.85), fullMark: 100 },
-                  ]} 
-                />
-              )}
+              <ReportTabs 
+                reportId={reportData.id} 
+                skillData={[
+                  { name: 'Analytical', value: reportData.scores.aptitude, fullMark: 100 },
+                  { name: 'Communication', value: Math.round(reportData.scores.personality * 0.8), fullMark: 100 },
+                  { name: 'Technical', value: Math.round(reportData.scores.aptitude * 0.9), fullMark: 100 },
+                  { name: 'Creativity', value: Math.round(reportData.scores.interest * 0.7), fullMark: 100 },
+                  { name: 'Leadership', value: Math.round(reportData.scores.personality * 0.6), fullMark: 100 },
+                  { name: 'Problem Solving', value: Math.round(reportData.scores.aptitude * 0.85), fullMark: 100 },
+                ]} 
+              />
             </>
           )}
         </>

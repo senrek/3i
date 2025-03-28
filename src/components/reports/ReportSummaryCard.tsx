@@ -16,13 +16,25 @@ import {
 interface ReportSummaryCardProps {
   reportData: {
     id: string;
-    completedDate: string;
+    completedAt?: string; // Changed from completedDate to completedAt and made optional
     assessmentCompleted: boolean;
   } | null;
   formatDate: (dateString: string) => string;
 }
 
 const ReportSummaryCard = ({ reportData, formatDate }: ReportSummaryCardProps) => {
+  // Safe date formatting function that handles invalid dates
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      return formatDate(dateString);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
+  };
+
   return (
     <Card className="border border-border/50 rounded-2xl overflow-hidden">
       <CardHeader className="pb-2">
@@ -33,7 +45,7 @@ const ReportSummaryCard = ({ reportData, formatDate }: ReportSummaryCardProps) =
               <span>Career Analysis Summary</span>
             </CardTitle>
             <CardDescription>
-              Last updated on {reportData ? formatDate(reportData.completedDate) : 'N/A'}
+              Last updated on {reportData && reportData.completedAt ? safeFormatDate(reportData.completedAt) : 'N/A'}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">

@@ -31,9 +31,18 @@ const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
           throw error;
         }
         
-        if (data && data.scores && data.scores.careerRecommendations) {
+        if (data && data.scores) {
+          // Safely extract career recommendations
+          let recommendations: any[] = [];
+          
+          if (typeof data.scores === 'object' && data.scores !== null) {
+            recommendations = Array.isArray(data.scores.careerRecommendations) 
+              ? data.scores.careerRecommendations 
+              : [];
+          }
+          
           // Map career recommendations to the format expected by CareerResultCard
-          const mappedCareers = data.scores.careerRecommendations.slice(0, 4).map(career => ({
+          const mappedCareers = recommendations.slice(0, 4).map(career => ({
             id: career.careerTitle.toLowerCase().replace(/\s+/g, '-'),
             title: career.careerTitle,
             matchPercentage: career.suitabilityPercentage,
