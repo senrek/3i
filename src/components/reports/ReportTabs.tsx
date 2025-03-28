@@ -11,9 +11,10 @@ interface ReportTabsProps {
     value: number;
     fullMark: number;
   }>;
+  responses?: Record<string, string> | null;
 }
 
-const ReportTabs = ({ reportId, skillData }: ReportTabsProps) => {
+const ReportTabs = ({ reportId, skillData, responses }: ReportTabsProps) => {
   return (
     <Tabs defaultValue="careers" className="space-y-6">
       <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -22,11 +23,11 @@ const ReportTabs = ({ reportId, skillData }: ReportTabsProps) => {
       </TabsList>
       
       <TabsContent value="careers" className="mt-0 space-y-6">
-        <CareerMatchesTab reportId={reportId} />
+        <CareerMatchesTab reportId={reportId} responses={responses} />
       </TabsContent>
       
       <TabsContent value="skills" className="mt-0 space-y-6">
-        <SkillAnalysisTab skillData={skillData} />
+        <SkillAnalysisTab skillData={skillData} responses={responses} />
       </TabsContent>
     </Tabs>
   );

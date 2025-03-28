@@ -8,10 +8,13 @@ export const calculateCategoryScore = (
 ): number => {
   let score = 0;
   let totalPossibleScore = 0;
+  let answeredQuestions = 0;
   
   categoryQuestions.forEach(question => {
     const answer = answers[question.id];
     if (!answer) return;
+    
+    answeredQuestions++;
     
     // This is a simplified scoring system - in a real application, 
     // you would implement a more sophisticated scoring algorithm
@@ -23,17 +26,22 @@ export const calculateCategoryScore = (
     totalPossibleScore += 3;
   });
   
-  return totalPossibleScore > 0 ? Math.round((score / totalPossibleScore) * 100) : 0;
+  // Ensure we don't divide by zero, and normalize to 0-100 scale
+  if (answeredQuestions === 0 || totalPossibleScore === 0) return 0;
+  
+  // Calculate the percentage score (0-100)
+  return Math.round((score / totalPossibleScore) * 100);
 };
 
 /**
- * Map category scores to career recommendations
+ * Map category scores to career recommendations with enhanced insights
  */
 export const mapScoresToCareers = (
   aptitudeScore: number,
   personalityScore: number,
   interestScore: number,
-  learningStyleScore: number
+  learningStyleScore: number,
+  analysisInsights?: any
 ): {
   careerTitle: string;
   suitabilityPercentage: number;
@@ -43,12 +51,10 @@ export const mapScoresToCareers = (
   workNature: string[];
   gapAnalysis: string[];
 }[] => {
-  // This is a simplified mapping function - in a real application,
-  // you would implement a more sophisticated algorithm based on detailed assessment data
-  
+  // Create a weighted score incorporating all elements
   const weightedScore = (aptitudeScore * 0.4) + (personalityScore * 0.25) + (interestScore * 0.25) + (learningStyleScore * 0.1);
   
-  // Base career matches on the weighted score
+  // Base career data
   const careers = [
     {
       careerTitle: "Software Engineer",
@@ -66,7 +72,11 @@ export const mapScoresToCareers = (
         "Testing and fixing bugs",
         "Collaborating with cross-functional teams"
       ],
-      gapAnalysis: ["Enhance technical skills", "Develop communication abilities", "Build project portfolio"]
+      gapAnalysis: ["Enhance technical skills", "Develop communication abilities", "Build project portfolio"],
+      aptitudeBoost: 0.2,  // Boost factors for different career types based on assessment areas
+      personalityBoost: 0,
+      interestBoost: 0.1,
+      styleFit: ["analytical", "practical"]
     },
     {
       careerTitle: "Data Scientist",
@@ -84,7 +94,11 @@ export const mapScoresToCareers = (
         "Building predictive models",
         "Presenting insights to stakeholders"
       ],
-      gapAnalysis: ["Strengthen mathematical foundation", "Learn additional programming languages", "Develop domain expertise"]
+      gapAnalysis: ["Strengthen mathematical foundation", "Learn additional programming languages", "Develop domain expertise"],
+      aptitudeBoost: 0.25,
+      personalityBoost: 0,
+      interestBoost: 0.05,
+      styleFit: ["analytical", "reflective"]
     },
     {
       careerTitle: "Medical Doctor",
@@ -102,7 +116,11 @@ export const mapScoresToCareers = (
         "Prescribing treatments and medications",
         "Managing patient care and follow-up"
       ],
-      gapAnalysis: ["Improve stress management", "Enhance communication with patients", "Develop leadership skills"]
+      gapAnalysis: ["Improve stress management", "Enhance communication with patients", "Develop leadership skills"],
+      aptitudeBoost: 0.15,
+      personalityBoost: 0.2,
+      interestBoost: 0.05,
+      styleFit: ["analytical", "practical"]
     },
     {
       careerTitle: "Business Analyst",
@@ -120,7 +138,11 @@ export const mapScoresToCareers = (
         "Analyzing data and processes",
         "Recommending solutions for business improvement"
       ],
-      gapAnalysis: ["Develop stronger technical skills", "Enhance data analysis capabilities", "Improve presentation skills"]
+      gapAnalysis: ["Develop stronger technical skills", "Enhance data analysis capabilities", "Improve presentation skills"],
+      aptitudeBoost: 0.1,
+      personalityBoost: 0.15,
+      interestBoost: 0.05,
+      styleFit: ["analytical", "practical"]
     },
     {
       careerTitle: "Graphic Designer",
@@ -138,17 +160,122 @@ export const mapScoresToCareers = (
         "Creating visual elements for digital and print media",
         "Collaborating with clients and team members"
       ],
-      gapAnalysis: ["Master additional design software", "Develop UI/UX skills", "Improve client communication"]
+      gapAnalysis: ["Master additional design software", "Develop UI/UX skills", "Improve client communication"],
+      aptitudeBoost: 0,
+      personalityBoost: 0.05,
+      interestBoost: 0.25,
+      styleFit: ["creative", "practical"]
+    },
+    {
+      careerTitle: "Marketing Specialist",
+      threshold: 62,
+      suitabilityFactor: 0.92,
+      careerDescription: "Plans and executes marketing campaigns to promote products, services, or brands.",
+      educationPathways: [
+        "Bachelor's in Marketing or Business",
+        "Communications degree with marketing certification",
+        "Digital marketing certifications and hands-on experience"
+      ],
+      keySkills: ["Strategic Thinking", "Creativity", "Communication", "Market Research", "Social Media"],
+      workNature: [
+        "Developing marketing strategies and campaigns",
+        "Managing brand identity across platforms",
+        "Analyzing campaign performance metrics"
+      ],
+      gapAnalysis: ["Enhance data analytics skills", "Develop deeper industry knowledge", "Build content creation expertise"],
+      aptitudeBoost: 0.05,
+      personalityBoost: 0.15,
+      interestBoost: 0.15,
+      styleFit: ["creative", "practical"]
+    },
+    {
+      careerTitle: "Project Manager",
+      threshold: 68,
+      suitabilityFactor: 0.98,
+      careerDescription: "Oversees projects from initiation to completion, ensuring they are completed on time and within budget.",
+      educationPathways: [
+        "Bachelor's in Business or related field",
+        "PMP or other project management certification",
+        "Industry-specific degree with project management experience"
+      ],
+      keySkills: ["Leadership", "Organization", "Communication", "Problem Solving", "Risk Management"],
+      workNature: [
+        "Planning and defining project scope",
+        "Coordinating team members and resources",
+        "Tracking milestones and delivering reports"
+      ],
+      gapAnalysis: ["Strengthen technical knowledge", "Develop conflict resolution skills", "Build stakeholder management expertise"],
+      aptitudeBoost: 0.1,
+      personalityBoost: 0.2,
+      interestBoost: 0.05,
+      styleFit: ["practical", "analytical"]
+    },
+    {
+      careerTitle: "Entrepreneur",
+      threshold: 70,
+      suitabilityFactor: 1.0,
+      careerDescription: "Starts and runs businesses, taking on financial risks in the hope of profit.",
+      educationPathways: [
+        "Business degree or entrepreneurship program",
+        "Industry-specific experience and knowledge",
+        "Self-learning and practical experience through ventures"
+      ],
+      keySkills: ["Risk-Taking", "Decision Making", "Leadership", "Innovation", "Persistence"],
+      workNature: [
+        "Identifying and pursuing business opportunities",
+        "Building and managing teams",
+        "Securing funding and resources"
+      ],
+      gapAnalysis: ["Develop financial management skills", "Build industry network", "Enhance marketing knowledge"],
+      aptitudeBoost: 0.1,
+      personalityBoost: 0.1,
+      interestBoost: 0.2,
+      styleFit: ["creative", "practical"]
     }
   ];
   
+  // Process results with enhanced logic using the response analysis
   const results = careers.map(career => {
-    const suitabilityScore = Math.min(
-      100, 
-      Math.round(
-        (weightedScore / career.threshold) * 100 * career.suitabilityFactor
-      )
-    );
+    // Start with base suitability calculation
+    let suitabilityScore = (weightedScore / career.threshold) * 100 * career.suitabilityFactor;
+    
+    // Apply category-specific boosts
+    suitabilityScore += (aptitudeScore * career.aptitudeBoost);
+    suitabilityScore += (personalityScore * career.personalityBoost);
+    suitabilityScore += (interestScore * career.interestBoost);
+    
+    // Apply learning style fit if the information is available
+    if (analysisInsights) {
+      const aptitudeStyle = analysisInsights.aptitudeStyle || '';
+      const interestStyle = analysisInsights.interestStyle || '';
+      
+      // Add bonus for style matches
+      if (career.styleFit.includes(aptitudeStyle)) {
+        suitabilityScore += 5;
+      }
+      if (career.styleFit.includes(interestStyle)) {
+        suitabilityScore += 5;
+      }
+    }
+    
+    // Ensure score is within 0-100 range
+    suitabilityScore = Math.max(0, Math.min(100, Math.round(suitabilityScore)));
+    
+    // Generate personalized gap analysis based on scores
+    const customGapAnalysis = [...career.gapAnalysis];
+    
+    // Add score-specific gap analysis items
+    if (aptitudeScore < 70 && ["Software Engineer", "Data Scientist"].includes(career.careerTitle)) {
+      customGapAnalysis.push("Focus on building technical and analytical skills");
+    }
+    
+    if (personalityScore < 70 && ["Medical Doctor", "Marketing Specialist"].includes(career.careerTitle)) {
+      customGapAnalysis.push("Develop stronger communication and interpersonal skills");
+    }
+    
+    if (interestScore < 70 && ["Graphic Designer", "Entrepreneur"].includes(career.careerTitle)) {
+      customGapAnalysis.push("Explore creative projects to build portfolio and clarify interests");
+    }
     
     return {
       careerTitle: career.careerTitle,
@@ -157,7 +284,7 @@ export const mapScoresToCareers = (
       educationPathways: career.educationPathways,
       keySkills: career.keySkills,
       workNature: career.workNature,
-      gapAnalysis: career.gapAnalysis
+      gapAnalysis: customGapAnalysis
     };
   });
   

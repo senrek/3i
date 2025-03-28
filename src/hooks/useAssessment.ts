@@ -76,12 +76,16 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     console.log('Interest Score:', interestScore);
     console.log('Learning Style Score:', learningStyleScore);
     
+    // Analyze answers to extract key insights
+    const analysisInsights = analyzeResponses(answers);
+    
     // Generate career recommendations based on scores
     const careerRecommendations = mapScoresToCareers(
       aptitudeScore,
       personalityScore,
       interestScore,
-      learningStyleScore
+      learningStyleScore,
+      analysisInsights
     );
     
     console.log('Career Recommendations:', careerRecommendations);
@@ -92,7 +96,8 @@ export const useAssessment = (assessment: any, questions: any[]) => {
       personality: personalityScore,
       interest: interestScore,
       learningStyle: learningStyleScore,
-      careerRecommendations
+      careerRecommendations,
+      analysisInsights
     };
     
     try {
@@ -103,7 +108,8 @@ export const useAssessment = (assessment: any, questions: any[]) => {
           user_id: user.id,
           assessment_id: assessment.id,
           responses: answers,
-          scores: scores
+          scores: scores,
+          completed_at: new Date().toISOString()
         })
         .select('id')
         .single();
@@ -123,6 +129,62 @@ export const useAssessment = (assessment: any, questions: any[]) => {
       console.error('Error saving assessment results:', error);
       toast.error(`Failed to save assessment results: ${error.message}`);
     }
+  };
+
+  // Helper function to analyze responses
+  const analyzeResponses = (responses: Record<string, string>) => {
+    // Simple analysis of response patterns
+    const aptitudeResponses = Object.entries(responses).filter(([id]) => id.startsWith('apt_'));
+    const personalityResponses = Object.entries(responses).filter(([id]) => id.startsWith('per_'));
+    const interestResponses = Object.entries(responses).filter(([id]) => id.startsWith('int_'));
+    
+    // Count of A/B/C/D answers for each category
+    const aptitudeAnalysis = {
+      A: aptitudeResponses.filter(([, val]) => val === 'A').length,
+      B: aptitudeResponses.filter(([, val]) => val === 'B').length,
+      C: aptitudeResponses.filter(([, val]) => val === 'C').length,
+      D: aptitudeResponses.filter(([, val]) => val === 'D').length,
+    };
+    
+    const personalityAnalysis = {
+      A: personalityResponses.filter(([, val]) => val === 'A').length,
+      B: personalityResponses.filter(([, val]) => val === 'B').length,
+      C: personalityResponses.filter(([, val]) => val === 'C').length,
+      D: personalityResponses.filter(([, val]) => val === 'D').length,
+    };
+    
+    const interestAnalysis = {
+      A: interestResponses.filter(([, val]) => val === 'A').length,
+      B: interestResponses.filter(([, val]) => val === 'B').length,
+      C: interestResponses.filter(([, val]) => val === 'C').length,
+      D: interestResponses.filter(([, val]) => val === 'D').length,
+    };
+    
+    // Determine dominant styles
+    const aptitudeStyle = getDominantStyle(aptitudeAnalysis);
+    const personalityStyle = getDominantStyle(personalityAnalysis);
+    const interestStyle = getDominantStyle(interestAnalysis);
+    
+    return {
+      aptitudeStyle,
+      personalityStyle,
+      interestStyle,
+      rawAnalysis: {
+        aptitude: aptitudeAnalysis,
+        personality: personalityAnalysis,
+        interest: interestAnalysis
+      }
+    };
+  };
+  
+  // Helper to get dominant style
+  const getDominantStyle = (analysis: Record<string, number>) => {
+    const maxVal = Math.max(analysis.A, analysis.B, analysis.C, analysis.D);
+    
+    if (analysis.A === maxVal) return 'analytical';
+    if (analysis.B === maxVal) return 'practical';
+    if (analysis.C === maxVal) return 'creative';
+    return 'reflective';
   };
 
   const handleViewResults = () => {

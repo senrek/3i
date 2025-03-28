@@ -8,6 +8,7 @@ import CareerInsightsCard from '@/components/reports/CareerInsightsCard';
 
 interface CareerMatchesTabProps {
   reportId: string;
+  responses?: Record<string, string> | null;
 }
 
 // Define interface for the career recommendation structure
@@ -16,12 +17,22 @@ interface CareerRecommendation {
   suitabilityPercentage: number;
   careerDescription: string;
   keySkills: string[];
+  educationPathways?: string[];
+  workNature?: string[];
+  gapAnalysis?: string[];
 }
 
-const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
+const CareerMatchesTab = ({ reportId, responses }: CareerMatchesTabProps) => {
   const { user } = useAuth();
   const [careerResults, setCareerResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [insightsData, setInsightsData] = useState<{
+    strengthAreas: string[];
+    developmentAreas: string[];
+  }>({
+    strengthAreas: [],
+    developmentAreas: [],
+  });
 
   useEffect(() => {
     const fetchCareerData = async () => {
@@ -31,7 +42,7 @@ const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
         // Fetch assessment data
         const { data, error } = await supabase
           .from('user_assessments')
-          .select('scores')
+          .select('scores, responses')
           .eq('id', reportId)
           .single();
         
@@ -40,15 +51,69 @@ const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
         }
         
         if (data && data.scores) {
-          // Safely extract career recommendations
+          // Extract career recommendations
           let recommendations: CareerRecommendation[] = [];
+          const userResponses = data.responses as Record<string, string> || {};
+          
+          // Generate insights based on responses
+          const strengths: string[] = [];
+          const developments: string[] = [];
           
           if (typeof data.scores === 'object' && data.scores !== null) {
-            // Type assertion to handle the Json type safely
+            // Extract career recommendations from scores
             const scoresObj = data.scores as Record<string, any>;
             recommendations = Array.isArray(scoresObj.careerRecommendations) 
               ? scoresObj.careerRecommendations as CareerRecommendation[]
               : [];
+              
+            // Process responses to determine strength and development areas
+            if (Object.keys(userResponses).length > 0) {
+              // Count of A and B answers (high scores) for different categories
+              let aptitudeHighCount = 0;
+              let personalityHighCount = 0;
+              let interestHighCount = 0;
+              let learningHighCount = 0;
+              
+              // Process responses to generate insights
+              Object.entries(userResponses).forEach(([questionId, answer]) => {
+                // Simple logic to determine strengths based on question categories and answers
+                if (questionId.startsWith('apt_') && (answer === 'A' || answer === 'B')) {
+                  aptitudeHighCount++;
+                }
+                if (questionId.startsWith('per_') && (answer === 'A' || answer === 'B')) {
+                  personalityHighCount++;
+                }
+                if (questionId.startsWith('int_') && (answer === 'A' || answer === 'B')) {
+                  interestHighCount++;
+                }
+                if (questionId.startsWith('lrn_') && (answer === 'A' || answer === 'B')) {
+                  learningHighCount++;
+                }
+              });
+              
+              // Determine strengths based on answer patterns
+              if (aptitudeHighCount > 5) strengths.push('Analytical Thinking');
+              if (aptitudeHighCount > 7) strengths.push('Problem Solving');
+              if (personalityHighCount > 5) strengths.push('Communication Skills');
+              if (personalityHighCount > 7) strengths.push('Emotional Intelligence');
+              if (interestHighCount > 5) strengths.push('Creativity');
+              if (learningHighCount > 5) strengths.push('Adaptability');
+              
+              // Determine development areas
+              if (aptitudeHighCount < 4) developments.push('Analytical Reasoning');
+              if (personalityHighCount < 4) developments.push('Interpersonal Skills');
+              if (interestHighCount < 4) developments.push('Career Exploration');
+              if (learningHighCount < 4) developments.push('Learning Methodology');
+            }
+          }
+          
+          // Ensure we have some default values if analysis is inconclusive
+          if (strengths.length === 0) {
+            strengths.push('Self-Motivation', 'Persistence');
+          }
+          
+          if (developments.length === 0) {
+            developments.push('Strategic Planning', 'Technical Skills');
           }
           
           // Map career recommendations to the format expected by CareerResultCard
@@ -57,24 +122,30 @@ const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
             title: career.careerTitle,
             matchPercentage: career.suitabilityPercentage,
             description: career.careerDescription,
-            skills: career.keySkills
+            skills: career.keySkills,
+            educationPathways: career.educationPathways || [],
+            workNature: career.workNature || []
           }));
           
           setCareerResults(mappedCareers);
+          setInsightsData({
+            strengthAreas: strengths,
+            developmentAreas: developments
+          });
         } else {
           // Use fallback data if no career recommendations found
           setCareerResults([]);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching career data:', error);
-        toast.error('Error fetching career data');
+        toast.error(`Failed to load career data: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchCareerData();
-  }, [user, reportId]);
+  }, [user, reportId, responses]);
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-40">Loading career data...</div>;
@@ -104,12 +175,17 @@ const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
               skills={career.skills}
               isPrimary={index === 0}
               reportId={reportId}
+              educationPathways={career.educationPathways}
+              workNature={career.workNature}
             />
           ))}
         </div>
       </div>
       <div className="md:col-span-2 lg:col-span-3">
-        <CareerInsightsCard />
+        <CareerInsightsCard 
+          strengthAreas={insightsData.strengthAreas}
+          developmentAreas={insightsData.developmentAreas}
+        />
       </div>
     </div>
   );

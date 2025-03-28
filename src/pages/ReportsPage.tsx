@@ -9,6 +9,7 @@ import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
 import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
+import { Json } from '@/integrations/supabase/types';
 
 // Define a proper type for scores
 interface ReportScores {
@@ -16,7 +17,15 @@ interface ReportScores {
   personality: number;
   interest: number;
   learningStyle: number;
-  careerRecommendations: any[];
+  careerRecommendations: Array<{
+    careerTitle: string;
+    suitabilityPercentage: number;
+    careerDescription: string;
+    educationPathways: string[];
+    keySkills: string[];
+    workNature: string[];
+    gapAnalysis: string[];
+  }>;
 }
 
 interface ReportData {
@@ -25,6 +34,8 @@ interface ReportData {
   assessmentCompleted: boolean;
   scores: ReportScores | null;
   userName: string;
+  responses: Record<string, string> | null;
+  rawResponses: Record<string, any> | null;
 }
 
 const ReportsPage = () => {
@@ -46,44 +57,61 @@ const ReportsPage = () => {
           .select('*, profiles:user_id(first_name, last_name)')
           .eq('user_id', user.id)
           .order('completed_at', { ascending: false })
-          .limit(1)
-          .single();
+          .limit(1);
         
         if (error) {
           throw error;
         }
         
-        if (assessments) {
-          const userData = assessments.profiles as any;
+        if (assessments && assessments.length > 0) {
+          const assessment = assessments[0];
+          const userData = assessment.profiles as any;
           const userName = userData?.first_name && userData?.last_name 
             ? `${userData.first_name} ${userData.last_name}` 
             : user.email || 'User';
           
           // Ensure scores has the right structure
           let validScores: ReportScores | null = null;
+          let responses: Record<string, string> | null = null;
           
-          if (assessments.scores) {
+          if (assessment.scores) {
             // Convert from Json to the expected format
-            const scoresObj = assessments.scores as Record<string, any>;
+            const scoresObj = assessment.scores as Record<string, any>;
             
             // Extract values with proper type checking
-            validScores = {
-              aptitude: typeof scoresObj.aptitude === 'number' ? scoresObj.aptitude : 0,
-              personality: typeof scoresObj.personality === 'number' ? scoresObj.personality : 0,
-              interest: typeof scoresObj.interest === 'number' ? scoresObj.interest : 0,
-              learningStyle: typeof scoresObj.learningStyle === 'number' ? scoresObj.learningStyle : 0,
-              careerRecommendations: Array.isArray(scoresObj.careerRecommendations) 
-                ? scoresObj.careerRecommendations 
-                : []
-            };
+            try {
+              validScores = {
+                aptitude: typeof scoresObj.aptitude === 'number' ? scoresObj.aptitude : 0,
+                personality: typeof scoresObj.personality === 'number' ? scoresObj.personality : 0,
+                interest: typeof scoresObj.interest === 'number' ? scoresObj.interest : 0,
+                learningStyle: typeof scoresObj.learningStyle === 'number' ? scoresObj.learningStyle : 0,
+                careerRecommendations: Array.isArray(scoresObj.careerRecommendations) 
+                  ? scoresObj.careerRecommendations 
+                  : []
+              };
+            } catch (e) {
+              console.error('Error parsing scores:', e);
+              validScores = null;
+            }
+          }
+          
+          if (assessment.responses) {
+            try {
+              responses = assessment.responses as Record<string, string>;
+            } catch (e) {
+              console.error('Error parsing responses:', e);
+              responses = null;
+            }
           }
           
           setReportData({
-            id: assessments.id,
-            completedAt: assessments.completed_at || new Date().toISOString(),
+            id: assessment.id,
+            completedAt: assessment.completed_at || new Date().toISOString(),
             assessmentCompleted: true,
             scores: validScores,
-            userName
+            userName,
+            responses,
+            rawResponses: assessment.responses as Record<string, any> || null
           });
         } else {
           setReportData({
@@ -91,17 +119,22 @@ const ReportsPage = () => {
             completedAt: new Date().toISOString(),
             assessmentCompleted: false,
             scores: null,
-            userName: user.email || 'User'
+            userName: user.email || 'User',
+            responses: null,
+            rawResponses: null
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching assessment data:', error);
+        toast.error(`Error loading report data: ${error.message}`);
         setReportData({
           id: 'error',
           completedAt: new Date().toISOString(),
           assessmentCompleted: false,
           scores: null,
-          userName: user.email || 'User'
+          userName: user.email || 'User',
+          responses: null,
+          rawResponses: null
         });
       } finally {
         setIsLoading(false);
@@ -119,7 +152,7 @@ const ReportsPage = () => {
       // Check if date is valid
       if (isNaN(date.getTime())) {
         console.warn('Invalid date string:', dateString);
-        return 'Invalid Date';
+        return 'N/A';
       }
       
       return new Intl.DateTimeFormat('en-US', {
@@ -129,7 +162,7 @@ const ReportsPage = () => {
       }).format(date);
     } catch (error) {
       console.error('Error formatting date:', error);
-      return 'Error';
+      return 'N/A';
     }
   };
 
@@ -152,6 +185,7 @@ const ReportsPage = () => {
                 reportId={reportData.id} 
                 userName={reportData.userName} 
                 scores={reportData.scores}
+                responses={reportData.responses}
               />
               
               <ReportTabs 
@@ -164,6 +198,7 @@ const ReportsPage = () => {
                   { name: 'Leadership', value: Math.round(reportData.scores.personality * 0.6), fullMark: 100 },
                   { name: 'Problem Solving', value: Math.round(reportData.scores.aptitude * 0.85), fullMark: 100 },
                 ]} 
+                responses={reportData.responses}
               />
             </>
           )}
