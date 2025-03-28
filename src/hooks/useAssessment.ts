@@ -3,15 +3,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { calculateCategoryScore, mapScoresToCareers } from '@/utils/assessmentScoring';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useAssessment = (assessment: any, questions: any[]) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
+  const [assessmentId, setAssessmentId] = useState<string | null>(null);
 
   // Set the selected answer when navigating to a question with an existing answer
   useEffect(() => {
@@ -49,9 +53,12 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     }
   };
 
-  const completeAssessment = () => {
-    // In a real application, you would send the answers to your backend
-    console.log('Assessment completed with answers:', answers);
+  const completeAssessment = async () => {
+    if (!user) {
+      toast.error("You must be logged in to complete the assessment");
+      navigate('/login');
+      return;
+    }
     
     // Calculate scores by category
     const aptitudeQuestions = questions.filter(q => q.category === 'aptitude');
@@ -79,14 +86,43 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     
     console.log('Career Recommendations:', careerRecommendations);
     
-    // In a real application, you would store these results in a database or state management system
-    // For now, we'll just mark the assessment as completed
+    // Prepare scores object
+    const scores = {
+      aptitude: aptitudeScore,
+      personality: personalityScore,
+      interest: interestScore,
+      learningStyle: learningStyleScore,
+      careerRecommendations
+    };
     
-    // Mark the assessment as completed
-    setIsCompleted(true);
-    
-    // Show success message
-    toast.success(`Career Analysis Assessment completed successfully!`);
+    try {
+      // Save the assessment results to Supabase
+      const { data, error } = await supabase
+        .from('user_assessments')
+        .insert({
+          user_id: user.id,
+          assessment_id: assessment.id,
+          responses: answers,
+          scores: scores
+        })
+        .select('id')
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      setAssessmentId(data.id);
+      
+      // Mark the assessment as completed
+      setIsCompleted(true);
+      
+      // Show success message
+      toast.success(`Career Analysis Assessment completed successfully!`);
+    } catch (error: any) {
+      console.error('Error saving assessment results:', error);
+      toast.error(`Failed to save assessment results: ${error.message}`);
+    }
   };
 
   const handleViewResults = () => {
@@ -99,6 +135,7 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     selectedAnswer,
     isCompleted,
     isStarted,
+    assessmentId,
     handleStartAssessment,
     handleAnswerSelect,
     handleNextQuestion,

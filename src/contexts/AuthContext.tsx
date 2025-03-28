@@ -1,15 +1,12 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { toast } from "sonner";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -30,29 +27,47 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // For mock authentication purposes
+  useEffect(() => {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsLoading(false);
+        
+        if (event === 'SIGNED_IN') {
+          toast.success("Signed in successfully");
+        } else if (event === 'SIGNED_OUT') {
+          toast.success("Signed out successfully");
+        }
+      }
+    );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       
-      // Mock user data
-      const userData = {
-        id: '123',
-        name: email.split('@')[0],
-        email,
-      };
-      
-      setUser(userData);
-      toast.success("Login successful");
-    } catch (error) {
-      toast.error("Login failed. Please try again.");
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Login failed. Please try again.");
       console.error(error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -61,20 +76,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: name.split(' ')[0],
+            last_name: name.split(' ').slice(1).join(' '),
+          }
+        }
+      });
       
-      // Mock user data
-      const userData = {
-        id: '123',
-        name,
-        email,
-      };
+      if (error) {
+        throw error;
+      }
       
-      setUser(userData);
-      toast.success("Registration successful");
-    } catch (error) {
-      toast.error("Registration failed. Please try again.");
+      toast.success("Registration successful! Please check your email for confirmation.");
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed. Please try again.");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -82,25 +101,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const continueAsGuest = () => {
-    const guestUser = {
-      id: 'guest-' + Math.random().toString(36).substr(2, 9),
-      name: 'Guest User',
-      email: 'guest@example.com',
-    };
-    
-    setUser(guestUser);
-    toast.success("Continuing as guest");
+    toast.error("Guest access is not available. Please sign in or register.");
   };
 
-  const logout = () => {
-    setUser(null);
-    toast.success("Logged out successfully");
+  const logout = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Logout failed. Please try again.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        session,
         isAuthenticated: !!user,
         isLoading,
         login,

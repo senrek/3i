@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { assessments } from '@/data/assessments';
 import { unifiedQuestions } from '@/data/unifiedQuestions';
@@ -9,9 +9,11 @@ import AssessmentComplete from '@/components/assessment/AssessmentComplete';
 import AssessmentIntroCard from '@/components/assessment/AssessmentIntroCard';
 import AssessmentInProgress from '@/components/assessment/AssessmentInProgress';
 import { useAssessment } from '@/hooks/useAssessment';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 const AssessmentTakePage = () => {
   const { id } = useParams<{ id: string }>();
+  const { isLoading, isAuthenticated } = useRequireAuth();
   
   const [assessment, setAssessment] = useState<typeof assessments[0] | undefined>(undefined);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -44,6 +46,13 @@ const AssessmentTakePage = () => {
     handlePreviousQuestion,
     handleViewResults
   } = useAssessment(assessment, questions);
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">Loading...</div>;
+  }
+
+  // If not authenticated, the useRequireAuth hook will redirect to login
 
   // If no assessment found
   if (!assessment) {
@@ -78,6 +87,8 @@ const AssessmentTakePage = () => {
       onAnswerSelect={handleAnswerSelect}
       onNext={handleNextQuestion}
       onPrevious={handlePreviousQuestion}
+      isLastQuestion={currentQuestion === questions.length}
+      isFirstQuestion={currentQuestion === 1}
     />
   );
 };

@@ -1,38 +1,92 @@
 
 import React, { useState, useEffect } from 'react';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import ReportHeader from '@/components/reports/ReportHeader';
 import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
 import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
 
-const ReportsPage = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [reportData, setReportData] = useState<{
-    id: string;
-    completedDate: string;
-    assessmentCompleted: boolean;
-  } | null>(null);
+interface ReportData {
+  id: string;
+  completedAt: string;
+  assessmentCompleted: boolean;
+  scores: {
+    aptitude: number;
+    personality: number;
+    interest: number;
+    learningStyle: number;
+    careerRecommendations: any[];
+  } | null;
+  userName: string;
+}
 
-  // Simulate fetching report data from an API
+const ReportsPage = () => {
+  useRequireAuth(); // Require authentication for this page
+  const { user } = useAuth();
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+
+  // Fetch report data from Supabase
   useEffect(() => {
     const fetchReportData = async () => {
-      // Simulating API call with setTimeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!user) return;
       
-      // Mock data for demonstration
-      const mockReportData = {
-        id: 'report-1',
-        completedDate: new Date().toISOString(),
-        assessmentCompleted: true,
-      };
-      
-      setReportData(mockReportData);
-      setIsLoading(false);
+      try {
+        // Fetch latest assessment for the user
+        const { data: assessments, error } = await supabase
+          .from('user_assessments')
+          .select('*, profiles:user_id(first_name, last_name)')
+          .eq('user_id', user.id)
+          .order('completed_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (assessments) {
+          const userData = assessments.profiles as any;
+          const userName = userData?.first_name && userData?.last_name 
+            ? `${userData.first_name} ${userData.last_name}` 
+            : user.email || 'User';
+          
+          setReportData({
+            id: assessments.id,
+            completedAt: assessments.completed_at,
+            assessmentCompleted: true,
+            scores: assessments.scores,
+            userName
+          });
+        } else {
+          setReportData({
+            id: 'no-assessment',
+            completedAt: new Date().toISOString(),
+            assessmentCompleted: false,
+            scores: null,
+            userName: user.email || 'User'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching assessment data:', error);
+        setReportData({
+          id: 'error',
+          completedAt: new Date().toISOString(),
+          assessmentCompleted: false,
+          scores: null,
+          userName: user.email || 'User'
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     fetchReportData();
-  }, []);
+  }, [user]);
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -43,16 +97,6 @@ const ReportsPage = () => {
       year: 'numeric',
     }).format(date);
   };
-
-  // Mock skill data for the radar chart
-  const skillData = [
-    { name: 'Analytical', value: 85, fullMark: 100 },
-    { name: 'Communication', value: 65, fullMark: 100 },
-    { name: 'Technical', value: 90, fullMark: 100 },
-    { name: 'Creativity', value: 70, fullMark: 100 },
-    { name: 'Leadership', value: 60, fullMark: 100 },
-    { name: 'Problem Solving', value: 80, fullMark: 100 },
-  ];
 
   return (
     <div className="space-y-8">
@@ -69,8 +113,25 @@ const ReportsPage = () => {
 
           {reportData?.assessmentCompleted && (
             <>
-              <ReportPDFGenerator reportId={reportData.id} userName="John Doe" />
-              <ReportTabs reportId={reportData.id} skillData={skillData} />
+              <ReportPDFGenerator 
+                reportId={reportData.id} 
+                userName={reportData.userName} 
+                scores={reportData.scores}
+              />
+              
+              {reportData.scores && (
+                <ReportTabs 
+                  reportId={reportData.id} 
+                  skillData={[
+                    { name: 'Analytical', value: reportData.scores.aptitude, fullMark: 100 },
+                    { name: 'Communication', value: Math.round(reportData.scores.personality * 0.8), fullMark: 100 },
+                    { name: 'Technical', value: Math.round(reportData.scores.aptitude * 0.9), fullMark: 100 },
+                    { name: 'Creativity', value: Math.round(reportData.scores.interest * 0.7), fullMark: 100 },
+                    { name: 'Leadership', value: Math.round(reportData.scores.personality * 0.6), fullMark: 100 },
+                    { name: 'Problem Solving', value: Math.round(reportData.scores.aptitude * 0.85), fullMark: 100 },
+                  ]} 
+                />
+              )}
             </>
           )}
         </>
