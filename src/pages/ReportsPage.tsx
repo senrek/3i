@@ -64,10 +64,22 @@ const ReportsPage = () => {
         setError(null);
         console.log("Fetching report data for user:", user.id);
         
-        // Fetch latest assessment for the user
+        // First fetch the user profile to get name information
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileError) {
+          console.warn("Could not fetch profile data:", profileError);
+          // Continue with default name handling
+        }
+        
+        // Then fetch assessment data separately
         const { data: assessments, error: assessmentError } = await supabase
           .from('user_assessments')
-          .select('*, profiles(first_name, last_name, email)')
+          .select('*')
           .eq('user_id', user.id)
           .order('completed_at', { ascending: false })
           .limit(1);
@@ -83,12 +95,11 @@ const ReportsPage = () => {
           const assessment = assessments[0];
           console.log("Working with assessment:", assessment);
           
-          // Extract profile data from the joined result
-          const profileData = assessment.profiles;
-          console.log("Profile data:", profileData);
-          
-          const userName = profileData 
-            ? `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || user.email || 'User'
+          // Construct user name from profile data if available, otherwise use user email
+          const firstName = profileData?.first_name || '';
+          const lastName = profileData?.last_name || '';
+          const userName = (firstName || lastName) 
+            ? `${firstName} ${lastName}`.trim()
             : user.email || 'User';
           
           // Ensure scores has the right structure
