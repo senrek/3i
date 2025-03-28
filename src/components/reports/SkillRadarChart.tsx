@@ -10,13 +10,13 @@ interface Skill {
 }
 
 interface SkillRadarChartProps {
-  skills: Skill[];
+  data: Skill[];
   title?: string;
   description?: string;
 }
 
 const SkillRadarChart = ({ 
-  skills, 
+  data, 
   title = 'Skill Analysis', 
   description = 'Your skills compared to career requirements' 
 }: SkillRadarChartProps) => {
@@ -29,7 +29,7 @@ const SkillRadarChart = ({
       <CardContent className="p-1">
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={skills}>
+            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
               <PolarGrid stroke="var(--border)" />
               <PolarAngleAxis 
                 dataKey="name" 
