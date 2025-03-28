@@ -1,12 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-
-  return (
-    <footer className="border-t border-border bg-card/30 backdrop-blur-sm">
+  return <footer className="border-t border-border bg-card/30 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -16,23 +12,17 @@ const Footer = () => {
                   C
                 </div>
               </div>
-              <span className="text-xl font-semibold">CareerPath</span>
+              <span className="text-xl font-semibold">3i</span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground max-w-xs">
               Empowering individuals to make informed career decisions through 
               scientifically validated assessments and personalized guidance.
             </p>
             <div className="mt-6 flex space-x-4">
-              {['twitter', 'facebook', 'instagram', 'linkedin'].map((social) => (
-                <a
-                  key={social}
-                  href={`#${social}`}
-                  className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
+              {['twitter', 'facebook', 'instagram', 'linkedin'].map(social => <a key={social} href={`#${social}`} className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                   <span className="sr-only">{social}</span>
                   <div className="h-5 w-5 rounded-md bg-muted" />
-                </a>
-              ))}
+                </a>)}
             </div>
           </div>
           
@@ -41,22 +31,26 @@ const Footer = () => {
               Assessments
             </h3>
             <ul className="space-y-2 text-sm">
-              {[
-                { name: 'Aptitude Test', href: '/assessments/aptitude' },
-                { name: 'Personality Assessment', href: '/assessments/personality' },
-                { name: 'Career Interest', href: '/assessments/interest' },
-                { name: 'Skills Evaluation', href: '/assessments/skills' },
-                { name: 'Learning Style', href: '/assessments/learning-style' },
-              ].map((item) => (
-                <li key={item.name}>
-                  <Link 
-                    to={item.href}
-                    className="text-muted-foreground transition-colors hover:text-primary"
-                  >
+              {[{
+              name: 'Aptitude Test',
+              href: '/assessments/aptitude'
+            }, {
+              name: 'Personality Assessment',
+              href: '/assessments/personality'
+            }, {
+              name: 'Career Interest',
+              href: '/assessments/interest'
+            }, {
+              name: 'Skills Evaluation',
+              href: '/assessments/skills'
+            }, {
+              name: 'Learning Style',
+              href: '/assessments/learning-style'
+            }].map(item => <li key={item.name}>
+                  <Link to={item.href} className="text-muted-foreground transition-colors hover:text-primary">
                     {item.name}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
           
@@ -65,22 +59,26 @@ const Footer = () => {
               Resources
             </h3>
             <ul className="space-y-2 text-sm">
-              {[
-                { name: 'Career Library', href: '/resources/careers' },
-                { name: 'Educational Pathways', href: '/resources/education' },
-                { name: 'Industry Insights', href: '/resources/insights' },
-                { name: 'Assessment Guide', href: '/resources/guide' },
-                { name: 'FAQ', href: '/faq' },
-              ].map((item) => (
-                <li key={item.name}>
-                  <Link 
-                    to={item.href}
-                    className="text-muted-foreground transition-colors hover:text-primary"
-                  >
+              {[{
+              name: 'Career Library',
+              href: '/resources/careers'
+            }, {
+              name: 'Educational Pathways',
+              href: '/resources/education'
+            }, {
+              name: 'Industry Insights',
+              href: '/resources/insights'
+            }, {
+              name: 'Assessment Guide',
+              href: '/resources/guide'
+            }, {
+              name: 'FAQ',
+              href: '/faq'
+            }].map(item => <li key={item.name}>
+                  <Link to={item.href} className="text-muted-foreground transition-colors hover:text-primary">
                     {item.name}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
           
@@ -89,22 +87,26 @@ const Footer = () => {
               Company
             </h3>
             <ul className="space-y-2 text-sm">
-              {[
-                { name: 'About Us', href: '/about' },
-                { name: 'Contact', href: '/contact' },
-                { name: 'Privacy Policy', href: '/privacy' },
-                { name: 'Terms of Service', href: '/terms' },
-                { name: 'Careers', href: '/careers' },
-              ].map((item) => (
-                <li key={item.name}>
-                  <Link 
-                    to={item.href}
-                    className="text-muted-foreground transition-colors hover:text-primary"
-                  >
+              {[{
+              name: 'About Us',
+              href: '/about'
+            }, {
+              name: 'Contact',
+              href: '/contact'
+            }, {
+              name: 'Privacy Policy',
+              href: '/privacy'
+            }, {
+              name: 'Terms of Service',
+              href: '/terms'
+            }, {
+              name: 'Careers',
+              href: '/careers'
+            }].map(item => <li key={item.name}>
+                  <Link to={item.href} className="text-muted-foreground transition-colors hover:text-primary">
                     {item.name}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
         </div>
@@ -115,8 +117,6 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
