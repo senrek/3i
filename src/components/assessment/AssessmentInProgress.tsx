@@ -11,6 +11,8 @@ interface AssessmentInProgressProps {
   onAnswerSelect: (value: string) => void;
   onNext: () => void;
   onPrevious: () => void;
+  isLastQuestion?: boolean;  // Added as optional prop
+  isFirstQuestion?: boolean; // Added as optional prop
 }
 
 const AssessmentInProgress = ({
@@ -20,7 +22,9 @@ const AssessmentInProgress = ({
   selectedAnswer,
   onAnswerSelect,
   onNext,
-  onPrevious
+  onPrevious,
+  isLastQuestion,
+  isFirstQuestion
 }: AssessmentInProgressProps) => {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col justify-center py-12">
@@ -37,8 +41,8 @@ const AssessmentInProgress = ({
             onAnswerSelect={onAnswerSelect}
             onNext={onNext}
             onPrevious={onPrevious}
-            isLastQuestion={currentQuestion === totalQuestions}
-            isFirstQuestion={currentQuestion === 1}
+            isLastQuestion={isLastQuestion ?? (currentQuestion === totalQuestions)}
+            isFirstQuestion={isFirstQuestion ?? (currentQuestion === 1)}
           />
         )}
       </div>

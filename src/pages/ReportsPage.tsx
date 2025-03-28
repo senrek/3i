@@ -63,13 +63,18 @@ const ReportsPage = () => {
           let validScores: ReportScores | null = null;
           
           if (assessments.scores) {
-            // Make sure we have all the required properties
+            // Convert from Json to the expected format
+            const scoresObj = assessments.scores as Record<string, any>;
+            
+            // Extract values with proper type checking
             validScores = {
-              aptitude: (assessments.scores.aptitude as number) || 0,
-              personality: (assessments.scores.personality as number) || 0,
-              interest: (assessments.scores.interest as number) || 0,
-              learningStyle: (assessments.scores.learningStyle as number) || 0,
-              careerRecommendations: (assessments.scores.careerRecommendations as any[]) || []
+              aptitude: typeof scoresObj.aptitude === 'number' ? scoresObj.aptitude : 0,
+              personality: typeof scoresObj.personality === 'number' ? scoresObj.personality : 0,
+              interest: typeof scoresObj.interest === 'number' ? scoresObj.interest : 0,
+              learningStyle: typeof scoresObj.learningStyle === 'number' ? scoresObj.learningStyle : 0,
+              careerRecommendations: Array.isArray(scoresObj.careerRecommendations) 
+                ? scoresObj.careerRecommendations 
+                : []
             };
           }
           

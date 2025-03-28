@@ -10,6 +10,14 @@ interface CareerMatchesTabProps {
   reportId: string;
 }
 
+// Define interface for the career recommendation structure
+interface CareerRecommendation {
+  careerTitle: string;
+  suitabilityPercentage: number;
+  careerDescription: string;
+  keySkills: string[];
+}
+
 const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
   const { user } = useAuth();
   const [careerResults, setCareerResults] = useState<any[]>([]);
@@ -33,11 +41,13 @@ const CareerMatchesTab = ({ reportId }: CareerMatchesTabProps) => {
         
         if (data && data.scores) {
           // Safely extract career recommendations
-          let recommendations: any[] = [];
+          let recommendations: CareerRecommendation[] = [];
           
           if (typeof data.scores === 'object' && data.scores !== null) {
-            recommendations = Array.isArray(data.scores.careerRecommendations) 
-              ? data.scores.careerRecommendations 
+            // Type assertion to handle the Json type safely
+            const scoresObj = data.scores as Record<string, any>;
+            recommendations = Array.isArray(scoresObj.careerRecommendations) 
+              ? scoresObj.careerRecommendations as CareerRecommendation[]
               : [];
           }
           
