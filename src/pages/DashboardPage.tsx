@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,17 +59,21 @@ const DashboardPage = () => {
       {/* Assessment Cards Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { title: 'Aptitude Test', description: 'Evaluate your analytical capabilities', icon: Lightbulb, href: '/assessments/aptitude' },
-          { title: 'Personality Analysis', description: 'Discover your personality traits', icon: BarChartBig, href: '/assessments/personality' },
-          { title: 'Interest Inventory', description: 'Identify your career interests', icon: Bookmark, href: '/assessments/interest' },
-          { title: 'Career Assessment', description: 'Get comprehensive career guidance', icon: GraduationCap, href: '/assessments/career-analysis' },
+          { id: "aptitude", title: 'Aptitude Test', description: 'Evaluate your analytical capabilities', icon: Lightbulb, duration: 15, questionCount: 25, progress: 0, status: 'not_started' as const },
+          { id: "personality", title: 'Personality Analysis', description: 'Discover your personality traits', icon: BarChartBig, duration: 20, questionCount: 30, progress: 0, status: 'not_started' as const },
+          { id: "interest", title: 'Interest Inventory', description: 'Identify your career interests', icon: Bookmark, duration: 10, questionCount: 20, progress: 0, status: 'not_started' as const },
+          { id: "career-analysis", title: 'Career Assessment', description: 'Get comprehensive career guidance', icon: GraduationCap, duration: 45, questionCount: 50, progress: 0, status: 'not_started' as const },
         ].map((assessment, index) => (
           <AssessmentCard
             key={index}
+            id={assessment.id}
             title={assessment.title}
             description={assessment.description}
             icon={assessment.icon}
-            href={assessment.href}
+            duration={assessment.duration}
+            questionCount={assessment.questionCount}
+            progress={assessment.progress}
+            status={assessment.status}
           />
         ))}
       </div>
