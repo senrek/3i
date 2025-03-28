@@ -1,4 +1,3 @@
-
 /**
  * Calculate scores for a specific category of questions
  */
@@ -16,14 +15,53 @@ export const calculateCategoryScore = (
     
     answeredQuestions++;
     
-    // This is a simplified scoring system - in a real application, 
-    // you would implement a more sophisticated scoring algorithm
-    if (answer === 'A') score += 3;
-    else if (answer === 'B') score += 2;
-    else if (answer === 'C') score += 1;
-    else if (answer === 'D') score += 0;
-    
-    totalPossibleScore += 3;
+    // Enhanced scoring system for different question categories
+    if (question.category === 'aptitude') {
+      if (answer === 'A') score += 3;
+      else if (answer === 'B') score += 2;
+      else if (answer === 'C') score += 1;
+      else if (answer === 'D') score += 0;
+      totalPossibleScore += 3;
+    } 
+    else if (question.category === 'personality') {
+      // For personality, score based on different patterns
+      // For some personality questions, A might indicate one trait, B another
+      // We'll use a weighted approach where each answer contributes to the total score
+      if (question.id.startsWith('per_')) {
+        if (['per_1', 'per_3', 'per_6'].includes(question.id)) {
+          // Questions about extraversion/introversion
+          score += (answer === 'A') ? 3 : 1;
+        } else if (['per_4', 'per_5', 'per_7'].includes(question.id)) {
+          // Questions about thinking/feeling
+          score += (answer === 'B') ? 3 : 1;
+        } else {
+          // Other personality questions
+          score += (answer === 'A') ? 2 : 2; // Equal weight for either choice
+        }
+        totalPossibleScore += 3;
+      }
+    }
+    else if (question.category === 'interest') {
+      // For interest questions, C (Yes) is most positive
+      if (answer === 'C') score += 3;
+      else if (answer === 'B') score += 1.5;
+      else if (answer === 'A') score += 0;
+      totalPossibleScore += 3;
+    }
+    else if (question.category === 'learning-style') {
+      // For learning style, all answers contribute to understanding the style
+      // All answers are valid, but we'll score for consistency
+      score += 2; // All responses are valid and contribute equally
+      totalPossibleScore += 2;
+    }
+    else {
+      // Default scoring for any other category
+      if (answer === 'A') score += 3;
+      else if (answer === 'B') score += 2;
+      else if (answer === 'C') score += 1;
+      else if (answer === 'D') score += 0;
+      totalPossibleScore += 3;
+    }
   });
   
   // Ensure we don't divide by zero, and normalize to 0-100 scale
@@ -54,7 +92,7 @@ export const mapScoresToCareers = (
   // Create a weighted score incorporating all elements
   const weightedScore = (aptitudeScore * 0.4) + (personalityScore * 0.25) + (interestScore * 0.25) + (learningStyleScore * 0.1);
   
-  // Base career data
+  // Enhanced career database
   const careers = [
     {
       careerTitle: "Software Engineer",
@@ -64,15 +102,20 @@ export const mapScoresToCareers = (
       educationPathways: [
         "B.Tech/B.E. in Computer Science or IT",
         "BCA followed by MCA",
-        "B.Sc in Computer Science followed by M.Sc"
+        "B.Sc in Computer Science followed by M.Sc",
+        "Coding bootcamps plus self-learning and certifications",
+        "Online computer science degree programs"
       ],
-      keySkills: ["Problem Solving", "Logical Thinking", "Programming", "Teamwork", "Communication"],
+      keySkills: ["Problem Solving", "Logical Thinking", "Programming", "Teamwork", "Communication", "Continuous Learning"],
       workNature: [
         "Designing and implementing software solutions",
         "Testing and fixing bugs",
-        "Collaborating with cross-functional teams"
+        "Collaborating with cross-functional teams",
+        "Writing and maintaining code",
+        "Developing applications for web, mobile, and desktop platforms",
+        "Implementing security and data protection measures"
       ],
-      gapAnalysis: ["Enhance technical skills", "Develop communication abilities", "Build project portfolio"],
+      gapAnalysis: ["Enhance technical skills", "Develop communication abilities", "Build project portfolio", "Learn version control systems", "Understand software development lifecycle"],
       aptitudeBoost: 0.2,  // Boost factors for different career types based on assessment areas
       personalityBoost: 0,
       interestBoost: 0.1,
@@ -86,15 +129,20 @@ export const mapScoresToCareers = (
       educationPathways: [
         "B.Tech/B.E. in Computer Science with Data Science specialization",
         "B.Sc in Statistics followed by M.Sc in Data Science",
-        "Engineering degree followed by specialized certification in Data Science"
+        "Engineering degree followed by specialized certification in Data Science",
+        "Mathematics or Statistics degree with programming skills",
+        "Online data science and machine learning bootcamps"
       ],
-      keySkills: ["Statistical Analysis", "Machine Learning", "Programming", "Data Visualization", "Critical Thinking"],
+      keySkills: ["Statistical Analysis", "Machine Learning", "Programming", "Data Visualization", "Critical Thinking", "Domain Knowledge"],
       workNature: [
         "Collecting and analyzing large datasets",
         "Building predictive models",
-        "Presenting insights to stakeholders"
+        "Presenting insights to stakeholders",
+        "Implementing machine learning algorithms",
+        "Cleaning and preprocessing data",
+        "Creating data visualization dashboards"
       ],
-      gapAnalysis: ["Strengthen mathematical foundation", "Learn additional programming languages", "Develop domain expertise"],
+      gapAnalysis: ["Strengthen mathematical foundation", "Learn additional programming languages", "Develop domain expertise", "Build data visualization skills", "Gain experience with big data technologies"],
       aptitudeBoost: 0.25,
       personalityBoost: 0,
       interestBoost: 0.05,
@@ -108,15 +156,20 @@ export const mapScoresToCareers = (
       educationPathways: [
         "MBBS followed by MD/MS specialization",
         "MBBS followed by DNB",
-        "MBBS with international certifications"
+        "MBBS with international certifications",
+        "MBBS followed by super-specialization",
+        "Integrated medical programs in select universities"
       ],
-      keySkills: ["Critical Thinking", "Empathy", "Communication", "Attention to Detail", "Decision Making"],
+      keySkills: ["Critical Thinking", "Empathy", "Communication", "Attention to Detail", "Decision Making", "Continuous Learning"],
       workNature: [
         "Examining patients and diagnosing conditions",
         "Prescribing treatments and medications",
-        "Managing patient care and follow-up"
+        "Managing patient care and follow-up",
+        "Performing medical procedures and surgeries",
+        "Collaborating with healthcare teams",
+        "Keeping up with medical research and advancements"
       ],
-      gapAnalysis: ["Improve stress management", "Enhance communication with patients", "Develop leadership skills"],
+      gapAnalysis: ["Improve stress management", "Enhance communication with patients", "Develop leadership skills", "Build research capabilities", "Strengthen specialized medical knowledge"],
       aptitudeBoost: 0.15,
       personalityBoost: 0.2,
       interestBoost: 0.05,
@@ -130,15 +183,20 @@ export const mapScoresToCareers = (
       educationPathways: [
         "BBA/B.Com followed by MBA",
         "Engineering degree with MBA",
-        "Economics or Statistics degree with business certification"
+        "Economics or Statistics degree with business certification",
+        "Business Analytics specialized degrees",
+        "Data Science programs with business focus"
       ],
-      keySkills: ["Analytical Thinking", "Communication", "Problem Solving", "Technical Knowledge", "Business Acumen"],
+      keySkills: ["Analytical Thinking", "Communication", "Problem Solving", "Technical Knowledge", "Business Acumen", "Project Management"],
       workNature: [
         "Gathering and documenting business requirements",
         "Analyzing data and processes",
-        "Recommending solutions for business improvement"
+        "Recommending solutions for business improvement",
+        "Creating reports and dashboards",
+        "Facilitating meetings and workshops",
+        "Managing stakeholder relationships"
       ],
-      gapAnalysis: ["Develop stronger technical skills", "Enhance data analysis capabilities", "Improve presentation skills"],
+      gapAnalysis: ["Develop stronger technical skills", "Enhance data analysis capabilities", "Improve presentation skills", "Build domain knowledge", "Learn project management methodologies"],
       aptitudeBoost: 0.1,
       personalityBoost: 0.15,
       interestBoost: 0.05,
@@ -152,15 +210,20 @@ export const mapScoresToCareers = (
       educationPathways: [
         "Bachelor's in Design or Fine Arts",
         "Diploma in Graphic Design",
-        "Self-learning with a strong portfolio"
+        "Self-learning with a strong portfolio",
+        "Design bootcamps and specialized courses",
+        "Animation and multimedia design programs"
       ],
-      keySkills: ["Creativity", "Visual Thinking", "Software Proficiency", "Time Management", "Communication"],
+      keySkills: ["Creativity", "Visual Thinking", "Software Proficiency", "Time Management", "Communication", "Attention to Detail"],
       workNature: [
         "Designing logos, illustrations, and layouts",
         "Creating visual elements for digital and print media",
-        "Collaborating with clients and team members"
+        "Collaborating with clients and team members",
+        "Developing branding and identity materials",
+        "Creating user interface designs",
+        "Working with typography and color theory"
       ],
-      gapAnalysis: ["Master additional design software", "Develop UI/UX skills", "Improve client communication"],
+      gapAnalysis: ["Master additional design software", "Develop UI/UX skills", "Improve client communication", "Build a diverse portfolio", "Learn animation and video editing"],
       aptitudeBoost: 0,
       personalityBoost: 0.05,
       interestBoost: 0.25,
@@ -174,15 +237,20 @@ export const mapScoresToCareers = (
       educationPathways: [
         "Bachelor's in Marketing or Business",
         "Communications degree with marketing certification",
-        "Digital marketing certifications and hands-on experience"
+        "Digital marketing certifications and hands-on experience",
+        "MBA with marketing specialization",
+        "Advertising and public relations programs"
       ],
-      keySkills: ["Strategic Thinking", "Creativity", "Communication", "Market Research", "Social Media"],
+      keySkills: ["Strategic Thinking", "Creativity", "Communication", "Market Research", "Social Media", "Data Analysis"],
       workNature: [
         "Developing marketing strategies and campaigns",
         "Managing brand identity across platforms",
-        "Analyzing campaign performance metrics"
+        "Analyzing campaign performance metrics",
+        "Creating content for various marketing channels",
+        "Conducting market research and competitor analysis",
+        "Managing advertising budgets and ROI"
       ],
-      gapAnalysis: ["Enhance data analytics skills", "Develop deeper industry knowledge", "Build content creation expertise"],
+      gapAnalysis: ["Enhance data analytics skills", "Develop deeper industry knowledge", "Build content creation expertise", "Learn SEO and SEM techniques", "Understand consumer psychology"],
       aptitudeBoost: 0.05,
       personalityBoost: 0.15,
       interestBoost: 0.15,
@@ -196,15 +264,20 @@ export const mapScoresToCareers = (
       educationPathways: [
         "Bachelor's in Business or related field",
         "PMP or other project management certification",
-        "Industry-specific degree with project management experience"
+        "Industry-specific degree with project management experience",
+        "MBA with project management focus",
+        "Technical degree with management training"
       ],
-      keySkills: ["Leadership", "Organization", "Communication", "Problem Solving", "Risk Management"],
+      keySkills: ["Leadership", "Organization", "Communication", "Problem Solving", "Risk Management", "Negotiation"],
       workNature: [
         "Planning and defining project scope",
         "Coordinating team members and resources",
-        "Tracking milestones and delivering reports"
+        "Tracking milestones and delivering reports",
+        "Managing project risks and constraints",
+        "Facilitating communication between stakeholders",
+        "Ensuring projects meet quality standards"
       ],
-      gapAnalysis: ["Strengthen technical knowledge", "Develop conflict resolution skills", "Build stakeholder management expertise"],
+      gapAnalysis: ["Strengthen technical knowledge", "Develop conflict resolution skills", "Build stakeholder management expertise", "Learn project management software tools", "Gain experience with different methodologies"],
       aptitudeBoost: 0.1,
       personalityBoost: 0.2,
       interestBoost: 0.05,
@@ -218,16 +291,129 @@ export const mapScoresToCareers = (
       educationPathways: [
         "Business degree or entrepreneurship program",
         "Industry-specific experience and knowledge",
-        "Self-learning and practical experience through ventures"
+        "Self-learning and practical experience through ventures",
+        "Entrepreneurship bootcamps and incubators",
+        "MBA with entrepreneurship focus"
       ],
-      keySkills: ["Risk-Taking", "Decision Making", "Leadership", "Innovation", "Persistence"],
+      keySkills: ["Risk-Taking", "Decision Making", "Leadership", "Innovation", "Persistence", "Sales"],
       workNature: [
         "Identifying and pursuing business opportunities",
         "Building and managing teams",
-        "Securing funding and resources"
+        "Securing funding and resources",
+        "Developing business plans and strategies",
+        "Managing finances and operations",
+        "Marketing and selling products or services"
       ],
-      gapAnalysis: ["Develop financial management skills", "Build industry network", "Enhance marketing knowledge"],
+      gapAnalysis: ["Develop financial management skills", "Build industry network", "Enhance marketing knowledge", "Learn risk assessment techniques", "Improve leadership capabilities"],
       aptitudeBoost: 0.1,
+      personalityBoost: 0.1,
+      interestBoost: 0.2,
+      styleFit: ["creative", "practical"]
+    },
+    {
+      careerTitle: "Clinical Psychologist",
+      threshold: 72,
+      suitabilityFactor: 0.95,
+      careerDescription: "Diagnoses and treats mental, emotional, and behavioral disorders through observation, assessment, and therapy.",
+      educationPathways: [
+        "Bachelor's in Psychology followed by M.Phil in Clinical Psychology",
+        "MA/M.Sc in Psychology with clinical specialization",
+        "Doctorate in Clinical Psychology (Ph.D. or Psy.D)",
+        "RCI registered course in Clinical Psychology",
+        "Specialized training in therapeutic approaches"
+      ],
+      keySkills: ["Empathy", "Active Listening", "Critical Thinking", "Assessment", "Communication", "Emotional Intelligence"],
+      workNature: [
+        "Conducting psychological assessments and evaluations",
+        "Providing therapy and counseling to individuals and groups",
+        "Developing treatment plans for clients",
+        "Collaborating with healthcare professionals",
+        "Maintaining detailed client records",
+        "Conducting research in clinical psychology"
+      ],
+      gapAnalysis: ["Develop deeper understanding of therapeutic approaches", "Build experience with diverse populations", "Strengthen assessment techniques", "Enhance research methodology knowledge", "Cultivate self-care practices"],
+      aptitudeBoost: 0.05,
+      personalityBoost: 0.25,
+      interestBoost: 0.15,
+      styleFit: ["reflective", "analytical"]
+    },
+    {
+      careerTitle: "Financial Analyst",
+      threshold: 70,
+      suitabilityFactor: 0.92,
+      careerDescription: "Evaluates financial data and market trends to help businesses and individuals make investment decisions.",
+      educationPathways: [
+        "B.Com/BBA with finance specialization",
+        "MBA in Finance",
+        "Chartered Financial Analyst (CFA) certification",
+        "Master's in Financial Management",
+        "Economics degree with finance courses"
+      ],
+      keySkills: ["Analytical Thinking", "Financial Modeling", "Attention to Detail", "Communication", "Problem Solving", "Technical Proficiency"],
+      workNature: [
+        "Analyzing financial statements and data",
+        "Creating financial models and forecasts",
+        "Evaluating investment opportunities",
+        "Preparing reports and presentations",
+        "Monitoring market trends and economic indicators",
+        "Making recommendations to management or clients"
+      ],
+      gapAnalysis: ["Develop advanced Excel skills", "Learn financial software platforms", "Enhance presentation capabilities", "Build industry-specific knowledge", "Understand global economic factors"],
+      aptitudeBoost: 0.2,
+      personalityBoost: 0.05,
+      interestBoost: 0.1,
+      styleFit: ["analytical", "reflective"]
+    },
+    {
+      careerTitle: "Mechanical Engineer",
+      threshold: 68,
+      suitabilityFactor: 0.9,
+      careerDescription: "Designs, develops, builds, and tests mechanical devices, including tools, engines, and machines.",
+      educationPathways: [
+        "B.Tech/B.E. in Mechanical Engineering",
+        "Diploma in Mechanical Engineering followed by B.Tech",
+        "M.Tech with specialization in specific fields",
+        "Mechanical Engineering with certifications in CAD/CAM",
+        "Engineering degree with additional robotics training"
+      ],
+      keySkills: ["Technical Knowledge", "Problem Solving", "Creativity", "Analytical Thinking", "Attention to Detail", "Project Management"],
+      workNature: [
+        "Designing mechanical components and systems",
+        "Creating and analyzing mechanical drawings and specifications",
+        "Testing and evaluating mechanical devices",
+        "Troubleshooting and solving mechanical issues",
+        "Collaborating with cross-functional engineering teams",
+        "Improving existing mechanical designs and systems"
+      ],
+      gapAnalysis: ["Strengthen CAD/CAM skills", "Develop knowledge of new materials", "Learn about manufacturing processes", "Build project management capabilities", "Enhance understanding of automation and robotics"],
+      aptitudeBoost: 0.2,
+      personalityBoost: 0,
+      interestBoost: 0.15,
+      styleFit: ["practical", "analytical"]
+    },
+    {
+      careerTitle: "UI/UX Designer",
+      threshold: 65,
+      suitabilityFactor: 0.9,
+      careerDescription: "Creates user-friendly and visually appealing interfaces for websites, apps, and digital products.",
+      educationPathways: [
+        "Degree in Design, Human-Computer Interaction, or related field",
+        "UI/UX design bootcamps and certification programs",
+        "Self-learning with a strong portfolio",
+        "Graphic design background with UI/UX specialization",
+        "Computer Science degree with design courses"
+      ],
+      keySkills: ["User Empathy", "Visual Design", "Prototyping", "Usability Testing", "Information Architecture", "Collaboration"],
+      workNature: [
+        "Conducting user research and creating user personas",
+        "Designing wireframes, mockups, and prototypes",
+        "Creating user flows and sitemaps",
+        "Collaborating with developers and stakeholders",
+        "Conducting usability testing and gathering feedback",
+        "Iterating designs based on user feedback and data"
+      ],
+      gapAnalysis: ["Learn industry-standard design tools", "Develop user research methodologies", "Build coding knowledge (HTML/CSS)", "Understand accessibility guidelines", "Enhance prototyping skills"],
+      aptitudeBoost: 0.05,
       personalityBoost: 0.1,
       interestBoost: 0.2,
       styleFit: ["creative", "practical"]
@@ -265,16 +451,16 @@ export const mapScoresToCareers = (
     const customGapAnalysis = [...career.gapAnalysis];
     
     // Add score-specific gap analysis items
-    if (aptitudeScore < 70 && ["Software Engineer", "Data Scientist"].includes(career.careerTitle)) {
-      customGapAnalysis.push("Focus on building technical and analytical skills");
+    if (aptitudeScore < 70 && ["Software Engineer", "Data Scientist", "Mechanical Engineer"].includes(career.careerTitle)) {
+      customGapAnalysis.push("Focus on building technical and analytical skills through structured learning and practice problems");
     }
     
-    if (personalityScore < 70 && ["Medical Doctor", "Marketing Specialist"].includes(career.careerTitle)) {
-      customGapAnalysis.push("Develop stronger communication and interpersonal skills");
+    if (personalityScore < 70 && ["Medical Doctor", "Clinical Psychologist", "Marketing Specialist"].includes(career.careerTitle)) {
+      customGapAnalysis.push("Develop stronger communication and interpersonal skills through group activities and public speaking practice");
     }
     
-    if (interestScore < 70 && ["Graphic Designer", "Entrepreneur"].includes(career.careerTitle)) {
-      customGapAnalysis.push("Explore creative projects to build portfolio and clarify interests");
+    if (interestScore < 70 && ["Graphic Designer", "UI/UX Designer", "Entrepreneur"].includes(career.careerTitle)) {
+      customGapAnalysis.push("Explore creative projects and hands-on experiences to build portfolio and clarify interests");
     }
     
     return {

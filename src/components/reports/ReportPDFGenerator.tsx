@@ -159,176 +159,442 @@ const ReportPDFGenerator = ({
         throw new Error("Could not generate report content");
       }
       
-      // Create a temporary element to render PDF content
-      const reportElement = document.createElement('div');
-      reportElement.style.width = '750px';
-      reportElement.style.padding = '40px';
-      reportElement.style.position = 'absolute';
-      reportElement.style.left = '-9999px';
-      reportElement.style.fontFamily = 'Arial, sans-serif';
+      // Create PDF with multiple pages
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15; // 15mm margins
+      const contentWidth = pageWidth - (margin * 2);
+      const lineHeight = 7;
       
-      // Add report content
-      reportElement.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #3b82f6; margin-bottom: 10px;">Career Assessment Report</h1>
-          <h2 style="color: #666; font-weight: normal; margin-bottom: 5px;">Prepared for: ${pdfContent.userName}</h2>
-          <p style="color: #666;">Report Date: ${new Date().toLocaleDateString()}</p>
-        </div>
-        
-        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
-          <h2 style="color: #3b82f6; margin-bottom: 15px;">Executive Summary</h2>
-          <p>This comprehensive assessment evaluates your aptitudes, personality traits, interests, and learning style to identify optimal career paths. Based on your responses, we've analyzed your strengths and development areas to provide tailored recommendations.</p>
-          
-          <div style="margin-top: 20px;">
-            <h3 style="color: #3b82f6; margin-bottom: 10px;">Assessment Scores</h3>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-              <div style="flex: 1; padding-right: 10px;">
-                <p><strong>Aptitude:</strong> ${pdfContent.scores.aptitude}%</p>
-                <p><strong>Personality:</strong> ${pdfContent.scores.personality}%</p>
-              </div>
-              <div style="flex: 1; padding-left: 10px;">
-                <p><strong>Interest:</strong> ${pdfContent.scores.interest}%</p>
-                <p><strong>Learning Style:</strong> ${pdfContent.scores.learningStyle}%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
-          <h2 style="color: #3b82f6; margin-bottom: 15px;">Top Career Recommendation</h2>
-          <h3 style="margin-bottom: 5px;">${pdfContent.topCareerPath.title} - ${pdfContent.topCareerPath.match}% Match</h3>
-          <p style="margin-bottom: 15px;">${pdfContent.topCareerPath.description}</p>
-          
-          <div style="margin-top: 15px;">
-            <h4 style="color: #3b82f6; margin-bottom: 5px;">Key Skills Required:</h4>
-            <ul>
-              ${pdfContent.topCareerPath.keySkills.map(skill => `<li>${skill}</li>`).join('')}
-            </ul>
-          </div>
-          
-          <div style="margin-top: 15px;">
-            <h4 style="color: #3b82f6; margin-bottom: 5px;">Education Pathways:</h4>
-            <ul>
-              ${pdfContent.topCareerPath.educationPathways.map(path => `<li>${path}</li>`).join('')}
-            </ul>
-          </div>
-        </div>
-        
-        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
-          <h2 style="color: #3b82f6; margin-bottom: 15px;">Strength & Development Areas</h2>
-          
-          <div style="margin-bottom: 15px;">
-            <h4 style="color: #22c55e; margin-bottom: 5px;">Strength Areas:</h4>
-            <ul>
-              ${pdfContent.strengthAreas.map(strength => `<li>${strength}</li>`).join('')}
-            </ul>
-          </div>
-          
-          <div>
-            <h4 style="color: #f97316; margin-bottom: 5px;">Development Areas:</h4>
-            <ul>
-              ${pdfContent.developmentAreas.map(area => `<li>${area}</li>`).join('')}
-            </ul>
-          </div>
-        </div>
-        
-        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
-          <h2 style="color: #3b82f6; margin-bottom: 15px;">Alternative Career Paths</h2>
-          
-          ${pdfContent.otherCareers.map(career => `
-            <div style="margin-bottom: 20px;">
-              <h3 style="margin-bottom: 5px;">${career.title} - ${career.match}% Match</h3>
-              <p style="margin-bottom: 10px;">${career.description}</p>
-              <div>
-                <strong>Key Skills:</strong> ${career.keySkills.join(', ')}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
-          <h2 style="color: #3b82f6; margin-bottom: 15px;">Personalized Action Plan</h2>
-          
-          <div style="margin-bottom: 15px;">
-            <h4 style="color: #3b82f6; margin-bottom: 5px;">Short-Term (3-6 months):</h4>
-            <ul>
-              ${pdfContent.recommendations.shortTerm.map(rec => `<li>${rec}</li>`).join('')}
-            </ul>
-          </div>
-          
-          <div style="margin-bottom: 15px;">
-            <h4 style="color: #3b82f6; margin-bottom: 5px;">Medium-Term (6-12 months):</h4>
-            <ul>
-              ${pdfContent.recommendations.mediumTerm.map(rec => `<li>${rec}</li>`).join('')}
-            </ul>
-          </div>
-          
-          <div>
-            <h4 style="color: #3b82f6; margin-bottom: 5px;">Long-Term (1-3 years):</h4>
-            <ul>
-              ${pdfContent.recommendations.longTerm.map(rec => `<li>${rec}</li>`).join('')}
-            </ul>
-          </div>
-        </div>
-        
-        <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
-          <p>This report is based on your assessment responses and provides personalized career guidance.</p>
-          <p>Report ID: ${pdfContent.reportId}</p>
-        </div>
-      `;
+      // Helper function to add page
+      const addNewPage = () => {
+        pdf.addPage();
+        return margin; // Return starting Y position
+      };
       
-      document.body.appendChild(reportElement);
+      // Helper function for text wrapping
+      const addWrappedText = (text, x, y, maxWidth, lineHeight) => {
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        for (let i = 0; i < lines.length; i++) {
+          pdf.text(lines[i], x, y + (i * lineHeight));
+        }
+        return y + (lines.length * lineHeight);
+      };
       
-      try {
-        // Generate PDF from the HTML element
-        const canvas = await html2canvas(reportElement, {
-          scale: 1,
-          useCORS: true,
-          logging: false
+      // Function to add section header
+      const addSectionHeader = (title, y) => {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        pdf.setTextColor(59, 130, 246); // #3b82f6 - Blue color
+        pdf.text(title, margin, y);
+        pdf.setLineWidth(0.5);
+        pdf.setDrawColor(59, 130, 246);
+        pdf.line(margin, y + 1, pageWidth - margin, y + 1);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        return y + 8; // Return next position
+      };
+      
+      // === PAGE 1: Cover Page ===
+      // Header
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(22);
+      pdf.setTextColor(59, 130, 246); // Blue color
+      pdf.text('Career Assessment Report', pageWidth/2, 30, { align: 'center' });
+      
+      // Subtitle
+      pdf.setFontSize(14);
+      pdf.text('For Classes 11-12', pageWidth/2, 40, { align: 'center' });
+      
+      // User info
+      pdf.setFontSize(14);
+      pdf.setTextColor(0);
+      pdf.text(`Prepared for: ${pdfContent.userName}`, pageWidth/2, 60, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text(`Report Date: ${new Date().toLocaleDateString()}`, pageWidth/2, 70, { align: 'center' });
+      
+      // Logo placeholder (you could add a logo image here)
+      pdf.setFillColor(240, 240, 240);
+      pdf.roundedRect(pageWidth/2 - 25, 85, 50, 50, 2, 2, 'F');
+      pdf.setFontSize(10);
+      pdf.text('Career Analysis', pageWidth/2, 115, { align: 'center' });
+      
+      // Report description
+      pdf.setFontSize(12);
+      let yPos = 150;
+      pdf.text("This report provides a comprehensive analysis of your aptitudes, personality traits, interests, and learning style to identify optimal career paths aligned with your unique profile.", margin, yPos, { maxWidth: contentWidth });
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text(`Report ID: ${pdfContent.reportId}`, margin, pageHeight - 10);
+      pdf.text('Page 1 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // === PAGE 2: Executive Summary ===
+      pdf.addPage();
+      yPos = margin;
+      
+      // Page title
+      yPos = addSectionHeader('Executive Summary', yPos);
+      
+      // Assessment Scores
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Assessment Scores', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      // Score table
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setFillColor(245, 245, 245);
+      pdf.rect(margin, yPos, contentWidth, 30, 'FD');
+      
+      const scoreTableX = margin + 5;
+      pdf.text(`Aptitude: ${pdfContent.scores.aptitude}%`, scoreTableX, yPos + 7);
+      pdf.text(`Personality: ${pdfContent.scores.personality}%`, scoreTableX, yPos + 15);
+      pdf.text(`Interest: ${pdfContent.scores.interest}%`, scoreTableX + contentWidth/2, yPos + 7);
+      pdf.text(`Learning Style: ${pdfContent.scores.learningStyle}%`, scoreTableX + contentWidth/2, yPos + 15);
+      
+      yPos += 40;
+      
+      // Strengths & Development Areas
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Key Strengths', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.strengthAreas.forEach((strength, index) => {
+        pdf.text(`• ${strength}`, margin + 5, yPos);
+        yPos += 7;
+        
+        // Check if we need a new page
+        if (yPos > pageHeight - margin && index < pdfContent.strengthAreas.length - 1) {
+          yPos = addNewPage();
+        }
+      });
+      
+      yPos += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Development Areas', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.developmentAreas.forEach((area, index) => {
+        pdf.text(`• ${area}`, margin + 5, yPos);
+        yPos += 7;
+        
+        // Check if we need a new page
+        if (yPos > pageHeight - margin && index < pdfContent.developmentAreas.length - 1) {
+          yPos = addNewPage();
+        }
+      });
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Page 2 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // === PAGE 3: Top Career Recommendation ===
+      pdf.addPage();
+      yPos = margin;
+      
+      // Page title
+      yPos = addSectionHeader('Top Career Recommendation', yPos);
+      
+      // Career Title and Match
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.text(pdfContent.topCareerPath.title, margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(12);
+      pdf.setTextColor(34, 197, 94); // Green color
+      pdf.text(`${pdfContent.topCareerPath.match}% Match`, margin + contentWidth - 30, yPos);
+      pdf.setTextColor(0);
+      
+      yPos += 10;
+      
+      // Career Description
+      pdf.setFontSize(10);
+      yPos = addWrappedText(pdfContent.topCareerPath.description, margin, yPos, contentWidth, lineHeight);
+      
+      yPos += 10;
+      
+      // Key Skills
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Key Skills Required', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.topCareerPath.keySkills.forEach((skill, index) => {
+        pdf.text(`• ${skill}`, margin + 5, yPos);
+        yPos += 7;
+        
+        // Check if we need a new page
+        if (yPos > pageHeight - margin && index < pdfContent.topCareerPath.keySkills.length - 1) {
+          yPos = addNewPage();
+        }
+      });
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Page 3 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // === PAGE 4: Education Pathways ===
+      pdf.addPage();
+      yPos = margin;
+      
+      // Page title
+      yPos = addSectionHeader('Education Pathways', yPos);
+      
+      // Education Pathways
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text(`Education Pathways for ${pdfContent.topCareerPath.title}`, margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.topCareerPath.educationPathways.forEach((path, index) => {
+        pdf.text(`${index + 1}. ${path}`, margin + 5, yPos);
+        yPos += 10;
+        
+        // Check if we need a new page
+        if (yPos > pageHeight - margin && index < pdfContent.topCareerPath.educationPathways.length - 1) {
+          yPos = addNewPage();
+        }
+      });
+      
+      yPos += 10;
+      
+      // Work Nature
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Work Responsibilities', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.topCareerPath.workNature.forEach((work, index) => {
+        pdf.text(`• ${work}`, margin + 5, yPos);
+        yPos += 10;
+        
+        // Check if we need a new page
+        if (yPos > pageHeight - margin && index < pdfContent.topCareerPath.workNature.length - 1) {
+          yPos = addNewPage();
+        }
+      });
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Page 4 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // === PAGE 5: Alternative Career Paths ===
+      pdf.addPage();
+      yPos = margin;
+      
+      // Page title
+      yPos = addSectionHeader('Alternative Career Paths', yPos);
+      
+      // Alternative Careers
+      pdfContent.otherCareers.forEach((career, index) => {
+        // Check if we need a new page
+        if (yPos > pageHeight - 50) {
+          yPos = addNewPage();
+          yPos = addSectionHeader('Alternative Career Paths (Continued)', yPos);
+        }
+        
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
+        pdf.text(`${career.title} - ${career.match}% Match`, margin, yPos);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        yPos += 7;
+        
+        yPos = addWrappedText(career.description, margin + 5, yPos, contentWidth - 10, lineHeight);
+        yPos += 5;
+        
+        pdf.text(`Key Skills: ${career.keySkills.join(', ')}`, margin + 5, yPos);
+        yPos += 15; // Extra space between careers
+      });
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Page 5 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // === PAGE 6: Gap Analysis ===
+      pdf.addPage();
+      yPos = margin;
+      
+      // Page title
+      yPos = addSectionHeader('Gap Analysis & Development Plan', yPos);
+      
+      // Gap Analysis
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Areas for Development', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.gapAnalysis.forEach((gap, index) => {
+        pdf.text(`• ${gap}`, margin + 5, yPos);
+        yPos += 10;
+        
+        // Check if we need a new page
+        if (yPos > pageHeight - margin && index < pdfContent.gapAnalysis.length - 1) {
+          yPos = addNewPage();
+        }
+      });
+      
+      yPos += 10;
+      
+      // Learning Style
+      if (pdfContent.personalization.learningPreferences.length > 0) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
+        pdf.text('Your Learning Preferences', margin, yPos);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        yPos += 7;
+        
+        pdfContent.personalization.learningPreferences.forEach(style => {
+          pdf.text(`• ${style}`, margin + 5, yPos);
+          yPos += 7;
         });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-        const imgX = (pdfWidth - imgWidth * ratio) / 2;
-        
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-        heightLeft -= pdfHeight;
-        
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-          heightLeft -= pdfHeight;
-        }
-        
-        // Save the PDF
-        pdf.save(`CareerAssessment_${userName.replace(/\s+/g, '_')}_${reportId.slice(0, 8)}.pdf`);
-        
-        toast.success('Career assessment report generated successfully!');
-        
-        // Store report generation record in Supabase
-        const { error } = await supabase
-          .from('user_assessments')
-          .update({ 
-            report_generated_at: new Date().toISOString()
-          })
-          .eq('id', reportId);
-        
-        if (error) {
-          console.error('Error updating report generation status:', error);
-        }
-      } finally {
-        // Clean up the temporary element
-        if (reportElement && reportElement.parentNode) {
-          reportElement.parentNode.removeChild(reportElement);
-        }
+      }
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Page 6 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // === PAGE 7: Action Plan ===
+      pdf.addPage();
+      yPos = margin;
+      
+      // Page title
+      yPos = addSectionHeader('Personalized Action Plan', yPos);
+      
+      // Short Term
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Short-Term (3-6 months)', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.recommendations.shortTerm.forEach((rec, index) => {
+        pdf.text(`${index + 1}. ${rec}`, margin + 5, yPos);
+        yPos += 10;
+      });
+      
+      yPos += 5;
+      
+      // Medium Term
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Medium-Term (6-12 months)', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.recommendations.mediumTerm.forEach((rec, index) => {
+        pdf.text(`${index + 1}. ${rec}`, margin + 5, yPos);
+        yPos += 10;
+      });
+      
+      yPos += 5;
+      
+      // Long Term
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Long-Term (1-3 years)', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdfContent.recommendations.longTerm.forEach((rec, index) => {
+        pdf.text(`${index + 1}. ${rec}`, margin + 5, yPos);
+        yPos += 10;
+      });
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Page 7 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // === PAGE 8: Conclusion ===
+      pdf.addPage();
+      yPos = margin;
+      
+      // Page title
+      yPos = addSectionHeader('Conclusion', yPos);
+      
+      // Conclusion text
+      pdf.setFontSize(10);
+      let conclusionText = "This career assessment report is designed to guide you in making informed decisions about your educational and career path. The insights provided are based on your responses to the assessment questions, which measured your aptitudes, personality traits, interests, and learning preferences.";
+      yPos = addWrappedText(conclusionText, margin, yPos, contentWidth, lineHeight);
+      yPos += 10;
+      
+      conclusionText = "Remember that this report is a tool to help you explore possibilities that align with your strengths and preferences. Your career journey is unique, and this report serves as a starting point for further exploration and development.";
+      yPos = addWrappedText(conclusionText, margin, yPos, contentWidth, lineHeight);
+      yPos += 10;
+      
+      conclusionText = "We recommend discussing these results with your teachers, career counselors, or mentors who can provide additional guidance specific to your situation and goals.";
+      yPos = addWrappedText(conclusionText, margin, yPos, contentWidth, lineHeight);
+      yPos += 15;
+      
+      // Next Steps
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Next Steps', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      pdf.text('1. Research the recommended career paths in more detail', margin + 5, yPos); yPos += 7;
+      pdf.text('2. Speak with professionals in your field of interest', margin + 5, yPos); yPos += 7;
+      pdf.text('3. Explore educational institutions offering relevant programs', margin + 5, yPos); yPos += 7;
+      pdf.text('4. Develop a personal plan to address identified gaps', margin + 5, yPos); yPos += 7;
+      pdf.text('5. Consider shadowing or internship opportunities', margin + 5, yPos); yPos += 7;
+      
+      // Certificate
+      yPos += 20;
+      pdf.setFillColor(245, 245, 245);
+      pdf.rect(margin, yPos, contentWidth, 40, 'F');
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text('Career Assessment Certificate', pageWidth/2, yPos + 15, { align: 'center' });
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text(`This certifies that ${pdfContent.userName} has completed the Career Analysis Assessment`, pageWidth/2, yPos + 25, { align: 'center' });
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Page 8 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      
+      // Save the PDF
+      pdf.save(`CareerAssessment_${userName.replace(/\s+/g, '_')}_${reportId.slice(0, 8)}.pdf`);
+      
+      toast.success('Career assessment report generated successfully!');
+      
+      // Store report generation record in Supabase
+      const { error } = await supabase
+        .from('user_assessments')
+        .update({ 
+          report_generated_at: new Date().toISOString()
+        })
+        .eq('id', reportId);
+      
+      if (error) {
+        console.error('Error updating report generation status:', error);
       }
       
     } catch (error: any) {

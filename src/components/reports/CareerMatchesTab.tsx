@@ -33,6 +33,7 @@ const CareerMatchesTab = ({
   const { user } = useAuth();
   const [careerResults, setCareerResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [careerAreas, setCareerAreas] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCareerData = async () => {
@@ -53,6 +54,7 @@ const CareerMatchesTab = ({
         if (data && data.scores) {
           // Extract career recommendations
           let recommendations: CareerRecommendation[] = [];
+          let careerAreaRecommendations: string[] = [];
           
           if (typeof data.scores === 'object' && data.scores !== null) {
             // Extract career recommendations from scores
@@ -60,6 +62,25 @@ const CareerMatchesTab = ({
             recommendations = Array.isArray(scoresObj.careerRecommendations) 
               ? scoresObj.careerRecommendations as CareerRecommendation[]
               : [];
+              
+            // Extract career area recommendations if available
+            if (scoresObj.analysisInsights && scoresObj.analysisInsights.careerAreaRecommendations) {
+              careerAreaRecommendations = scoresObj.analysisInsights.careerAreaRecommendations;
+            } else {
+              // Fallback career areas based on top careers
+              careerAreaRecommendations = recommendations.slice(0, 3).map(career => {
+                if (career.careerTitle.includes("Engineer") || career.careerTitle.includes("Data")) 
+                  return "Technology & Engineering";
+                else if (career.careerTitle.includes("Design")) 
+                  return "Design & Creative Arts";
+                else if (career.careerTitle.includes("Doctor") || career.careerTitle.includes("Psychologist"))
+                  return "Healthcare & Medicine";
+                else if (career.careerTitle.includes("Analyst") || career.careerTitle.includes("Financial"))
+                  return "Business & Finance";
+                else
+                  return "Professional Services";
+              });
+            }
           }
           
           // Map career recommendations to the format expected by CareerResultCard
@@ -70,13 +91,16 @@ const CareerMatchesTab = ({
             description: career.careerDescription,
             skills: career.keySkills,
             educationPathways: career.educationPathways || [],
-            workNature: career.workNature || []
+            workNature: career.workNature || [],
+            gapAnalysis: career.gapAnalysis || []
           }));
           
           setCareerResults(mappedCareers);
+          setCareerAreas([...new Set(careerAreaRecommendations)]);
         } else {
           // Use fallback data if no career recommendations found
           setCareerResults([]);
+          setCareerAreas(["Technology", "Business", "Creative Arts"]);
         }
       } catch (error: any) {
         console.error('Error fetching career data:', error);
@@ -105,29 +129,43 @@ const CareerMatchesTab = ({
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-8">
-      <div className="md:col-span-6 lg:col-span-5 space-y-6">
-        <div className="grid gap-6 sm:grid-cols-2">
-          {careerResults.map((career, index) => (
-            <CareerResultCard
-              key={career.id}
-              title={career.title}
-              matchPercentage={career.matchPercentage}
-              description={career.description}
-              skills={career.skills}
-              isPrimary={index === 0}
-              reportId={reportId}
-              educationPathways={career.educationPathways}
-              workNature={career.workNature}
-            />
+    <div className="space-y-6">
+      {/* Career Areas Section */}
+      <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+        <h3 className="text-lg font-medium mb-3">Recommended Career Fields</h3>
+        <div className="flex flex-wrap gap-2">
+          {careerAreas.map((area, index) => (
+            <div key={index} className="px-3 py-1.5 bg-primary/10 text-primary-foreground rounded-full text-sm">
+              {area}
+            </div>
           ))}
         </div>
       </div>
-      <div className="md:col-span-2 lg:col-span-3">
-        <CareerInsightsCard 
-          strengthAreas={strengthAreas}
-          developmentAreas={developmentAreas}
-        />
+      
+      <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-8">
+        <div className="md:col-span-6 lg:col-span-5 space-y-6">
+          <div className="grid gap-6 sm:grid-cols-2">
+            {careerResults.map((career, index) => (
+              <CareerResultCard
+                key={career.id}
+                title={career.title}
+                matchPercentage={career.matchPercentage}
+                description={career.description}
+                skills={career.skills}
+                isPrimary={index === 0}
+                reportId={reportId}
+                educationPathways={career.educationPathways}
+                workNature={career.workNature}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="md:col-span-2 lg:col-span-3">
+          <CareerInsightsCard 
+            strengthAreas={strengthAreas}
+            developmentAreas={developmentAreas}
+          />
+        </div>
       </div>
     </div>
   );
