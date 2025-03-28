@@ -38,6 +38,7 @@ export type Database = {
           assessment_id: string
           completed_at: string | null
           id: string
+          report_generated_at: string | null
           responses: Json
           scores: Json
           user_id: string
@@ -46,6 +47,7 @@ export type Database = {
           assessment_id: string
           completed_at?: string | null
           id?: string
+          report_generated_at?: string | null
           responses: Json
           scores: Json
           user_id: string
@@ -54,6 +56,7 @@ export type Database = {
           assessment_id?: string
           completed_at?: string | null
           id?: string
+          report_generated_at?: string | null
           responses?: Json
           scores?: Json
           user_id?: string
@@ -65,7 +68,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_assessment_with_profile: {
+        Args: {
+          input_assessment_id: string
+        }
+        Returns: {
+          id: string
+          user_id: string
+          assessment_id: string
+          completed_at: string
+          responses: Json
+          scores: Json
+          report_generated_at: string
+          first_name: string
+          last_name: string
+          email: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

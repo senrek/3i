@@ -9,6 +9,8 @@ import CareerInsightsCard from '@/components/reports/CareerInsightsCard';
 interface CareerMatchesTabProps {
   reportId: string;
   responses?: Record<string, string> | null;
+  strengthAreas?: string[];
+  developmentAreas?: string[];
 }
 
 // Define interface for the career recommendation structure
@@ -22,17 +24,15 @@ interface CareerRecommendation {
   gapAnalysis?: string[];
 }
 
-const CareerMatchesTab = ({ reportId, responses }: CareerMatchesTabProps) => {
+const CareerMatchesTab = ({ 
+  reportId, 
+  responses,
+  strengthAreas = ['Problem Solving', 'Critical Thinking', 'Adaptability'],
+  developmentAreas = ['Technical Skills', 'Leadership', 'Time Management']
+}: CareerMatchesTabProps) => {
   const { user } = useAuth();
   const [careerResults, setCareerResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [insightsData, setInsightsData] = useState<{
-    strengthAreas: string[];
-    developmentAreas: string[];
-  }>({
-    strengthAreas: [],
-    developmentAreas: [],
-  });
 
   useEffect(() => {
     const fetchCareerData = async () => {
@@ -53,11 +53,6 @@ const CareerMatchesTab = ({ reportId, responses }: CareerMatchesTabProps) => {
         if (data && data.scores) {
           // Extract career recommendations
           let recommendations: CareerRecommendation[] = [];
-          const userResponses = data.responses as Record<string, string> || {};
-          
-          // Generate insights based on responses
-          const strengths: string[] = [];
-          const developments: string[] = [];
           
           if (typeof data.scores === 'object' && data.scores !== null) {
             // Extract career recommendations from scores
@@ -65,55 +60,6 @@ const CareerMatchesTab = ({ reportId, responses }: CareerMatchesTabProps) => {
             recommendations = Array.isArray(scoresObj.careerRecommendations) 
               ? scoresObj.careerRecommendations as CareerRecommendation[]
               : [];
-              
-            // Process responses to determine strength and development areas
-            if (Object.keys(userResponses).length > 0) {
-              // Count of A and B answers (high scores) for different categories
-              let aptitudeHighCount = 0;
-              let personalityHighCount = 0;
-              let interestHighCount = 0;
-              let learningHighCount = 0;
-              
-              // Process responses to generate insights
-              Object.entries(userResponses).forEach(([questionId, answer]) => {
-                // Simple logic to determine strengths based on question categories and answers
-                if (questionId.startsWith('apt_') && (answer === 'A' || answer === 'B')) {
-                  aptitudeHighCount++;
-                }
-                if (questionId.startsWith('per_') && (answer === 'A' || answer === 'B')) {
-                  personalityHighCount++;
-                }
-                if (questionId.startsWith('int_') && (answer === 'A' || answer === 'B')) {
-                  interestHighCount++;
-                }
-                if (questionId.startsWith('lrn_') && (answer === 'A' || answer === 'B')) {
-                  learningHighCount++;
-                }
-              });
-              
-              // Determine strengths based on answer patterns
-              if (aptitudeHighCount > 5) strengths.push('Analytical Thinking');
-              if (aptitudeHighCount > 7) strengths.push('Problem Solving');
-              if (personalityHighCount > 5) strengths.push('Communication Skills');
-              if (personalityHighCount > 7) strengths.push('Emotional Intelligence');
-              if (interestHighCount > 5) strengths.push('Creativity');
-              if (learningHighCount > 5) strengths.push('Adaptability');
-              
-              // Determine development areas
-              if (aptitudeHighCount < 4) developments.push('Analytical Reasoning');
-              if (personalityHighCount < 4) developments.push('Interpersonal Skills');
-              if (interestHighCount < 4) developments.push('Career Exploration');
-              if (learningHighCount < 4) developments.push('Learning Methodology');
-            }
-          }
-          
-          // Ensure we have some default values if analysis is inconclusive
-          if (strengths.length === 0) {
-            strengths.push('Self-Motivation', 'Persistence');
-          }
-          
-          if (developments.length === 0) {
-            developments.push('Strategic Planning', 'Technical Skills');
           }
           
           // Map career recommendations to the format expected by CareerResultCard
@@ -128,10 +74,6 @@ const CareerMatchesTab = ({ reportId, responses }: CareerMatchesTabProps) => {
           }));
           
           setCareerResults(mappedCareers);
-          setInsightsData({
-            strengthAreas: strengths,
-            developmentAreas: developments
-          });
         } else {
           // Use fallback data if no career recommendations found
           setCareerResults([]);
@@ -183,8 +125,8 @@ const CareerMatchesTab = ({ reportId, responses }: CareerMatchesTabProps) => {
       </div>
       <div className="md:col-span-2 lg:col-span-3">
         <CareerInsightsCard 
-          strengthAreas={insightsData.strengthAreas}
-          developmentAreas={insightsData.developmentAreas}
+          strengthAreas={strengthAreas}
+          developmentAreas={developmentAreas}
         />
       </div>
     </div>

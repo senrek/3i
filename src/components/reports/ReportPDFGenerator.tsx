@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ReportPDFGeneratorProps {
   reportId: string;
@@ -15,21 +17,26 @@ interface ReportPDFGeneratorProps {
     interest: number;
     learningStyle: number;
     careerRecommendations: any[];
+    analysisInsights?: any;
   } | null;
   responses?: Record<string, string> | null;
+  strengthAreas?: string[];
+  developmentAreas?: string[];
 }
 
 const ReportPDFGenerator = ({ 
   reportId, 
   userName = 'Student', 
   scores,
-  responses
+  responses,
+  strengthAreas = ['Problem Solving', 'Critical Thinking', 'Adaptability'],
+  developmentAreas = ['Technical Skills', 'Leadership', 'Time Management']
 }: ReportPDFGeneratorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePdfContent = async () => {
     // This would normally be done server-side with a proper PDF generation library
-    // For this demo, we'll simulate creating PDF content for a Supabase Edge Function
+    // For this implementation, we'll create a PDF using client-side libraries
     
     if (!scores) {
       return null;
@@ -40,9 +47,9 @@ const ReportPDFGenerator = ({
     
     // Analyze responses to provide more personalized insights
     const responseInsights = {
-      learningPreferences: [],
-      workStylePreferences: [],
-      personalityTraits: []
+      learningPreferences: [] as string[],
+      workStylePreferences: [] as string[],
+      personalityTraits: [] as string[]
     };
     
     if (responses) {
@@ -90,6 +97,8 @@ const ReportPDFGenerator = ({
         interest: scores.interest,
         learningStyle: scores.learningStyle
       },
+      strengthAreas,
+      developmentAreas,
       topCareerPath: {
         title: topCareer.careerTitle,
         match: topCareer.suitabilityPercentage,
@@ -143,39 +152,183 @@ const ReportPDFGenerator = ({
     setIsGenerating(true);
     
     try {
-      // Generate PDF content
+      // Prepare for PDF generation
       const pdfContent = await generatePdfContent();
       
       if (!pdfContent) {
         throw new Error("Could not generate report content");
       }
       
-      // In a production app, this would call a Supabase Edge Function to generate the PDF
-      // For now, we'll simulate PDF generation with a success message
-      toast.success('Career assessment report generated successfully!');
+      // Create a temporary element to render PDF content
+      const reportElement = document.createElement('div');
+      reportElement.style.width = '750px';
+      reportElement.style.padding = '40px';
+      reportElement.style.position = 'absolute';
+      reportElement.style.left = '-9999px';
+      reportElement.style.fontFamily = 'Arial, sans-serif';
       
-      // Simulate downloading a PDF
-      const element = document.createElement("a");
-      const file = new Blob(
-        [JSON.stringify(pdfContent, null, 2)], 
-        { type: 'application/json' }
-      );
-      element.href = URL.createObjectURL(file);
-      element.download = `CareerAssessment_${userName.replace(/\s+/g, '_')}_${reportId.slice(0, 8)}.json`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      // Add report content
+      reportElement.innerHTML = `
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #3b82f6; margin-bottom: 10px;">Career Assessment Report</h1>
+          <h2 style="color: #666; font-weight: normal; margin-bottom: 5px;">Prepared for: ${pdfContent.userName}</h2>
+          <p style="color: #666;">Report Date: ${new Date().toLocaleDateString()}</p>
+        </div>
+        
+        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+          <h2 style="color: #3b82f6; margin-bottom: 15px;">Executive Summary</h2>
+          <p>This comprehensive assessment evaluates your aptitudes, personality traits, interests, and learning style to identify optimal career paths. Based on your responses, we've analyzed your strengths and development areas to provide tailored recommendations.</p>
+          
+          <div style="margin-top: 20px;">
+            <h3 style="color: #3b82f6; margin-bottom: 10px;">Assessment Scores</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+              <div style="flex: 1; padding-right: 10px;">
+                <p><strong>Aptitude:</strong> ${pdfContent.scores.aptitude}%</p>
+                <p><strong>Personality:</strong> ${pdfContent.scores.personality}%</p>
+              </div>
+              <div style="flex: 1; padding-left: 10px;">
+                <p><strong>Interest:</strong> ${pdfContent.scores.interest}%</p>
+                <p><strong>Learning Style:</strong> ${pdfContent.scores.learningStyle}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+          <h2 style="color: #3b82f6; margin-bottom: 15px;">Top Career Recommendation</h2>
+          <h3 style="margin-bottom: 5px;">${pdfContent.topCareerPath.title} - ${pdfContent.topCareerPath.match}% Match</h3>
+          <p style="margin-bottom: 15px;">${pdfContent.topCareerPath.description}</p>
+          
+          <div style="margin-top: 15px;">
+            <h4 style="color: #3b82f6; margin-bottom: 5px;">Key Skills Required:</h4>
+            <ul>
+              ${pdfContent.topCareerPath.keySkills.map(skill => `<li>${skill}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div style="margin-top: 15px;">
+            <h4 style="color: #3b82f6; margin-bottom: 5px;">Education Pathways:</h4>
+            <ul>
+              ${pdfContent.topCareerPath.educationPathways.map(path => `<li>${path}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+          <h2 style="color: #3b82f6; margin-bottom: 15px;">Strength & Development Areas</h2>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="color: #22c55e; margin-bottom: 5px;">Strength Areas:</h4>
+            <ul>
+              ${pdfContent.strengthAreas.map(strength => `<li>${strength}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div>
+            <h4 style="color: #f97316; margin-bottom: 5px;">Development Areas:</h4>
+            <ul>
+              ${pdfContent.developmentAreas.map(area => `<li>${area}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+          <h2 style="color: #3b82f6; margin-bottom: 15px;">Alternative Career Paths</h2>
+          
+          ${pdfContent.otherCareers.map(career => `
+            <div style="margin-bottom: 20px;">
+              <h3 style="margin-bottom: 5px;">${career.title} - ${career.match}% Match</h3>
+              <p style="margin-bottom: 10px;">${career.description}</p>
+              <div>
+                <strong>Key Skills:</strong> ${career.keySkills.join(', ')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+          <h2 style="color: #3b82f6; margin-bottom: 15px;">Personalized Action Plan</h2>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="color: #3b82f6; margin-bottom: 5px;">Short-Term (3-6 months):</h4>
+            <ul>
+              ${pdfContent.recommendations.shortTerm.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <h4 style="color: #3b82f6; margin-bottom: 5px;">Medium-Term (6-12 months):</h4>
+            <ul>
+              ${pdfContent.recommendations.mediumTerm.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div>
+            <h4 style="color: #3b82f6; margin-bottom: 5px;">Long-Term (1-3 years):</h4>
+            <ul>
+              ${pdfContent.recommendations.longTerm.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+          <p>This report is based on your assessment responses and provides personalized career guidance.</p>
+          <p>Report ID: ${pdfContent.reportId}</p>
+        </div>
+      `;
       
-      // Store report generation record in Supabase
-      const { error } = await supabase
-        .from('user_assessments')
-        .update({ 
-          report_generated_at: new Date().toISOString()
-        })
-        .eq('id', reportId);
+      document.body.appendChild(reportElement);
       
-      if (error) {
-        console.error('Error updating report generation status:', error);
+      try {
+        // Generate PDF from the HTML element
+        const canvas = await html2canvas(reportElement, {
+          scale: 1,
+          useCORS: true,
+          logging: false
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
+        heightLeft -= pdfHeight;
+        
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
+          heightLeft -= pdfHeight;
+        }
+        
+        // Save the PDF
+        pdf.save(`CareerAssessment_${userName.replace(/\s+/g, '_')}_${reportId.slice(0, 8)}.pdf`);
+        
+        toast.success('Career assessment report generated successfully!');
+        
+        // Store report generation record in Supabase
+        const { error } = await supabase
+          .from('user_assessments')
+          .update({ 
+            report_generated_at: new Date().toISOString()
+          })
+          .eq('id', reportId);
+        
+        if (error) {
+          console.error('Error updating report generation status:', error);
+        }
+      } finally {
+        // Clean up the temporary element
+        if (reportElement && reportElement.parentNode) {
+          reportElement.parentNode.removeChild(reportElement);
+        }
       }
       
     } catch (error: any) {

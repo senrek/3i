@@ -26,6 +26,12 @@ interface ReportScores {
     workNature: string[];
     gapAnalysis: string[];
   }>;
+  analysisInsights?: {
+    aptitudeStyle?: string;
+    personalityStyle?: string;
+    interestStyle?: string;
+    rawAnalysis?: Record<string, any>;
+  };
 }
 
 interface ReportData {
@@ -36,6 +42,8 @@ interface ReportData {
   userName: string;
   responses: Record<string, string> | null;
   rawResponses: Record<string, any> | null;
+  strengthAreas: string[];
+  developmentAreas: string[];
 }
 
 const ReportsPage = () => {
@@ -73,6 +81,8 @@ const ReportsPage = () => {
           // Ensure scores has the right structure
           let validScores: ReportScores | null = null;
           let responses: Record<string, string> | null = null;
+          let strengthAreas: string[] = [];
+          let developmentAreas: string[] = [];
           
           if (assessment.scores) {
             // Convert from Json to the expected format
@@ -87,7 +97,8 @@ const ReportsPage = () => {
                 learningStyle: typeof scoresObj.learningStyle === 'number' ? scoresObj.learningStyle : 0,
                 careerRecommendations: Array.isArray(scoresObj.careerRecommendations) 
                   ? scoresObj.careerRecommendations 
-                  : []
+                  : [],
+                analysisInsights: scoresObj.analysisInsights || {}
               };
             } catch (e) {
               console.error('Error parsing scores:', e);
@@ -98,6 +109,52 @@ const ReportsPage = () => {
           if (assessment.responses) {
             try {
               responses = assessment.responses as Record<string, string>;
+              
+              // Generate insights based on responses
+              const aptitudeQuestions = Object.entries(responses).filter(([id]) => id.startsWith('apt_'));
+              const personalityQuestions = Object.entries(responses).filter(([id]) => id.startsWith('per_'));
+              const interestQuestions = Object.entries(responses).filter(([id]) => id.startsWith('int_'));
+              
+              // Generate strength areas based on high-scoring answers (A and B)
+              if (aptitudeQuestions.filter(([, val]) => val === 'A' || val === 'B').length > 3) {
+                strengthAreas.push('Analytical Thinking');
+              }
+              if (personalityQuestions.filter(([, val]) => val === 'A' || val === 'B').length > 3) {
+                strengthAreas.push('Communication Skills');
+              }
+              if (interestQuestions.filter(([, val]) => val === 'A' || val === 'B').length > 3) {
+                strengthAreas.push('Creativity');
+              }
+              if (aptitudeQuestions.filter(([, val]) => val === 'A').length > 2) {
+                strengthAreas.push('Problem Solving');
+              }
+              if (personalityQuestions.filter(([, val]) => val === 'A').length > 2) {
+                strengthAreas.push('Leadership');
+              }
+              
+              // Generate development areas based on low-scoring answers (C and D)
+              if (aptitudeQuestions.filter(([, val]) => val === 'C' || val === 'D').length > 2) {
+                developmentAreas.push('Technical Skills');
+              }
+              if (personalityQuestions.filter(([, val]) => val === 'C' || val === 'D').length > 2) {
+                developmentAreas.push('Interpersonal Skills');
+              }
+              if (interestQuestions.filter(([, val]) => val === 'C' || val === 'D').length > 2) {
+                developmentAreas.push('Career Focus');
+              }
+              if (aptitudeQuestions.filter(([, val]) => val === 'D').length > 1) {
+                developmentAreas.push('Critical Thinking');
+              }
+              
+              // Ensure we have at least some default values if nothing is detected
+              if (strengthAreas.length === 0) {
+                strengthAreas = ['Problem Solving', 'Critical Thinking', 'Adaptability'];
+              }
+              
+              if (developmentAreas.length === 0) {
+                developmentAreas = ['Technical Skills', 'Leadership', 'Time Management'];
+              }
+              
             } catch (e) {
               console.error('Error parsing responses:', e);
               responses = null;
@@ -111,7 +168,9 @@ const ReportsPage = () => {
             scores: validScores,
             userName,
             responses,
-            rawResponses: assessment.responses as Record<string, any> || null
+            rawResponses: assessment.responses as Record<string, any> || null,
+            strengthAreas,
+            developmentAreas
           });
         } else {
           setReportData({
@@ -121,7 +180,9 @@ const ReportsPage = () => {
             scores: null,
             userName: user.email || 'User',
             responses: null,
-            rawResponses: null
+            rawResponses: null,
+            strengthAreas: [],
+            developmentAreas: []
           });
         }
       } catch (error: any) {
@@ -134,7 +195,9 @@ const ReportsPage = () => {
           scores: null,
           userName: user.email || 'User',
           responses: null,
-          rawResponses: null
+          rawResponses: null,
+          strengthAreas: [],
+          developmentAreas: []
         });
       } finally {
         setIsLoading(false);
@@ -186,6 +249,8 @@ const ReportsPage = () => {
                 userName={reportData.userName} 
                 scores={reportData.scores}
                 responses={reportData.responses}
+                strengthAreas={reportData.strengthAreas}
+                developmentAreas={reportData.developmentAreas}
               />
               
               <ReportTabs 
@@ -199,6 +264,8 @@ const ReportsPage = () => {
                   { name: 'Problem Solving', value: Math.round(reportData.scores.aptitude * 0.85), fullMark: 100 },
                 ]} 
                 responses={reportData.responses}
+                strengthAreas={reportData.strengthAreas}
+                developmentAreas={reportData.developmentAreas}
               />
             </>
           )}
