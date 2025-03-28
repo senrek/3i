@@ -1,34 +1,28 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, LogOut, Moon, Sun, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-
 interface HeaderProps {
   toggleSidebar?: () => void;
 }
-
-const Header = ({ toggleSidebar }: HeaderProps) => {
-  const { user, logout, isAuthenticated } = useAuth();
+const Header = ({
+  toggleSidebar
+}: HeaderProps) => {
+  const {
+    user,
+    logout,
+    isAuthenticated
+  } = useAuth();
   const location = useLocation();
-
-  return (
-    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-lg">
+  return <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-2">
-          {isAuthenticated && toggleSidebar && (
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}>
+          {isAuthenticated && toggleSidebar && <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}>
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
-            </Button>
-          )}
+            </Button>}
           
           <Link to="/" className="flex items-center gap-2">
             <div className="relative h-8 w-8 overflow-hidden rounded-full bg-primary">
@@ -36,52 +30,29 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
                 C
               </div>
             </div>
-            <span className="hidden text-lg font-semibold sm:inline-block">CareerPath</span>
+            <span className="hidden text-lg font-semibold sm:inline-block">3i</span>
           </Link>
         </div>
 
         <nav className="hidden md:flex items-center space-x-1">
-          <Link 
-            to="/" 
-            className={`${
-              location.pathname === '/' ? 'nav-link nav-link-active' : 'nav-link'
-            }`}
-          >
+          <Link to="/" className={`${location.pathname === '/' ? 'nav-link nav-link-active' : 'nav-link'}`}>
             Home
           </Link>
-          {isAuthenticated && (
-            <>
-              <Link 
-                to="/dashboard" 
-                className={`${
-                  location.pathname === '/dashboard' ? 'nav-link nav-link-active' : 'nav-link'
-                }`}
-              >
+          {isAuthenticated && <>
+              <Link to="/dashboard" className={`${location.pathname === '/dashboard' ? 'nav-link nav-link-active' : 'nav-link'}`}>
                 Dashboard
               </Link>
-              <Link 
-                to="/assessments" 
-                className={`${
-                  location.pathname.includes('/assessments') ? 'nav-link nav-link-active' : 'nav-link'
-                }`}
-              >
+              <Link to="/assessments" className={`${location.pathname.includes('/assessments') ? 'nav-link nav-link-active' : 'nav-link'}`}>
                 Assessments
               </Link>
-              <Link 
-                to="/reports" 
-                className={`${
-                  location.pathname.includes('/reports') ? 'nav-link nav-link-active' : 'nav-link'
-                }`}
-              >
+              <Link to="/reports" className={`${location.pathname.includes('/reports') ? 'nav-link nav-link-active' : 'nav-link'}`}>
                 Reports
               </Link>
-            </>
-          )}
+            </>}
         </nav>
 
         <div className="flex items-center gap-2">
-          {isAuthenticated ? (
-            <DropdownMenu>
+          {isAuthenticated ? <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -104,18 +75,11 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
                   <LogOut className="mr-2 h-4 w-4" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            location.pathname !== '/login' && location.pathname !== '/register' && (
-              <Button asChild size="sm" className="rounded-xl">
+            </DropdownMenu> : location.pathname !== '/login' && location.pathname !== '/register' && <Button asChild size="sm" className="rounded-xl">
                 <Link to="/login">Sign in</Link>
-              </Button>
-            )
-          )}
+              </Button>}
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
