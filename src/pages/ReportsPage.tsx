@@ -9,7 +9,8 @@ import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
 import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
-import { Json } from '@/integrations/supabase/types';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 // Define a proper type for scores
 interface ReportScores {
@@ -52,6 +53,7 @@ const ReportsPage = () => {
   
   const [isLoading, setIsLoading] = useState(true);
   const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch report data from Supabase
   useEffect(() => {
@@ -59,23 +61,34 @@ const ReportsPage = () => {
       if (!user) return;
       
       try {
+        setError(null);
+        console.log("Fetching report data for user:", user.id);
+        
         // Fetch latest assessment for the user
-        const { data: assessments, error } = await supabase
+        const { data: assessments, error: assessmentError } = await supabase
           .from('user_assessments')
-          .select('*, profiles:user_id(first_name, last_name)')
+          .select('*, profiles(first_name, last_name, email)')
           .eq('user_id', user.id)
           .order('completed_at', { ascending: false })
           .limit(1);
         
-        if (error) {
-          throw error;
+        if (assessmentError) {
+          console.error("Error fetching assessments:", assessmentError);
+          throw new Error(`Error fetching assessments: ${assessmentError.message}`);
         }
+        
+        console.log("Fetched assessments:", assessments);
         
         if (assessments && assessments.length > 0) {
           const assessment = assessments[0];
-          const userData = assessment.profiles as any;
-          const userName = userData?.first_name && userData?.last_name 
-            ? `${userData.first_name} ${userData.last_name}` 
+          console.log("Working with assessment:", assessment);
+          
+          // Extract profile data from the joined result
+          const profileData = assessment.profiles;
+          console.log("Profile data:", profileData);
+          
+          const userName = profileData 
+            ? `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || user.email || 'User'
             : user.email || 'User';
           
           // Ensure scores has the right structure
@@ -87,6 +100,7 @@ const ReportsPage = () => {
           if (assessment.scores) {
             // Convert from Json to the expected format
             const scoresObj = assessment.scores as Record<string, any>;
+            console.log("Raw scores:", scoresObj);
             
             // Extract values with proper type checking
             try {
@@ -100,6 +114,7 @@ const ReportsPage = () => {
                   : [],
                 analysisInsights: scoresObj.analysisInsights || {}
               };
+              console.log("Parsed valid scores:", validScores);
             } catch (e) {
               console.error('Error parsing scores:', e);
               validScores = null;
@@ -109,6 +124,7 @@ const ReportsPage = () => {
           if (assessment.responses) {
             try {
               responses = assessment.responses as Record<string, string>;
+              console.log("Responses sample:", Object.keys(responses).slice(0, 3));
               
               // Generate insights based on responses
               const aptitudeQuestions = Object.entries(responses).filter(([id]) => id.startsWith('apt_'));
@@ -155,6 +171,9 @@ const ReportsPage = () => {
                 developmentAreas = ['Technical Skills', 'Leadership', 'Time Management'];
               }
               
+              console.log("Generated strengths:", strengthAreas);
+              console.log("Generated development areas:", developmentAreas);
+              
             } catch (e) {
               console.error('Error parsing responses:', e);
               responses = null;
@@ -172,7 +191,9 @@ const ReportsPage = () => {
             strengthAreas,
             developmentAreas
           });
+          console.log("Report data set successfully");
         } else {
+          console.log("No assessments found for user");
           setReportData({
             id: 'no-assessment',
             completedAt: new Date().toISOString(),
@@ -187,13 +208,17 @@ const ReportsPage = () => {
         }
       } catch (error: any) {
         console.error('Error fetching assessment data:', error);
-        toast.error(`Error loading report data: ${error.message}`);
+        const errorMessage = `Error loading report data: ${error.message}`;
+        setError(errorMessage);
+        toast.error(errorMessage);
+        
+        // Still set default data to prevent UI breaks
         setReportData({
           id: 'error',
           completedAt: new Date().toISOString(),
           assessmentCompleted: false,
           scores: null,
-          userName: user.email || 'User',
+          userName: user?.email || 'User',
           responses: null,
           rawResponses: null,
           strengthAreas: [],
@@ -235,6 +260,14 @@ const ReportsPage = () => {
 
       {isLoading ? (
         <LoadingPlaceholder />
+      ) : error ? (
+        <div className="text-center py-12 space-y-4">
+          <h3 className="text-lg font-medium text-red-600">Error loading report data</h3>
+          <p className="text-muted-foreground">{error}</p>
+          <Button asChild>
+            <Link to="/assessments">Go to Assessments</Link>
+          </Button>
+        </div>
       ) : (
         <>
           <ReportSummaryCard 
@@ -268,6 +301,19 @@ const ReportsPage = () => {
                 developmentAreas={reportData.developmentAreas}
               />
             </>
+          )}
+
+          {!reportData?.assessmentCompleted && (
+            <div className="text-center py-12 space-y-6">
+              <h3 className="text-xl font-medium">No assessment results found</h3>
+              <p className="text-muted-foreground max-w-lg mx-auto">
+                Complete the Career Analysis Assessment to receive personalized career recommendations,
+                skill analysis, and a comprehensive PDF report for your career planning.
+              </p>
+              <Button asChild size="lg" className="mt-4">
+                <Link to="/assessments/career-analysis">Take Assessment Now</Link>
+              </Button>
+            </div>
           )}
         </>
       )}
