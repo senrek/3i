@@ -28,31 +28,59 @@ export const calculateCategoryScore = (
       // For some personality questions, A might indicate one trait, B another
       // We'll use a weighted approach where each answer contributes to the total score
       if (question.id.startsWith('per_')) {
+        // Questions about extraversion/introversion
         if (['per_1', 'per_3', 'per_6'].includes(question.id)) {
-          // Questions about extraversion/introversion
           score += (answer === 'A') ? 3 : 1;
-        } else if (['per_4', 'per_5', 'per_7'].includes(question.id)) {
-          // Questions about thinking/feeling
+        } 
+        // Questions about thinking/feeling
+        else if (['per_20', 'per_21', 'per_23', 'per_24'].includes(question.id)) {
           score += (answer === 'B') ? 3 : 1;
-        } else {
-          // Other personality questions
+        }
+        // Questions about structure/flexibility
+        else if (['per_27', 'per_28', 'per_29'].includes(question.id)) {
+          score += (answer === 'A') ? 3 : 1;
+        }
+        // Other personality questions
+        else {
           score += (answer === 'A') ? 2 : 2; // Equal weight for either choice
         }
         totalPossibleScore += 3;
       }
     }
     else if (question.category === 'interest') {
-      // For interest questions, C (Yes) is most positive
-      if (answer === 'C') score += 3;
-      else if (answer === 'B') score += 1.5;
-      else if (answer === 'A') score += 0;
-      totalPossibleScore += 3;
+      // For standard interest questions (A-D format)
+      if (question.options.length === 4 && 
+          (question.id.startsWith('int_') && Number(question.id.replace(/\D/g, '')) <= 22)) {
+        if (answer === 'A') score += 3;
+        else if (answer === 'B') score += 2;
+        else if (answer === 'C') score += 1;
+        else if (answer === 'D') score += 0;
+        totalPossibleScore += 3;
+      }
+      // For interest questions with Yes/Not sure/No format
+      else if (question.options.length === 3) {
+        if (answer === 'C') score += 3;      // Yes
+        else if (answer === 'B') score += 1.5; // Not sure
+        else if (answer === 'A') score += 0;   // No
+        totalPossibleScore += 3;
+      }
+      else {
+        // Default for other interest questions
+        if (answer === 'A') score += 3;
+        else if (answer === 'B') score += 2;
+        else if (answer === 'C') score += 1;
+        else if (answer === 'D') score += 0;
+        totalPossibleScore += 3;
+      }
     }
     else if (question.category === 'learning-style') {
-      // For learning style, all answers contribute to understanding the style
-      // All answers are valid, but we'll score for consistency
-      score += 2; // All responses are valid and contribute equally
-      totalPossibleScore += 2;
+      // Learning style questions help identify preferred learning methods
+      // rather than scoring high or low
+      // We'll weight answers to get a score that reflects engagement with learning
+      if (answer === 'A' || answer === 'D') score += 2.5; // Visual or Reading/Writing
+      else if (answer === 'B') score += 2;              // Auditory
+      else if (answer === 'C') score += 3;              // Kinesthetic/hands-on
+      totalPossibleScore += 3;
     }
     else {
       // Default scoring for any other category
@@ -90,14 +118,13 @@ export const mapScoresToCareers = (
   gapAnalysis: string[];
 }[] => {
   // Create a weighted score incorporating all elements
-  const weightedScore = (aptitudeScore * 0.4) + (personalityScore * 0.25) + (interestScore * 0.25) + (learningStyleScore * 0.1);
+  const weightedScore = (aptitudeScore * 0.35) + (personalityScore * 0.25) + (interestScore * 0.30) + (learningStyleScore * 0.10);
   
   // Enhanced career database with more appropriate education pathways
   const careers = [
     {
       careerTitle: "Software Engineer",
-      threshold: 80,
-      suitabilityFactor: 1.1,
+      baseScore: 70,
       careerDescription: "Develops software applications and systems using programming languages and tools.",
       educationPathways: [
         "B.Tech/B.E. in Computer Science or IT",
@@ -116,15 +143,18 @@ export const mapScoresToCareers = (
         "Implementing security and data protection measures"
       ],
       gapAnalysis: ["Enhance technical skills", "Develop communication abilities", "Build project portfolio", "Learn version control systems", "Understand software development lifecycle"],
-      aptitudeBoost: 0.2,  // Boost factors for different career types based on assessment areas
-      personalityBoost: 0,
-      interestBoost: 0.1,
-      styleFit: ["analytical", "practical"]
+      techFocus: 0.25,  // Aptitude weighting factors for different career types
+      creativeNeeds: 0.05,
+      analyticalNeeds: 0.20,
+      socialNeeds: 0.05,
+      leadershipNeeds: 0.05,
+      personalityFit: ['structured', 'detail-oriented', 'problem-solver'],
+      interestFit: ['technology', 'innovation', 'logic'],
+      learningStylePreference: ['visual', 'reading/writing']
     },
     {
       careerTitle: "Data Scientist",
-      threshold: 75,
-      suitabilityFactor: 1.05,
+      baseScore: 65,
       careerDescription: "Analyzes and interprets complex data to help organizations make better decisions.",
       educationPathways: [
         "B.Tech/B.E. in Computer Science with Data Science specialization",
@@ -143,15 +173,18 @@ export const mapScoresToCareers = (
         "Creating data visualization dashboards"
       ],
       gapAnalysis: ["Strengthen mathematical foundation", "Learn additional programming languages", "Develop domain expertise", "Build data visualization skills", "Gain experience with big data technologies"],
-      aptitudeBoost: 0.25,
-      personalityBoost: 0,
-      interestBoost: 0.05,
-      styleFit: ["analytical", "reflective"]
+      techFocus: 0.15,
+      creativeNeeds: 0.05,
+      analyticalNeeds: 0.30,
+      socialNeeds: 0.05,
+      leadershipNeeds: 0.05,
+      personalityFit: ['analytical', 'detail-oriented', 'problem-solver'],
+      interestFit: ['data', 'research', 'mathematics'],
+      learningStylePreference: ['visual', 'reading/writing']
     },
     {
       careerTitle: "Medical Doctor",
-      threshold: 70,
-      suitabilityFactor: 1.0,
+      baseScore: 65,
       careerDescription: "Diagnoses and treats illnesses, injuries, and other health conditions.",
       educationPathways: [
         "MBBS followed by MD/MS specialization",
@@ -170,15 +203,18 @@ export const mapScoresToCareers = (
         "Keeping up with medical research and advancements"
       ],
       gapAnalysis: ["Improve stress management", "Enhance communication with patients", "Develop leadership skills", "Build research capabilities", "Strengthen specialized medical knowledge"],
-      aptitudeBoost: 0.15,
-      personalityBoost: 0.2,
-      interestBoost: 0.05,
-      styleFit: ["analytical", "practical"]
+      techFocus: 0.10,
+      creativeNeeds: 0.05,
+      analyticalNeeds: 0.20,
+      socialNeeds: 0.25,
+      leadershipNeeds: 0.10,
+      personalityFit: ['detail-oriented', 'empathetic', 'dedicated'],
+      interestFit: ['healthcare', 'biology', 'helping others'],
+      learningStylePreference: ['kinesthetic', 'visual']
     },
     {
       careerTitle: "Business Analyst",
-      threshold: 65,
-      suitabilityFactor: 0.95,
+      baseScore: 60,
       careerDescription: "Analyzes business processes and recommends solutions to improve efficiency and performance.",
       educationPathways: [
         "BBA/B.Com followed by MBA",
@@ -197,15 +233,18 @@ export const mapScoresToCareers = (
         "Managing stakeholder relationships"
       ],
       gapAnalysis: ["Develop stronger technical skills", "Enhance data analysis capabilities", "Improve presentation skills", "Build domain knowledge", "Learn project management methodologies"],
-      aptitudeBoost: 0.1,
-      personalityBoost: 0.15,
-      interestBoost: 0.05,
-      styleFit: ["analytical", "practical"]
+      techFocus: 0.10,
+      creativeNeeds: 0.05,
+      analyticalNeeds: 0.25,
+      socialNeeds: 0.10,
+      leadershipNeeds: 0.10,
+      personalityFit: ['analytical', 'communicative', 'detail-oriented'],
+      interestFit: ['business', 'analysis', 'problem-solving'],
+      learningStylePreference: ['visual', 'auditory']
     },
     {
       careerTitle: "Graphic Designer",
-      threshold: 60,
-      suitabilityFactor: 0.9,
+      baseScore: 60,
       careerDescription: "Creates visual content to communicate ideas and messages effectively.",
       educationPathways: [
         "Bachelor's in Design or Fine Arts",
@@ -224,15 +263,18 @@ export const mapScoresToCareers = (
         "Working with typography and color theory"
       ],
       gapAnalysis: ["Master additional design software", "Develop UI/UX skills", "Improve client communication", "Build a diverse portfolio", "Learn animation and video editing"],
-      aptitudeBoost: 0,
-      personalityBoost: 0.05,
-      interestBoost: 0.25,
-      styleFit: ["creative", "practical"]
+      techFocus: 0.05,
+      creativeNeeds: 0.30,
+      analyticalNeeds: 0.05,
+      socialNeeds: 0.10,
+      leadershipNeeds: 0.05,
+      personalityFit: ['creative', 'detail-oriented', 'visual'],
+      interestFit: ['design', 'art', 'digital media'],
+      learningStylePreference: ['visual', 'kinesthetic']
     },
     {
       careerTitle: "Marketing Specialist",
-      threshold: 62,
-      suitabilityFactor: 0.92,
+      baseScore: 60,
       careerDescription: "Plans and executes marketing campaigns to promote products, services, or brands.",
       educationPathways: [
         "Bachelor's in Marketing or Business",
@@ -251,15 +293,18 @@ export const mapScoresToCareers = (
         "Managing advertising budgets and ROI"
       ],
       gapAnalysis: ["Enhance data analytics skills", "Develop deeper industry knowledge", "Build content creation expertise", "Learn SEO and SEM techniques", "Understand consumer psychology"],
-      aptitudeBoost: 0.05,
-      personalityBoost: 0.15,
-      interestBoost: 0.15,
-      styleFit: ["creative", "practical"]
+      techFocus: 0.05,
+      creativeNeeds: 0.15,
+      analyticalNeeds: 0.10,
+      socialNeeds: 0.20,
+      leadershipNeeds: 0.10,
+      personalityFit: ['creative', 'communicative', 'strategic'],
+      interestFit: ['marketing', 'communication', 'social media'],
+      learningStylePreference: ['visual', 'auditory']
     },
     {
       careerTitle: "Project Manager",
-      threshold: 68,
-      suitabilityFactor: 0.98,
+      baseScore: 65,
       careerDescription: "Oversees projects from initiation to completion, ensuring they are completed on time and within budget.",
       educationPathways: [
         "Bachelor's in Business or related field",
@@ -278,15 +323,18 @@ export const mapScoresToCareers = (
         "Ensuring projects meet quality standards"
       ],
       gapAnalysis: ["Strengthen technical knowledge", "Develop conflict resolution skills", "Build stakeholder management expertise", "Learn project management software tools", "Gain experience with different methodologies"],
-      aptitudeBoost: 0.1,
-      personalityBoost: 0.2,
-      interestBoost: 0.05,
-      styleFit: ["practical", "analytical"]
+      techFocus: 0.05,
+      creativeNeeds: 0.05,
+      analyticalNeeds: 0.15,
+      socialNeeds: 0.15,
+      leadershipNeeds: 0.25,
+      personalityFit: ['organized', 'communicative', 'leadership-oriented'],
+      interestFit: ['management', 'coordination', 'planning'],
+      learningStylePreference: ['auditory', 'reading/writing']
     },
     {
       careerTitle: "Entrepreneur",
-      threshold: 70,
-      suitabilityFactor: 1.0,
+      baseScore: 70,
       careerDescription: "Starts and runs businesses, taking on financial risks in the hope of profit.",
       educationPathways: [
         "Business degree or entrepreneurship program",
@@ -305,15 +353,18 @@ export const mapScoresToCareers = (
         "Marketing and selling products or services"
       ],
       gapAnalysis: ["Develop financial management skills", "Build industry network", "Enhance marketing knowledge", "Learn risk assessment techniques", "Improve leadership capabilities"],
-      aptitudeBoost: 0.1,
-      personalityBoost: 0.1,
-      interestBoost: 0.2,
-      styleFit: ["creative", "practical"]
+      techFocus: 0.05,
+      creativeNeeds: 0.15,
+      analyticalNeeds: 0.10,
+      socialNeeds: 0.15,
+      leadershipNeeds: 0.25,
+      personalityFit: ['risk-taker', 'innovative', 'self-motivated'],
+      interestFit: ['business', 'innovation', 'independence'],
+      learningStylePreference: ['kinesthetic', 'auditory']
     },
     {
       careerTitle: "Clinical Psychologist",
-      threshold: 72,
-      suitabilityFactor: 0.95,
+      baseScore: 65,
       careerDescription: "Diagnoses and treats mental, emotional, and behavioral disorders through observation, assessment, and therapy.",
       educationPathways: [
         "Bachelor's in Psychology followed by M.Phil in Clinical Psychology",
@@ -332,15 +383,18 @@ export const mapScoresToCareers = (
         "Conducting research in clinical psychology"
       ],
       gapAnalysis: ["Develop deeper understanding of therapeutic approaches", "Build experience with diverse populations", "Strengthen assessment techniques", "Enhance research methodology knowledge", "Cultivate self-care practices"],
-      aptitudeBoost: 0.05,
-      personalityBoost: 0.25,
-      interestBoost: 0.15,
-      styleFit: ["reflective", "analytical"]
+      techFocus: 0.05,
+      creativeNeeds: 0.05,
+      analyticalNeeds: 0.15,
+      socialNeeds: 0.30,
+      leadershipNeeds: 0.05,
+      personalityFit: ['empathetic', 'patient', 'analytical'],
+      interestFit: ['psychology', 'helping others', 'research'],
+      learningStylePreference: ['auditory', 'reading/writing']
     },
     {
       careerTitle: "Financial Analyst",
-      threshold: 70,
-      suitabilityFactor: 0.92,
+      baseScore: 65,
       careerDescription: "Evaluates financial data and market trends to help businesses and individuals make investment decisions.",
       educationPathways: [
         "B.Com/BBA with finance specialization",
@@ -359,15 +413,18 @@ export const mapScoresToCareers = (
         "Making recommendations to management or clients"
       ],
       gapAnalysis: ["Develop advanced Excel skills", "Learn financial software platforms", "Enhance presentation capabilities", "Build industry-specific knowledge", "Understand global economic factors"],
-      aptitudeBoost: 0.2,
-      personalityBoost: 0.05,
-      interestBoost: 0.1,
-      styleFit: ["analytical", "reflective"]
+      techFocus: 0.10,
+      creativeNeeds: 0.05,
+      analyticalNeeds: 0.30,
+      socialNeeds: 0.05,
+      leadershipNeeds: 0.10,
+      personalityFit: ['detail-oriented', 'analytical', 'precise'],
+      interestFit: ['finance', 'analysis', 'economics'],
+      learningStylePreference: ['visual', 'reading/writing']
     },
     {
       careerTitle: "Mechanical Engineer",
-      threshold: 68,
-      suitabilityFactor: 0.9,
+      baseScore: 65,
       careerDescription: "Designs, develops, builds, and tests mechanical devices, including tools, engines, and machines.",
       educationPathways: [
         "B.Tech/B.E. in Mechanical Engineering",
@@ -386,15 +443,18 @@ export const mapScoresToCareers = (
         "Improving existing mechanical designs and systems"
       ],
       gapAnalysis: ["Strengthen CAD/CAM skills", "Develop knowledge of new materials", "Learn about manufacturing processes", "Build project management capabilities", "Enhance understanding of automation and robotics"],
-      aptitudeBoost: 0.2,
-      personalityBoost: 0,
-      interestBoost: 0.15,
-      styleFit: ["practical", "analytical"]
+      techFocus: 0.25,
+      creativeNeeds: 0.10,
+      analyticalNeeds: 0.15,
+      socialNeeds: 0.05,
+      leadershipNeeds: 0.05,
+      personalityFit: ['detail-oriented', 'analytical', 'practical'],
+      interestFit: ['engineering', 'mechanics', 'design'],
+      learningStylePreference: ['kinesthetic', 'visual']
     },
     {
       careerTitle: "UI/UX Designer",
-      threshold: 65,
-      suitabilityFactor: 0.9,
+      baseScore: 60,
       careerDescription: "Creates user-friendly and visually appealing interfaces for websites, apps, and digital products.",
       educationPathways: [
         "Degree in Design, Human-Computer Interaction, or related field",
@@ -413,68 +473,111 @@ export const mapScoresToCareers = (
         "Iterating designs based on user feedback and data"
       ],
       gapAnalysis: ["Learn industry-standard design tools", "Develop user research methodologies", "Build coding knowledge (HTML/CSS)", "Understand accessibility guidelines", "Enhance prototyping skills"],
-      aptitudeBoost: 0.05,
-      personalityBoost: 0.1,
-      interestBoost: 0.2,
-      styleFit: ["creative", "practical"]
+      techFocus: 0.10,
+      creativeNeeds: 0.25,
+      analyticalNeeds: 0.15,
+      socialNeeds: 0.10,
+      leadershipNeeds: 0.05,
+      personalityFit: ['creative', 'empathetic', 'detail-oriented'],
+      interestFit: ['design', 'user experience', 'technology'],
+      learningStylePreference: ['visual', 'kinesthetic']
     }
   ];
   
-  // Process results with enhanced logic using the response analysis
+  // Extract insights from response analysis if available
+  const specificAptitudes = analysisInsights?.specificAptitudes || {};
+  const personalityTraits = analysisInsights?.personalityTraits || {};
+  const aptitudeStyle = analysisInsights?.aptitudeStyle || '';
+  const learningStyle = analysisInsights?.learningStyle || '';
+  
+  // Calculate match percentage based on multiple factors
   const results = careers.map(career => {
-    // Start with base suitability calculation
-    let suitabilityScore = (weightedScore / career.threshold) * 100 * career.suitabilityFactor;
+    // Start with base score
+    let suitabilityScore = career.baseScore;
     
-    // Apply category-specific boosts
-    suitabilityScore += (aptitudeScore * career.aptitudeBoost);
-    suitabilityScore += (personalityScore * career.personalityBoost);
-    suitabilityScore += (interestScore * career.interestBoost);
+    // Add aptitude component based on specific career requirements
+    if (specificAptitudes) {
+      suitabilityScore += (specificAptitudes.technical || 0) * career.techFocus;
+      suitabilityScore += (specificAptitudes.creative || 0) * career.creativeNeeds;
+      suitabilityScore += (specificAptitudes.analytical || 0) * career.analyticalNeeds;
+      suitabilityScore += (specificAptitudes.social || 0) * career.socialNeeds;
+      suitabilityScore += (specificAptitudes.leadership || 0) * career.leadershipNeeds;
+    }
     
-    // Apply learning style fit if the information is available
-    if (analysisInsights) {
-      const aptitudeStyle = analysisInsights.aptitudeStyle || '';
-      const interestStyle = analysisInsights.interestStyle || '';
-      
-      // Add bonus for style matches
-      if (career.styleFit.includes(aptitudeStyle)) {
+    // Add personality match factor
+    if (personalityTraits) {
+      // Match extrovert traits to social careers
+      if (personalityTraits.extroverted && 
+          ['Marketing Specialist', 'Clinical Psychologist', 'Project Manager', 'Entrepreneur'].includes(career.careerTitle)) {
         suitabilityScore += 5;
       }
-      if (career.styleFit.includes(interestStyle)) {
+      
+      // Match structured personality to detail-oriented careers
+      if (personalityTraits.structured && 
+          ['Software Engineer', 'Data Scientist', 'Financial Analyst', 'Mechanical Engineer'].includes(career.careerTitle)) {
+        suitabilityScore += 5;
+      }
+      
+      // Match detail-oriented personality to precision careers
+      if (personalityTraits.detailOriented && 
+          ['Data Scientist', 'Medical Doctor', 'Financial Analyst', 'UI/UX Designer'].includes(career.careerTitle)) {
+        suitabilityScore += 5;
+      }
+      
+      // Match people-oriented personality to service careers
+      if (personalityTraits.peopleOriented && 
+          ['Medical Doctor', 'Clinical Psychologist', 'Marketing Specialist'].includes(career.careerTitle)) {
         suitabilityScore += 5;
       }
     }
     
-    // Add variation to make results more realistic (not everyone gets 100%)
-    // Apply normalization factor to keep scores in a reasonable range
-    const normalizationFactor = 0.8;  // Reduce all scores to create more variance
-    suitabilityScore = suitabilityScore * normalizationFactor;
+    // Add learning style match factor
+    if (learningStyle && career.learningStylePreference.includes(learningStyle)) {
+      suitabilityScore += 3;
+    }
     
-    // Add small random factor for variation (±7%)
-    const randomVariation = (Math.random() * 14) - 7;
-    suitabilityScore += randomVariation;
+    // Add aptitude style match factor
+    if (aptitudeStyle === 'analytical' && 
+        ['Data Scientist', 'Financial Analyst', 'Software Engineer'].includes(career.careerTitle)) {
+      suitabilityScore += 5;
+    } else if (aptitudeStyle === 'creative' && 
+               ['Graphic Designer', 'UI/UX Designer', 'Entrepreneur'].includes(career.careerTitle)) {
+      suitabilityScore += 5;
+    } else if (aptitudeStyle === 'practical' && 
+               ['Mechanical Engineer', 'Medical Doctor', 'Project Manager'].includes(career.careerTitle)) {
+      suitabilityScore += 5;
+    }
     
-    // Ensure score is within 30-97% range (not giving 100% matches)
-    suitabilityScore = Math.max(30, Math.min(97, Math.round(suitabilityScore)));
+    // Add some variation to create a realistic spread of scores
+    // Random factor between -5 and +5
+    const variation = Math.floor(Math.random() * 10) - 5;
+    suitabilityScore += variation;
     
-    // Generate personalized gap analysis based on scores
+    // Cap at 92% max to avoid unrealistic 100% matches
+    suitabilityScore = Math.min(92, Math.max(40, suitabilityScore));
+    
+    // Custom gap analysis based on user's profile
     const customGapAnalysis = [...career.gapAnalysis];
     
-    // Add score-specific gap analysis items
-    if (aptitudeScore < 70 && ["Software Engineer", "Data Scientist", "Mechanical Engineer"].includes(career.careerTitle)) {
-      customGapAnalysis.push("Focus on building technical and analytical skills through structured learning and practice problems");
+    // Add personalized gap items based on career and aptitude scores
+    if (specificAptitudes.technical < 60 && 
+        ['Software Engineer', 'Data Scientist', 'Mechanical Engineer'].includes(career.careerTitle)) {
+      customGapAnalysis.push("Develop stronger technical and STEM foundations through targeted courses and hands-on projects");
     }
     
-    if (personalityScore < 70 && ["Medical Doctor", "Clinical Psychologist", "Marketing Specialist"].includes(career.careerTitle)) {
-      customGapAnalysis.push("Develop stronger communication and interpersonal skills through group activities and public speaking practice");
+    if (specificAptitudes.social < 60 && 
+        ['Medical Doctor', 'Clinical Psychologist', 'Marketing Specialist'].includes(career.careerTitle)) {
+      customGapAnalysis.push("Build better interpersonal and communication skills through group activities and public speaking practice");
     }
     
-    if (interestScore < 70 && ["Graphic Designer", "UI/UX Designer", "Entrepreneur"].includes(career.careerTitle)) {
-      customGapAnalysis.push("Explore creative projects and hands-on experiences to build portfolio and clarify interests");
+    if (specificAptitudes.leadership < 60 && 
+        ['Project Manager', 'Entrepreneur', 'Business Analyst'].includes(career.careerTitle)) {
+      customGapAnalysis.push("Develop leadership abilities by volunteering for team lead roles and studying effective management practices");
     }
     
     return {
       careerTitle: career.careerTitle,
-      suitabilityPercentage: suitabilityScore,
+      suitabilityPercentage: Math.round(suitabilityScore),
       careerDescription: career.careerDescription,
       educationPathways: career.educationPathways,
       keySkills: career.keySkills,

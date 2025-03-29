@@ -89,6 +89,11 @@ const getStrengthDescription = (strength: string): string => {
     'Analytical Thinking': 'You excel at breaking down complex information into logical components. This skill helps you understand patterns and relationships that others might miss.',
     'Communication Skills': 'You effectively express ideas and listen to others. Your ability to convey thoughts clearly and understand different perspectives enhances collaboration.',
     'Creativity': 'You demonstrate original thinking and innovative approaches to tasks. This imaginative capacity allows you to develop unique solutions and perspectives.',
+    'Technical Proficiency': 'You show strong aptitude for technical concepts and applications. This allows you to quickly grasp and apply technical knowledge in practical situations.',
+    'Attention to Detail': 'You notice fine details and maintain high accuracy in your work. This precision helps ensure quality outcomes and prevents oversights.',
+    'Organization': 'You excel at structuring tasks, information, and resources efficiently. This systematic approach enhances productivity and helps manage complex projects.',
+    'Empathy': 'You understand and share the feelings of others effectively. This emotional intelligence helps you build strong relationships and work well in diverse teams.',
+    'Business Acumen': 'You demonstrate good understanding of business principles and market dynamics. This knowledge helps you make sound business decisions and identify opportunities.',
   };
   
   return descriptions[strength] || 'You demonstrate notable proficiency in this area based on your assessment responses. This strength will be valuable across various career paths and educational journeys.';
@@ -108,6 +113,10 @@ const getGapDescription = (gap: string): string => {
     'Self-Motivation': 'Building stronger internal drive would help you pursue goals more effectively. Set clear objectives and develop accountability systems for your progress.',
     'Interpersonal Abilities': 'Developing skills for effective interaction with diverse individuals is recommended. Practice active listening and empathetic communication regularly.',
     'Critical Thinking': 'Strengthening your ability to evaluate information objectively would enhance your decision-making. Practice questioning assumptions and considering alternative perspectives.',
+    'Creative Thinking': 'Developing more innovative approaches to problem-solving would be valuable. Engage in activities that encourage original thinking and unconventional solutions.',
+    'Business Knowledge': 'Expanding your understanding of business principles and practices would broaden your career options. Consider courses in business fundamentals or industry-specific knowledge.',
+    'Time Management': 'Improving your ability to prioritize tasks and manage time efficiently would enhance productivity. Explore structured planning methods and tools.',
+    'Presentation Skills': 'Developing more effective public speaking and presentation abilities would strengthen your professional presence. Practice delivering presentations and seek feedback.',
   };
   
   return descriptions[gap] || 'This area presents an opportunity for targeted development to enhance your career prospects. Consider seeking specific training, mentorship, or practical experience to strengthen these skills.';
