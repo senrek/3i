@@ -107,7 +107,7 @@ serve(async (req) => {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${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}`,
+        'Authorization': `Bearer ${deepseekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
