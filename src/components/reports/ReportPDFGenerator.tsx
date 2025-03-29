@@ -83,6 +83,75 @@ const ReportPDFGenerator = ({
     return descriptions[gap] || 'This area presents an opportunity for targeted development to enhance career prospects. Consider seeking specific training, mentorship, or practical experience to strengthen these skills.';
   };
 
+  // Function to fetch AI-generated content
+  const fetchAIContent = async (contentType: string, assessmentData: any) => {
+    try {
+      // Extract key response highlights for the AI
+      const responseHighlights: Record<string, any> = {};
+      
+      if (responses) {
+        // Sample important questions for AI context
+        const importantQuestionIds = [
+          'apt_3', 'apt_6', 'apt_8', 'apt_10', 'apt_15', 
+          'per_1', 'per_4', 'per_9', 'per_13', 
+          'int_1', 'int_5', 'int_8',
+          'ls_1', 'ls_4'
+        ];
+        
+        importantQuestionIds.forEach(id => {
+          if (responses[id]) {
+            responseHighlights[id] = responses[id];
+          }
+        });
+      }
+      
+      // Prepare data for the AI request
+      const aiRequestData = {
+        contentType,
+        assessmentData: {
+          scores,
+          strengthAreas,
+          developmentAreas,
+          responseHighlights,
+          topCareer: scores?.careerRecommendations?.[0] || null
+        }
+      };
+      
+      const { data, error } = await supabase.functions.invoke('generate-ai-content', {
+        body: aiRequestData
+      });
+      
+      if (error) {
+        console.error(`Error generating ${contentType} content:`, error);
+        throw new Error(`AI content generation failed: ${error.message}`);
+      }
+      
+      return data.content || '';
+    } catch (error: any) {
+      console.error(`Failed to generate ${contentType} content:`, error);
+      // Return fallback content if AI generation fails
+      return getFallbackContent(contentType);
+    }
+  };
+  
+  // Fallback content if AI generation fails
+  const getFallbackContent = (contentType: string): string => {
+    switch (contentType) {
+      case 'careerRecommendation':
+        return "Based on your assessment results, this career path aligns well with your aptitudes, interests, and learning style. The field offers opportunities to utilize your strengths while providing room for growth in your development areas.";
+      case 'educationPathways':
+        return "Educational pathways for this career typically include specialized degree programs, certifications, and hands-on training opportunities. Both traditional and alternative educational routes can prepare you for success in this field.";
+      case 'alternativeCareers':
+        return "Besides your top career match, several alternative career paths also align with your profile. These options offer different ways to leverage your strengths while providing varied work environments and growth opportunities.";
+      case 'developmentPlan':
+        return "Your personalized development plan focuses on building your strengths while addressing key development areas. Following this structured approach will help prepare you for your desired career path.";
+      case 'executiveSummary':
+        return "Your assessment reveals a unique combination of aptitudes, interests, personality traits, and learning preferences that suggest compatibility with certain career paths. The report provides detailed insights to guide your educational and career planning.";
+      default:
+        return "Content generation was not successful. Please refer to your assessment results for guidance.";
+    }
+  };
+
   const generatePdfContent = async () => {
     // This would normally be done server-side with a proper PDF generation library
     // For this implementation, we'll create a PDF using client-side libraries
@@ -91,138 +160,166 @@ const ReportPDFGenerator = ({
       return null;
     }
     
-    // Use our new analysis utilities for more personalized insights
-    let personalityInsights = {
-      traits: ['Analytical', 'Logical', 'Practical'],
-      workStyle: ['Prefers structure and organization'],
-      learningPreferences: ['Visual Learner'],
-      communicationStyle: 'balanced',
-      decisionMakingStyle: 'rational',
-      careerValues: ['Professional Growth', 'Achievement', 'Independence']
-    };
-    
-    let analyzedStrengths = strengthAreas;
-    let analyzedDevelopmentAreas = developmentAreas;
-    let careerRecommendations = scores.careerRecommendations;
-    let developmentPlan = {
-      shortTerm: [
-        "Research educational pathways for your top career match",
-        "Identify and build missing skills from the gap analysis",
-        "Connect with professionals in your preferred career field"
-      ],
-      mediumTerm: [
-        "Select suitable educational programs that align with your career goals",
-        "Gain practical experience through internships or part-time roles",
-        "Continue developing your personal and professional portfolio"
-      ],
-      longTerm: [
-        "Pursue advanced qualifications if required for career progression",
-        "Expand your professional network within the industry",
-        "Regularly reassess your career path and make adjustments as needed"
-      ]
-    };
-    
-    // Use enhanced analysis if responses are available
-    if (responses) {
-      try {
-        // Generate personalized insights
-        personalityInsights = analyzePersonality(responses);
-        
-        const skillAnalysis = analyzeSkills(responses);
-        // Only override if we have valid data
-        if (skillAnalysis.strengths.length > 0) {
-          analyzedStrengths = skillAnalysis.strengths;
-        }
-        if (skillAnalysis.developmentAreas.length > 0) {
-          analyzedDevelopmentAreas = skillAnalysis.developmentAreas;
-        }
-        
-        // Generate personalized career recommendations
-        const personalizedRecommendations = generateCareerRecommendations(responses, personalityInsights);
-        if (personalizedRecommendations.length > 0) {
-          careerRecommendations = personalizedRecommendations.map(rec => ({
-            careerTitle: rec.title,
-            suitabilityPercentage: rec.match,
-            careerDescription: rec.description,
-            keySkills: rec.keySkills,
-            educationPathways: rec.educationPathways,
-            workNature: [rec.workEnvironment, rec.growthOpportunities],
-            gapAnalysis: analyzedDevelopmentAreas.map(area => 
-              `Develop skills in ${area.toLowerCase()} to enhance your suitability for this career path.`
-            )
-          }));
-        }
-        
-        // Generate personalized development plan
-        developmentPlan = generateDevelopmentPlan(personalityInsights, analyzedDevelopmentAreas);
-        
-      } catch (error) {
-        console.error('Error generating personalized insights:', error);
-        // Continue with default values if analysis fails
-      }
-    }
-    
-    // Format career recommendations for the PDF
-    const topCareer = careerRecommendations[0] || {
-      careerTitle: "Career Path",
-      suitabilityPercentage: 75,
-      careerDescription: "Based on your assessment responses, this career path aligns well with your aptitudes and interests.",
-      educationPathways: ["Bachelor's degree in relevant field", "Industry certifications", "Practical experience"],
-      keySkills: ["Communication", "Problem Solving", "Technical Aptitude"],
-      workNature: ["Professional environment with team collaboration", "Opportunities for advancement and specialization"],
-      gapAnalysis: analyzedDevelopmentAreas.map(area => `Development in ${area} would enhance career prospects.`)
-    };
-    
-    // Create a structured PDF content object
-    const pdfContent = {
-      userName,
-      reportDate: new Date().toISOString(),
-      reportId,
-      scores: {
-        aptitude: scores.aptitude,
-        personality: scores.personality,
-        interest: scores.interest,
-        learningStyle: scores.learningStyle
-      },
-      strengthAreas: analyzedStrengths.map(strength => ({
-        name: strength,
-        description: getStrengthDescription(strength)
-      })),
-      developmentAreas: analyzedDevelopmentAreas.map(area => ({
-        name: area,
-        description: getGapDescription(area)
-      })),
-      topCareerPath: {
-        title: topCareer.careerTitle,
-        match: topCareer.suitabilityPercentage,
-        description: topCareer.careerDescription,
-        educationPathways: topCareer.educationPathways,
-        keySkills: topCareer.keySkills,
-        workNature: topCareer.workNature
-      },
-      otherCareers: careerRecommendations.slice(1, 4).map(career => ({
-        title: career.careerTitle,
-        match: career.suitabilityPercentage,
-        description: career.careerDescription,
-        keySkills: career.keySkills.slice(0, 3)
-      })),
-      skillAnalysis: {
-        strengths: [
-          { name: 'Analytical Thinking', score: scores.aptitude > 70 ? 'Excellent' : 'Good' },
-          { name: 'Problem Solving', score: scores.aptitude > 65 ? 'Good' : 'Average' },
-          { name: 'Technical Aptitude', score: scores.aptitude > 75 ? 'Excellent' : 'Good' }
+    try {
+      // Use our new analysis utilities for more personalized insights
+      let personalityInsights = {
+        traits: ['Analytical', 'Logical', 'Practical'],
+        workStyle: ['Prefers structure and organization'],
+        learningPreferences: ['Visual Learner'],
+        communicationStyle: 'balanced',
+        decisionMakingStyle: 'rational',
+        careerValues: ['Professional Growth', 'Achievement', 'Independence']
+      };
+      
+      let analyzedStrengths = strengthAreas;
+      let analyzedDevelopmentAreas = developmentAreas;
+      let careerRecommendations = scores.careerRecommendations;
+      let developmentPlan = {
+        shortTerm: [
+          "Research educational pathways for your top career match",
+          "Identify and build missing skills from the gap analysis",
+          "Connect with professionals in your preferred career field"
         ],
-        development: [
-          { name: 'Communication', score: scores.personality < 70 ? 'Needs Improvement' : 'Good' },
-          { name: 'Leadership', score: scores.personality < 65 ? 'Needs Improvement' : 'Average' }
+        mediumTerm: [
+          "Select suitable educational programs that align with your career goals",
+          "Gain practical experience through internships or part-time roles",
+          "Continue developing your personal and professional portfolio"
+        ],
+        longTerm: [
+          "Pursue advanced qualifications if required for career progression",
+          "Expand your professional network within the industry",
+          "Regularly reassess your career path and make adjustments as needed"
         ]
-      },
-      personalization: personalityInsights,
-      gapAnalysis: topCareer.gapAnalysis,
-      recommendations: developmentPlan
-    };
-    
-    return pdfContent;
+      };
+      
+      // Use enhanced analysis if responses are available
+      if (responses) {
+        try {
+          // Generate personalized insights
+          personalityInsights = analyzePersonality(responses);
+          
+          const skillAnalysis = analyzeSkills(responses);
+          // Only override if we have valid data
+          if (skillAnalysis.strengths.length > 0) {
+            analyzedStrengths = skillAnalysis.strengths;
+          }
+          if (skillAnalysis.developmentAreas.length > 0) {
+            analyzedDevelopmentAreas = skillAnalysis.developmentAreas;
+          }
+          
+          // Generate personalized career recommendations
+          const personalizedRecommendations = generateCareerRecommendations(responses, personalityInsights);
+          if (personalizedRecommendations.length > 0) {
+            careerRecommendations = personalizedRecommendations.map(rec => ({
+              careerTitle: rec.title,
+              suitabilityPercentage: rec.match,
+              careerDescription: rec.description,
+              keySkills: rec.keySkills,
+              educationPathways: rec.educationPathways,
+              workNature: [rec.workEnvironment, rec.growthOpportunities],
+              gapAnalysis: analyzedDevelopmentAreas.map(area => 
+                `Develop skills in ${area.toLowerCase()} to enhance your suitability for this career path.`
+              )
+            }));
+          }
+          
+          // Generate personalized development plan
+          developmentPlan = generateDevelopmentPlan(personalityInsights, analyzedDevelopmentAreas);
+          
+        } catch (error) {
+          console.error('Error generating personalized insights:', error);
+          // Continue with default values if analysis fails
+        }
+      }
+      
+      // Format career recommendations for the PDF
+      const topCareer = careerRecommendations[0] || {
+        careerTitle: "Career Path",
+        suitabilityPercentage: 75,
+        careerDescription: "Based on your assessment responses, this career path aligns well with your aptitudes and interests.",
+        educationPathways: ["Bachelor's degree in relevant field", "Industry certifications", "Practical experience"],
+        keySkills: ["Communication", "Problem Solving", "Technical Aptitude"],
+        workNature: ["Professional environment with team collaboration", "Opportunities for advancement and specialization"],
+        gapAnalysis: analyzedDevelopmentAreas.map(area => `Development in ${area} would enhance career prospects.`)
+      };
+      
+      // Generate AI content for different sections of the PDF
+      const [
+        aiExecutiveSummary,
+        aiCareerRecommendation,
+        aiEducationPathways,
+        aiAlternativeCareers,
+        aiDevelopmentPlan
+      ] = await Promise.all([
+        fetchAIContent('executiveSummary', { scores, strengthAreas: analyzedStrengths, developmentAreas: analyzedDevelopmentAreas, topCareer }),
+        fetchAIContent('careerRecommendation', { scores, strengthAreas: analyzedStrengths, developmentAreas: analyzedDevelopmentAreas, topCareer }),
+        fetchAIContent('educationPathways', { scores, strengthAreas: analyzedStrengths, developmentAreas: analyzedDevelopmentAreas, topCareer }),
+        fetchAIContent('alternativeCareers', { scores, strengthAreas: analyzedStrengths, developmentAreas: analyzedDevelopmentAreas, topCareer }),
+        fetchAIContent('developmentPlan', { scores, strengthAreas: analyzedStrengths, developmentAreas: analyzedDevelopmentAreas, topCareer })
+      ]);
+      
+      // Create a structured PDF content object with AI-generated content
+      const pdfContent = {
+        userName,
+        reportDate: new Date().toISOString(),
+        reportId,
+        scores: {
+          aptitude: scores.aptitude,
+          personality: scores.personality,
+          interest: scores.interest,
+          learningStyle: scores.learningStyle
+        },
+        aiContent: {
+          executiveSummary: aiExecutiveSummary,
+          careerRecommendation: aiCareerRecommendation,
+          educationPathways: aiEducationPathways,
+          alternativeCareers: aiAlternativeCareers,
+          developmentPlan: aiDevelopmentPlan
+        },
+        strengthAreas: analyzedStrengths.map(strength => ({
+          name: strength,
+          description: getStrengthDescription(strength)
+        })),
+        developmentAreas: analyzedDevelopmentAreas.map(area => ({
+          name: area,
+          description: getGapDescription(area)
+        })),
+        topCareerPath: {
+          title: topCareer.careerTitle,
+          match: topCareer.suitabilityPercentage,
+          description: topCareer.careerDescription,
+          educationPathways: topCareer.educationPathways,
+          keySkills: topCareer.keySkills,
+          workNature: topCareer.workNature
+        },
+        otherCareers: careerRecommendations.slice(1, 4).map(career => ({
+          title: career.careerTitle,
+          match: career.suitabilityPercentage,
+          description: career.careerDescription,
+          keySkills: career.keySkills.slice(0, 3)
+        })),
+        skillAnalysis: {
+          strengths: [
+            { name: 'Analytical Thinking', score: scores.aptitude > 70 ? 'Excellent' : 'Good' },
+            { name: 'Problem Solving', score: scores.aptitude > 65 ? 'Good' : 'Average' },
+            { name: 'Technical Aptitude', score: scores.aptitude > 75 ? 'Excellent' : 'Good' }
+          ],
+          development: [
+            { name: 'Communication', score: scores.personality < 70 ? 'Needs Improvement' : 'Good' },
+            { name: 'Leadership', score: scores.personality < 65 ? 'Needs Improvement' : 'Average' }
+          ]
+        },
+        personalization: personalityInsights,
+        gapAnalysis: topCareer.gapAnalysis,
+        recommendations: developmentPlan
+      };
+      
+      return pdfContent;
+    } catch (error) {
+      console.error('Error preparing PDF content:', error);
+      toast.error('Failed to prepare PDF content');
+      return null;
+    }
   };
 
   const handleGeneratePDF = async () => {
@@ -333,6 +430,10 @@ const ReportPDFGenerator = ({
       // Page title
       yPos = addSectionHeader('Executive Summary', yPos);
       
+      // AI-generated executive summary
+      yPos = addWrappedText(pdfContent.aiContent.executiveSummary, margin, yPos, contentWidth, lineHeight);
+      yPos += 10;
+      
       // Assessment Scores
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(12);
@@ -425,9 +526,8 @@ const ReportPDFGenerator = ({
       
       yPos += 10;
       
-      // Career Description
-      pdf.setFontSize(10);
-      yPos = addWrappedText(pdfContent.topCareerPath.description, margin, yPos, contentWidth, lineHeight);
+      // AI-generated career recommendation
+      yPos = addWrappedText(pdfContent.aiContent.careerRecommendation, margin, yPos, contentWidth, lineHeight);
       
       yPos += 10;
       
@@ -478,6 +578,10 @@ const ReportPDFGenerator = ({
       
       // Page title
       yPos = addSectionHeader('Education Pathways', yPos);
+      
+      // AI-generated education pathways
+      yPos = addWrappedText(pdfContent.aiContent.educationPathways, margin, yPos, contentWidth, lineHeight);
+      yPos += 10;
       
       // Education Pathways
       pdf.setFont('helvetica', 'bold');
@@ -553,9 +657,9 @@ const ReportPDFGenerator = ({
       // Page title
       yPos = addSectionHeader('Alternative Career Paths', yPos);
       
-      // Introduction to alternative careers
-      yPos = addWrappedText("While your top career recommendation represents your strongest match based on your assessment results, the following alternative careers also align well with your profile and may be worth exploring:", margin, yPos, contentWidth, lineHeight);
-      yPos += 10;
+      // AI-generated alternative careers
+      yPos = addWrappedText(pdfContent.aiContent.alternativeCareers, margin, yPos, contentWidth, lineHeight);
+      yPos += 15;
       
       // Alternative Careers
       pdfContent.otherCareers.forEach((career, index) => {
@@ -622,9 +726,9 @@ const ReportPDFGenerator = ({
       // Page title
       yPos = addSectionHeader('Gap Analysis & Development Plan', yPos);
       
-      // Introduction to gap analysis
-      yPos = addWrappedText("Based on your assessment results, we've identified specific areas for development that can enhance your readiness for your recommended career paths. Addressing these gaps strategically will strengthen your candidacy for your preferred careers.", margin, yPos, contentWidth, lineHeight);
-      yPos += 10;
+      // AI-generated development plan
+      yPos = addWrappedText(pdfContent.aiContent.developmentPlan, margin, yPos, contentWidth, lineHeight);
+      yPos += 15;
       
       // Gap Analysis
       pdf.setFont('helvetica', 'bold');
