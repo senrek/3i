@@ -108,7 +108,7 @@ serve(async (req) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${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}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
