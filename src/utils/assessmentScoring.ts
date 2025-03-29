@@ -92,7 +92,7 @@ export const mapScoresToCareers = (
   // Create a weighted score incorporating all elements
   const weightedScore = (aptitudeScore * 0.4) + (personalityScore * 0.25) + (interestScore * 0.25) + (learningStyleScore * 0.1);
   
-  // Enhanced career database
+  // Enhanced career database with more appropriate education pathways
   const careers = [
     {
       careerTitle: "Software Engineer",
@@ -157,8 +157,8 @@ export const mapScoresToCareers = (
         "MBBS followed by MD/MS specialization",
         "MBBS followed by DNB",
         "MBBS with international certifications",
-        "MBBS followed by super-specialization",
-        "Integrated medical programs in select universities"
+        "Medical college with integrated programs for specific specializations",
+        "Pre-medical courses followed by medical school"
       ],
       keySkills: ["Critical Thinking", "Empathy", "Communication", "Attention to Detail", "Decision Making", "Continuous Learning"],
       workNature: [
@@ -444,8 +444,17 @@ export const mapScoresToCareers = (
       }
     }
     
-    // Ensure score is within 0-100 range
-    suitabilityScore = Math.max(0, Math.min(100, Math.round(suitabilityScore)));
+    // Add variation to make results more realistic (not everyone gets 100%)
+    // Apply normalization factor to keep scores in a reasonable range
+    const normalizationFactor = 0.8;  // Reduce all scores to create more variance
+    suitabilityScore = suitabilityScore * normalizationFactor;
+    
+    // Add small random factor for variation (±7%)
+    const randomVariation = (Math.random() * 14) - 7;
+    suitabilityScore += randomVariation;
+    
+    // Ensure score is within 30-97% range (not giving 100% matches)
+    suitabilityScore = Math.max(30, Math.min(97, Math.round(suitabilityScore)));
     
     // Generate personalized gap analysis based on scores
     const customGapAnalysis = [...career.gapAnalysis];
