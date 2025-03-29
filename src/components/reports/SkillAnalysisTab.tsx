@@ -13,14 +13,22 @@ interface SkillData {
 interface SkillAnalysisTabProps {
   skillData: SkillData[];
   responses?: Record<string, string> | null;
+  strengthAreas?: string[];
+  developmentAreas?: string[];
 }
 
-const SkillAnalysisTab = ({ skillData, responses }: SkillAnalysisTabProps) => {
-  // Analyze responses to determine skill gaps
-  const gapAreas = [];
-  const strengths = [];
+const SkillAnalysisTab = ({ 
+  skillData, 
+  responses,
+  strengthAreas = [], 
+  developmentAreas = [] 
+}: SkillAnalysisTabProps) => {
+  // Use provided strengths and development areas if available
+  let gapAreas = developmentAreas;
+  let strengths = strengthAreas;
   
-  if (responses) {
+  // If not provided, analyze responses
+  if ((gapAreas.length === 0 || strengths.length === 0) && responses) {
     const aptitudeQuestions = Object.keys(responses).filter(q => q.startsWith('apt_'));
     const personalityQuestions = Object.keys(responses).filter(q => q.startsWith('per_'));
     const interestQuestions = Object.keys(responses).filter(q => q.startsWith('int_'));
@@ -31,39 +39,52 @@ const SkillAnalysisTab = ({ skillData, responses }: SkillAnalysisTabProps) => {
     const interestABCount = interestQuestions.filter(q => ['A', 'B'].includes(responses[q])).length;
     
     // Determine gaps based on low AB counts
-    if (aptitudeABCount < (aptitudeQuestions.length * 0.5)) {
-      gapAreas.push('Technical Proficiency', 'Analytical Thinking');
-    }
-    
-    if (personalityABCount < (personalityQuestions.length * 0.5)) {
-      gapAreas.push('Communication Skills', 'Interpersonal Abilities');
-    }
-    
-    if (interestABCount < (interestQuestions.length * 0.5)) {
-      gapAreas.push('Career Focus', 'Self-Motivation');
+    if (gapAreas.length === 0) {
+      gapAreas = [];
+      if (aptitudeABCount < (aptitudeQuestions.length * 0.5)) {
+        gapAreas.push('Technical Proficiency', 'Analytical Thinking');
+      }
+      
+      if (personalityABCount < (personalityQuestions.length * 0.5)) {
+        gapAreas.push('Communication Skills', 'Interpersonal Abilities');
+      }
+      
+      if (interestABCount < (interestQuestions.length * 0.5)) {
+        gapAreas.push('Career Focus', 'Self-Motivation');
+      }
+      
+      // Ensure we have at least some gap areas
+      if (gapAreas.length === 0) {
+        gapAreas = ['Data Analysis', 'Technical Certifications', 'Leadership Skills'];
+      }
+      
+      // Limit to at most 5 gap areas
+      gapAreas = gapAreas.slice(0, 5);
     }
     
     // Determine strengths based on high AB counts
-    if (aptitudeABCount > (aptitudeQuestions.length * 0.7)) {
-      strengths.push('Problem Solving', 'Critical Thinking');
+    if (strengths.length === 0) {
+      strengths = [];
+      if (aptitudeABCount > (aptitudeQuestions.length * 0.7)) {
+        strengths.push('Problem Solving', 'Critical Thinking');
+      }
+      
+      if (personalityABCount > (personalityQuestions.length * 0.7)) {
+        strengths.push('Team Collaboration', 'Leadership Potential');
+      }
+      
+      if (interestABCount > (interestQuestions.length * 0.7)) {
+        strengths.push('Career Interest Clarity', 'Self-Direction');
+      }
+      
+      // Ensure we have at least some strengths
+      if (strengths.length === 0) {
+        strengths = ['Adaptability', 'Continuous Learning', 'Problem Solving'];
+      }
+      
+      // Limit to at most 5 strengths
+      strengths = strengths.slice(0, 5);
     }
-    
-    if (personalityABCount > (personalityQuestions.length * 0.7)) {
-      strengths.push('Team Collaboration', 'Leadership Potential');
-    }
-    
-    if (interestABCount > (interestQuestions.length * 0.7)) {
-      strengths.push('Career Interest Clarity', 'Self-Direction');
-    }
-  }
-  
-  // Default values if we couldn't determine from responses
-  if (gapAreas.length === 0) {
-    gapAreas.push('Data Analysis', 'Technical Certifications', 'Leadership Skills');
-  }
-  
-  if (strengths.length === 0) {
-    strengths.push('Adaptability', 'Continuous Learning', 'Problem Solving');
   }
   
   return (

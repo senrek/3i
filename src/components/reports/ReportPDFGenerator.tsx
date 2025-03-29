@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { analyzePersonality, analyzeSkills, generateCareerRecommendations, generateDevelopmentPlan } from '@/utils/responseAnalysis';
 
 interface ReportPDFGeneratorProps {
   reportId: string;
@@ -48,6 +49,11 @@ const ReportPDFGenerator = ({
       'Analytical Thinking': 'Excels at breaking down complex information into logical components. This skill helps understand patterns and relationships that others might miss.',
       'Communication Skills': 'Effectively expresses ideas and listens to others. Ability to convey thoughts clearly and understand different perspectives enhances collaboration.',
       'Creativity': 'Demonstrates original thinking and innovative approaches to tasks. This imaginative capacity allows developing unique solutions and perspectives.',
+      'Technical Proficiency': 'Shows strong aptitude for technical concepts and applications. This allows you to quickly grasp and apply technical knowledge in practical situations.',
+      'Attention to Detail': 'Notices fine details and maintains high accuracy in work. This precision helps ensure quality outcomes and prevents oversights.',
+      'Organization': 'Excels at structuring tasks, information, and resources efficiently. This systematic approach enhances productivity and helps manage complex projects.',
+      'Empathy': 'Understands and shares the feelings of others effectively. This emotional intelligence helps build strong relationships and work well in diverse teams.',
+      'Business Acumen': 'Demonstrates good understanding of business principles and market dynamics. This knowledge helps make sound business decisions and identify opportunities.',
     };
     
     return descriptions[strength] || 'Demonstrates notable proficiency in this area based on assessment responses. This strength will be valuable across various career paths and educational journeys.';
@@ -68,7 +74,10 @@ const ReportPDFGenerator = ({
       'Self-Motivation': 'Building stronger internal drive would help pursue goals more effectively. Set clear objectives and develop accountability systems for progress.',
       'Interpersonal Abilities': 'Developing skills for effective interaction with diverse individuals is recommended. Practice active listening and empathetic communication regularly.',
       'Critical Thinking': 'Strengthening ability to evaluate information objectively would enhance decision-making. Practice questioning assumptions and considering alternative perspectives.',
-      'Time Management': 'Improving ability to prioritize tasks and use time efficiently would increase productivity. Develop systems for tracking deadlines and managing competing priorities.'
+      'Creative Thinking': 'Developing more innovative approaches to problem-solving would be valuable. Engage in activities that encourage original thinking and unconventional solutions.',
+      'Business Knowledge': 'Expanding understanding of business principles and practices would broaden career options. Consider courses in business fundamentals or industry-specific knowledge.',
+      'Time Management': 'Improving ability to prioritize tasks and use time efficiently would increase productivity. Develop systems for tracking deadlines and managing competing priorities.',
+      'Presentation Skills': 'Developing more effective public speaking and presentation abilities would strengthen professional presence. Practice delivering presentations and seek feedback.',
     };
     
     return descriptions[gap] || 'This area presents an opportunity for targeted development to enhance career prospects. Consider seeking specific training, mentorship, or practical experience to strengthen these skills.';
@@ -82,201 +91,87 @@ const ReportPDFGenerator = ({
       return null;
     }
     
-    // Calculate more reasonable career match percentages based on responses
-    let processedCareerRecommendations = [];
+    // Use our new analysis utilities for more personalized insights
+    let personalityInsights = {
+      traits: ['Analytical', 'Logical', 'Practical'],
+      workStyle: ['Prefers structure and organization'],
+      learningPreferences: ['Visual Learner'],
+      communicationStyle: 'balanced',
+      decisionMakingStyle: 'rational',
+      careerValues: ['Professional Growth', 'Achievement', 'Independence']
+    };
     
-    if (scores.careerRecommendations && scores.careerRecommendations.length > 0) {
-      // Make a deep copy of recommendations to avoid modifying the original
-      processedCareerRecommendations = JSON.parse(JSON.stringify(scores.careerRecommendations));
-      
-      // Analyze responses to determine more accurate match percentages
-      if (responses) {
-        // Group responses by category for analysis
-        const technicalResponses = Object.entries(responses).filter(([id]) => 
-          ['8', '9', '14', '15', '27', '31', '44'].some(q => id.includes(`_${q}`))
-        );
+    let analyzedStrengths = strengthAreas;
+    let analyzedDevelopmentAreas = developmentAreas;
+    let careerRecommendations = scores.careerRecommendations;
+    let developmentPlan = {
+      shortTerm: [
+        "Research educational pathways for your top career match",
+        "Identify and build missing skills from the gap analysis",
+        "Connect with professionals in your preferred career field"
+      ],
+      mediumTerm: [
+        "Select suitable educational programs that align with your career goals",
+        "Gain practical experience through internships or part-time roles",
+        "Continue developing your personal and professional portfolio"
+      ],
+      longTerm: [
+        "Pursue advanced qualifications if required for career progression",
+        "Expand your professional network within the industry",
+        "Regularly reassess your career path and make adjustments as needed"
+      ]
+    };
+    
+    // Use enhanced analysis if responses are available
+    if (responses) {
+      try {
+        // Generate personalized insights
+        personalityInsights = analyzePersonality(responses);
         
-        const creativeResponses = Object.entries(responses).filter(([id]) => 
-          ['4', '5', '13', '21', '30', '39', '46'].some(q => id.includes(`_${q}`))
-        );
+        const skillAnalysis = analyzeSkills(responses);
+        // Only override if we have valid data
+        if (skillAnalysis.strengths.length > 0) {
+          analyzedStrengths = skillAnalysis.strengths;
+        }
+        if (skillAnalysis.developmentAreas.length > 0) {
+          analyzedDevelopmentAreas = skillAnalysis.developmentAreas;
+        }
         
-        const analyticalResponses = Object.entries(responses).filter(([id]) => 
-          ['19', '20', '33', '36', '38', '45'].some(q => id.includes(`_${q}`))
-        );
+        // Generate personalized career recommendations
+        const personalizedRecommendations = generateCareerRecommendations(responses, personalityInsights);
+        if (personalizedRecommendations.length > 0) {
+          careerRecommendations = personalizedRecommendations.map(rec => ({
+            careerTitle: rec.title,
+            suitabilityPercentage: rec.match,
+            careerDescription: rec.description,
+            keySkills: rec.keySkills,
+            educationPathways: rec.educationPathways,
+            workNature: [rec.workEnvironment, rec.growthOpportunities],
+            gapAnalysis: analyzedDevelopmentAreas.map(area => 
+              `Develop skills in ${area.toLowerCase()} to enhance your suitability for this career path.`
+            )
+          }));
+        }
         
-        const socialResponses = Object.entries(responses).filter(([id]) => 
-          ['7', '29', '32', '35', '40', '41', '47'].some(q => id.includes(`_${q}`))
-        );
+        // Generate personalized development plan
+        developmentPlan = generateDevelopmentPlan(personalityInsights, analyzedDevelopmentAreas);
         
-        const leadershipResponses = Object.entries(responses).filter(([id]) => 
-          ['6', '16', '17', '26', '43', '49'].some(q => id.includes(`_${q}`))
-        );
-        
-        const businessResponses = Object.entries(responses).filter(([id]) => 
-          ['11', '25', '48'].some(q => id.includes(`_${q}`))
-        );
-        
-        // Calculate affinity scores (0-100) for each category
-        const calculateAffinity = (responses: [string, string][]) => {
-          if (responses.length === 0) return 50; // Default if no relevant questions
-          
-          const totalPoints = responses.reduce((sum, [, val]) => {
-            if (val === 'A') return sum + 3;
-            if (val === 'B') return sum + 2;
-            if (val === 'C') return sum + 1;
-            return sum;
-          }, 0);
-          
-          const maxPoints = responses.length * 3;
-          return Math.round((totalPoints / maxPoints) * 100);
-        };
-        
-        const technicalAffinity = calculateAffinity(technicalResponses);
-        const creativeAffinity = calculateAffinity(creativeResponses);
-        const analyticalAffinity = calculateAffinity(analyticalResponses);
-        const socialAffinity = calculateAffinity(socialResponses);
-        const leadershipAffinity = calculateAffinity(leadershipResponses);
-        const businessAffinity = calculateAffinity(businessResponses);
-        
-        // Match careers with appropriate affinities
-        processedCareerRecommendations.forEach(career => {
-          let newMatch = 0;
-          
-          switch (career.careerTitle) {
-            case "Software Engineer":
-            case "Mechanical Engineer":
-              newMatch = (technicalAffinity * 0.4) + (analyticalAffinity * 0.4) + (leadershipAffinity * 0.2);
-              break;
-            case "Data Scientist":
-              newMatch = (analyticalAffinity * 0.5) + (technicalAffinity * 0.3) + (businessAffinity * 0.2);
-              break;
-            case "Medical Doctor":
-              newMatch = (socialAffinity * 0.4) + (analyticalAffinity * 0.4) + (leadershipAffinity * 0.2);
-              break;
-            case "Business Analyst":
-              newMatch = (businessAffinity * 0.4) + (analyticalAffinity * 0.4) + (socialAffinity * 0.2);
-              break;
-            case "Graphic Designer":
-            case "UI/UX Designer":
-              newMatch = (creativeAffinity * 0.6) + (technicalAffinity * 0.2) + (socialAffinity * 0.2);
-              break;
-            case "Marketing Specialist":
-              newMatch = (businessAffinity * 0.4) + (creativeAffinity * 0.3) + (socialAffinity * 0.3);
-              break;
-            case "Project Manager":
-              newMatch = (leadershipAffinity * 0.5) + (businessAffinity * 0.3) + (socialAffinity * 0.2);
-              break;
-            case "Entrepreneur":
-              newMatch = (leadershipAffinity * 0.4) + (businessAffinity * 0.3) + (creativeAffinity * 0.3);
-              break;
-            case "Clinical Psychologist":
-              newMatch = (socialAffinity * 0.6) + (analyticalAffinity * 0.3) + (leadershipAffinity * 0.1);
-              break;
-            case "Financial Analyst":
-              newMatch = (businessAffinity * 0.5) + (analyticalAffinity * 0.4) + (technicalAffinity * 0.1);
-              break;
-            default:
-              // For unspecified careers, use a balanced approach
-              newMatch = (
-                technicalAffinity * 0.2 + 
-                analyticalAffinity * 0.2 + 
-                socialAffinity * 0.2 + 
-                creativeAffinity * 0.2 + 
-                leadershipAffinity * 0.1 + 
-                businessAffinity * 0.1
-              );
-          }
-          
-          // Add some randomization for realism (±10%)
-          const randomFactor = Math.random() * 20 - 10;
-          newMatch = Math.round(newMatch + randomFactor);
-          
-          // Ensure match is between 30-95%
-          career.suitabilityPercentage = Math.max(30, Math.min(95, newMatch));
-        });
-        
-        // Sort by match percentage (high to low)
-        processedCareerRecommendations.sort((a, b) => 
-          b.suitabilityPercentage - a.suitabilityPercentage
-        );
+      } catch (error) {
+        console.error('Error generating personalized insights:', error);
+        // Continue with default values if analysis fails
       }
     }
     
     // Format career recommendations for the PDF
-    const topCareer = processedCareerRecommendations[0] || scores.careerRecommendations[0];
-    
-    // Analyze responses to provide more personalized insights
-    const responseInsights = {
-      learningPreferences: [] as string[],
-      workStylePreferences: [] as string[],
-      personalityTraits: [] as string[]
+    const topCareer = careerRecommendations[0] || {
+      careerTitle: "Career Path",
+      suitabilityPercentage: 75,
+      careerDescription: "Based on your assessment responses, this career path aligns well with your aptitudes and interests.",
+      educationPathways: ["Bachelor's degree in relevant field", "Industry certifications", "Practical experience"],
+      keySkills: ["Communication", "Problem Solving", "Technical Aptitude"],
+      workNature: ["Professional environment with team collaboration", "Opportunities for advancement and specialization"],
+      gapAnalysis: analyzedDevelopmentAreas.map(area => `Development in ${area} would enhance career prospects.`)
     };
-    
-    if (responses) {
-      // Simple analysis of learning preferences based on responses
-      if (Object.keys(responses).some(q => q.includes('_90') && responses[q] === 'A') || 
-          Object.keys(responses).some(q => q.includes('_92') && responses[q] === 'A') ||
-          Object.keys(responses).some(q => q.includes('_95') && responses[q] === 'A')) {
-        responseInsights.learningPreferences.push('Visual Learning');
-      }
-      if (Object.keys(responses).some(q => q.includes('_91') && responses[q] === 'B') || 
-          Object.keys(responses).some(q => q.includes('_92') && responses[q] === 'B') ||
-          Object.keys(responses).some(q => q.includes('_95') && responses[q] === 'B')) {
-        responseInsights.learningPreferences.push('Auditory Learning');
-      }
-      if (Object.keys(responses).some(q => q.includes('_93') && responses[q] === 'D') || 
-          Object.keys(responses).some(q => q.includes('_94') && responses[q] === 'A') ||
-          Object.keys(responses).some(q => q.includes('_95') && responses[q] === 'D')) {
-        responseInsights.learningPreferences.push('Kinesthetic Learning');
-      }
-      
-      // Work style preferences based on personality questions
-      if (Object.keys(responses).filter(q => 
-          (q.includes('_54') && responses[q] === 'A') || 
-          (q.includes('_55') && responses[q] === 'A') ||
-          (q.includes('_59') && responses[q] === 'A')).length >= 2) {
-        responseInsights.workStylePreferences.push('Collaborative Work Environment');
-      } else {
-        responseInsights.workStylePreferences.push('Independent Work Environment');
-      }
-      
-      if (Object.keys(responses).filter(q => 
-          (q.includes('_75') && responses[q] === 'A') || 
-          (q.includes('_76') && responses[q] === 'B') ||
-          (q.includes('_20') && responses[q] === 'A')).length >= 2) {
-        responseInsights.workStylePreferences.push('Structured Work Environment');
-      } else {
-        responseInsights.workStylePreferences.push('Flexible Work Environment');
-      }
-      
-      // Personality traits
-      const extroversionQuestions = Object.keys(responses).filter(q => 
-        q.includes('_54') || q.includes('_55') || q.includes('_56') || q.includes('_59')
-      );
-      
-      const aCount = extroversionQuestions.filter(q => responses[q] === 'A').length;
-      const bCount = extroversionQuestions.filter(q => responses[q] === 'B').length;
-      
-      if (aCount > bCount) {
-        responseInsights.personalityTraits.push('Extroverted', 'Assertive');
-      } else {
-        responseInsights.personalityTraits.push('Introverted', 'Reflective');
-      }
-      
-      // Thinking vs Feeling
-      const thinkingFeelingQuestions = Object.keys(responses).filter(q => 
-        q.includes('_68') || q.includes('_69') || q.includes('_71') || q.includes('_72')
-      );
-      
-      const thinkingCount = thinkingFeelingQuestions.filter(q => responses[q] === 'A').length;
-      const feelingCount = thinkingFeelingQuestions.filter(q => responses[q] === 'B').length;
-      
-      if (thinkingCount > feelingCount) {
-        responseInsights.personalityTraits.push('Logical', 'Objective');
-      } else {
-        responseInsights.personalityTraits.push('Empathetic', 'People-oriented');
-      }
-    }
     
     // Create a structured PDF content object
     const pdfContent = {
@@ -289,11 +184,11 @@ const ReportPDFGenerator = ({
         interest: scores.interest,
         learningStyle: scores.learningStyle
       },
-      strengthAreas: strengthAreas.map(strength => ({
+      strengthAreas: analyzedStrengths.map(strength => ({
         name: strength,
         description: getStrengthDescription(strength)
       })),
-      developmentAreas: developmentAreas.map(area => ({
+      developmentAreas: analyzedDevelopmentAreas.map(area => ({
         name: area,
         description: getGapDescription(area)
       })),
@@ -305,7 +200,7 @@ const ReportPDFGenerator = ({
         keySkills: topCareer.keySkills,
         workNature: topCareer.workNature
       },
-      otherCareers: processedCareerRecommendations.slice(1, 4).map(career => ({
+      otherCareers: careerRecommendations.slice(1, 4).map(career => ({
         title: career.careerTitle,
         match: career.suitabilityPercentage,
         description: career.careerDescription,
@@ -322,25 +217,9 @@ const ReportPDFGenerator = ({
           { name: 'Leadership', score: scores.personality < 65 ? 'Needs Improvement' : 'Average' }
         ]
       },
-      personalization: responseInsights,
+      personalization: personalityInsights,
       gapAnalysis: topCareer.gapAnalysis,
-      recommendations: {
-        shortTerm: [
-          "Research educational pathways for your top career match",
-          "Identify and build missing skills from the gap analysis",
-          "Connect with professionals in your preferred career field"
-        ],
-        mediumTerm: [
-          "Select suitable educational programs that align with your career goals",
-          "Gain practical experience through internships or part-time roles",
-          "Continue developing your personal and professional portfolio"
-        ],
-        longTerm: [
-          "Pursue advanced qualifications if required for career progression",
-          "Expand your professional network within the industry",
-          "Regularly reassess your career path and make adjustments as needed"
-        ]
-      }
+      recommendations: developmentPlan
     };
     
     return pdfContent;
@@ -422,7 +301,25 @@ const ReportPDFGenerator = ({
       // Report description
       pdf.setFontSize(12);
       let yPos = 150;
-      pdf.text("This report provides a comprehensive analysis of your aptitudes, personality traits, interests, and learning style to identify optimal career paths aligned with your unique profile.", margin, yPos, { maxWidth: contentWidth });
+      pdf.text("This comprehensive report analyzes your aptitudes, personality traits, interests, and learning preferences to identify optimal career paths uniquely aligned with your profile. It offers personalized insights to guide your educational and professional journey.", margin, yPos, { maxWidth: contentWidth });
+      
+      yPos += 30;
+      pdf.setFontSize(11);
+      pdf.text("Inside this report, you'll find:", margin, yPos);
+      yPos += 10;
+      
+      const reportContents = [
+        "• Detailed strengths and development areas analysis",
+        "• Personalized career recommendations with match percentages",
+        "• Educational pathway suggestions for career preparation",
+        "• Customized action plan for skill development",
+        "• Learning style insights to optimize your education"
+      ];
+      
+      reportContents.forEach(item => {
+        pdf.text(item, margin + 5, yPos);
+        yPos += 8;
+      });
       
       // Footer
       pdf.setFontSize(8);
@@ -553,6 +450,24 @@ const ReportPDFGenerator = ({
         }
       });
       
+      // Personality Fit Section
+      yPos += 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Personality Fit Analysis', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      // Add personality traits relevant to career
+      const relevantTraits = pdfContent.personalization.traits.slice(0, 3);
+      yPos = addWrappedText(`Your personality profile (${relevantTraits.join(', ')}) aligns well with this career path. ${pdfContent.topCareerPath.title} professionals typically benefit from these traits in their day-to-day responsibilities and long-term career development.`, margin + 5, yPos, contentWidth - 10, lineHeight);
+      
+      // Add work preferences
+      yPos += 10;
+      const workPreferences = pdfContent.personalization.workStyle.slice(0, 2);
+      yPos = addWrappedText(`Your work style (${workPreferences.join(', ')}) matches the typical work environment for this career, which often involves ${pdfContent.topCareerPath.workNature[0].toLowerCase()}`, margin + 5, yPos, contentWidth - 10, lineHeight);
+      
       // Footer
       pdf.setFontSize(8);
       pdf.text('Page 3 of 8', pageWidth - margin, pageHeight - 10, { align: 'right' });
@@ -583,9 +498,32 @@ const ReportPDFGenerator = ({
         }
       });
       
+      // Learning Style Recommendations
+      yPos += 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Learning Style Recommendations', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      const learningPreferences = pdfContent.personalization.learningPreferences;
+      
+      if (learningPreferences.includes('Visual Learner')) {
+        yPos = addWrappedText("Your assessment indicates you're a visual learner. For maximum effectiveness in your educational journey, prioritize learning materials with diagrams, charts, videos, and other visual aids. Take notes using mind maps and color-coding to help retain information.", margin + 5, yPos, contentWidth - 10, lineHeight);
+      } else if (learningPreferences.includes('Auditory Learner')) {
+        yPos = addWrappedText("Your assessment indicates you're an auditory learner. For maximum effectiveness in your educational journey, prioritize lectures, discussions, podcasts, and audio materials. Consider recording classes and reading your notes aloud when studying.", margin + 5, yPos, contentWidth - 10, lineHeight);
+      } else if (learningPreferences.includes('Kinesthetic Learner')) {
+        yPos = addWrappedText("Your assessment indicates you're a kinesthetic learner. For maximum effectiveness in your educational journey, prioritize hands-on activities, labs, role-playing, and experiential learning. Take breaks during study sessions to move around and consider using flashcards you can manipulate.", margin + 5, yPos, contentWidth - 10, lineHeight);
+      } else if (learningPreferences.includes('Reading/Writing Learner')) {
+        yPos = addWrappedText("Your assessment indicates you prefer learning through reading and writing. For maximum effectiveness in your educational journey, prioritize textbooks, articles, and written materials. Take detailed notes and rewrite information in your own words to enhance understanding and retention.", margin + 5, yPos, contentWidth - 10, lineHeight);
+      } else {
+        yPos = addWrappedText("Your assessment indicates you have a multimodal learning style. For maximum effectiveness in your educational journey, use a variety of learning approaches including visual aids, discussions, hands-on activities, and reading materials to reinforce understanding from multiple angles.", margin + 5, yPos, contentWidth - 10, lineHeight);
+      }
+      
       yPos += 10;
       
-      // Work Nature
+      // Work Responsibilities
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(12);
       pdf.text('Work Responsibilities', margin, yPos);
@@ -594,8 +532,8 @@ const ReportPDFGenerator = ({
       yPos += 7;
       
       pdfContent.topCareerPath.workNature.forEach((work, index) => {
-        pdf.text(`• ${work}`, margin + 5, yPos);
-        yPos += 10;
+        yPos = addWrappedText(`• ${work}`, margin + 5, yPos, contentWidth - 10, lineHeight);
+        yPos += 7;
         
         // Check if we need a new page
         if (yPos > pageHeight - margin && index < pdfContent.topCareerPath.workNature.length - 1) {
@@ -615,6 +553,10 @@ const ReportPDFGenerator = ({
       // Page title
       yPos = addSectionHeader('Alternative Career Paths', yPos);
       
+      // Introduction to alternative careers
+      yPos = addWrappedText("While your top career recommendation represents your strongest match based on your assessment results, the following alternative careers also align well with your profile and may be worth exploring:", margin, yPos, contentWidth, lineHeight);
+      yPos += 10;
+      
       // Alternative Careers
       pdfContent.otherCareers.forEach((career, index) => {
         // Check if we need a new page
@@ -633,9 +575,41 @@ const ReportPDFGenerator = ({
         yPos = addWrappedText(career.description, margin + 5, yPos, contentWidth - 10, lineHeight);
         yPos += 5;
         
-        pdf.text(`Key Skills: ${career.keySkills.join(', ')}`, margin + 5, yPos);
+        // Key Skills section
+        pdf.setFont('helvetica', 'italic');
+        pdf.text("Key Skills Required:", margin + 5, yPos);
+        pdf.setFont('helvetica', 'normal');
+        yPos += 5;
+        
+        pdf.text(`${career.keySkills.join(', ')}`, margin + 5, yPos);
         yPos += 15; // Extra space between careers
       });
+      
+      // Career Exploration Tips
+      if (yPos < pageHeight - 60) {
+        yPos += 5;
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
+        pdf.text('Career Exploration Tips', margin, yPos);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        yPos += 7;
+        
+        const explorationTips = [
+          "Research day-to-day responsibilities through informational interviews with professionals",
+          "Explore job shadowing or internship opportunities to experience the work environment",
+          "Connect with current students or recent graduates from relevant educational programs",
+          "Join professional organizations or online communities in your fields of interest",
+          "Attend career fairs and industry events to learn more about potential employers"
+        ];
+        
+        explorationTips.forEach((tip, index) => {
+          if (index < 3) { // Only show first 3 tips if space is limited
+            yPos = addWrappedText(`• ${tip}`, margin + 5, yPos, contentWidth - 10, lineHeight);
+            yPos += 5;
+          }
+        });
+      }
       
       // Footer
       pdf.setFontSize(8);
@@ -647,6 +621,10 @@ const ReportPDFGenerator = ({
       
       // Page title
       yPos = addSectionHeader('Gap Analysis & Development Plan', yPos);
+      
+      // Introduction to gap analysis
+      yPos = addWrappedText("Based on your assessment results, we've identified specific areas for development that can enhance your readiness for your recommended career paths. Addressing these gaps strategically will strengthen your candidacy for your preferred careers.", margin, yPos, contentWidth, lineHeight);
+      yPos += 10;
       
       // Gap Analysis
       pdf.setFont('helvetica', 'bold');
@@ -669,43 +647,40 @@ const ReportPDFGenerator = ({
       
       yPos += 10;
       
-      // Learning Style
-      if (pdfContent.personalization.learningPreferences.length > 0) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(12);
-        pdf.text('Your Learning Preferences', margin, yPos);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(10);
-        yPos += 7;
-        
-        pdfContent.personalization.learningPreferences.forEach(style => {
-          pdf.text(`• ${style}`, margin + 5, yPos);
-          yPos += 7;
-        });
-        
-        yPos += 3;
-        yPos = addWrappedText("Understanding your learning preferences can help you choose educational pathways that align with your natural learning style, enhancing knowledge retention and skill development.", margin + 5, yPos, contentWidth - 10, lineHeight);
-        yPos += 10;
+      // Personality analysis
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Personality Profile Insights', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      // Add traits summary
+      const traitsSummary = `Your assessment reveals key traits including: ${pdfContent.personalization.traits.join(', ')}`;
+      yPos = addWrappedText(traitsSummary, margin + 5, yPos, contentWidth - 10, lineHeight);
+      yPos += 7;
+      
+      // Add decision-making style
+      let decisionStyle = "";
+      if (pdfContent.personalization.decisionMakingStyle === 'rational') {
+        decisionStyle = "You tend to make decisions based on logical analysis and objective factors. This analytical approach helps you evaluate options systematically and reach sound conclusions.";
+      } else if (pdfContent.personalization.decisionMakingStyle === 'empathetic') {
+        decisionStyle = "You tend to make decisions by considering how they affect people and relationships. This people-centered approach helps you build rapport and maintain positive interactions.";
+      } else {
+        decisionStyle = "You show a balanced approach to decision-making, considering both objective factors and human elements when evaluating options.";
       }
       
-      // Work style preferences
-      if (pdfContent.personalization.workStylePreferences.length > 0) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(12);
-        pdf.text('Your Work Style Preferences', margin, yPos);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(10);
-        yPos += 7;
-        
-        pdfContent.personalization.workStylePreferences.forEach(style => {
-          pdf.text(`• ${style}`, margin + 5, yPos);
-          yPos += 7;
-        });
-        
-        yPos += 3;
-        yPos = addWrappedText("Being aware of your work style preferences can help you find environments where you'll naturally thrive and contribute most effectively.", margin + 5, yPos, contentWidth - 10, lineHeight);
-        yPos += 10;
-      }
+      yPos = addWrappedText(decisionStyle, margin + 5, yPos, contentWidth - 10, lineHeight);
+      yPos += 7;
+      
+      // Add work style
+      const workStyleText = `Work Style: ${pdfContent.personalization.workStyle.join(', ')}`;
+      yPos = addWrappedText(workStyleText, margin + 5, yPos, contentWidth - 10, lineHeight);
+      yPos += 7;
+      
+      // Add career values
+      const valuesText = `Career Values: Your responses indicate you value ${pdfContent.personalization.careerValues.join(', ')}`;
+      yPos = addWrappedText(valuesText, margin + 5, yPos, contentWidth - 10, lineHeight);
       
       // Footer
       pdf.setFontSize(8);
@@ -717,6 +692,10 @@ const ReportPDFGenerator = ({
       
       // Page title
       yPos = addSectionHeader('Personalized Action Plan', yPos);
+      
+      // Introduction to action plan
+      yPos = addWrappedText("Based on your assessment results and identified development areas, we've created a customized action plan to help you prepare for your recommended career paths. This plan is divided into short-term, medium-term, and long-term goals to provide a structured approach to your career development.", margin, yPos, contentWidth, lineHeight);
+      yPos += 10;
       
       // Short Term
       pdf.setFont('helvetica', 'bold');
@@ -763,21 +742,28 @@ const ReportPDFGenerator = ({
       
       yPos += 10;
       
-      // Personality traits section
-      if (pdfContent.personalization.personalityTraits.length > 0) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(12);
-        pdf.text('Your Key Personality Traits', margin, yPos);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(10);
-        yPos += 7;
-        
-        const traitsText = pdfContent.personalization.personalityTraits.join(', ');
-        yPos = addWrappedText(traitsText, margin + 5, yPos, contentWidth - 10, lineHeight);
-        
-        yPos += 7;
-        yPos = addWrappedText("These traits reflect your natural tendencies and can guide your career choices toward roles where these characteristics are valued and can contribute to your success.", margin + 5, yPos, contentWidth - 10, lineHeight);
-      }
+      // Tips for successful implementation
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text('Tips for Successful Implementation', margin, yPos);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      yPos += 7;
+      
+      const implementationTips = [
+        "Break down larger goals into smaller, actionable steps with specific deadlines",
+        "Track your progress regularly and adjust your approach as needed",
+        "Seek feedback from mentors, teachers, or career counselors",
+        "Celebrate small wins to maintain motivation throughout your journey",
+        "Revisit this report periodically to stay aligned with your career goals"
+      ];
+      
+      implementationTips.forEach((tip) => {
+        if (yPos < pageHeight - 20) {
+          yPos = addWrappedText(`• ${tip}`, margin + 5, yPos, contentWidth - 10, lineHeight);
+          yPos += 5;
+        }
+      });
       
       // Footer
       pdf.setFontSize(8);
@@ -792,15 +778,15 @@ const ReportPDFGenerator = ({
       
       // Conclusion text
       pdf.setFontSize(10);
-      let conclusionText = "This career assessment report is designed to guide you in making informed decisions about your educational and career path. The insights provided are based on your responses to the assessment questions, which measured your aptitudes, personality traits, interests, and learning preferences.";
+      let conclusionText = "This career assessment report provides personalized insights based on your unique profile of aptitudes, personality traits, interests, and learning preferences. The recommendations and action plans outlined here are designed to guide your educational and career planning process.";
       yPos = addWrappedText(conclusionText, margin, yPos, contentWidth, lineHeight);
       yPos += 10;
       
-      conclusionText = "Remember that this report is a tool to help you explore possibilities that align with your strengths and preferences. Your career journey is unique, and this report serves as a starting point for further exploration and development.";
+      conclusionText = "Remember that this report serves as a starting point for exploration rather than a definitive prescription. Your career journey is unique, and this analysis offers evidence-based guidance to help you make informed decisions about your future.";
       yPos = addWrappedText(conclusionText, margin, yPos, contentWidth, lineHeight);
       yPos += 10;
       
-      conclusionText = "We recommend discussing these results with your teachers, career counselors, or mentors who can provide additional guidance specific to your situation and goals.";
+      conclusionText = "We recommend discussing these results with your teachers, parents, career counselors, or mentors who can provide additional context and guidance specific to your situation and goals.";
       yPos = addWrappedText(conclusionText, margin, yPos, contentWidth, lineHeight);
       yPos += 15;
       
@@ -813,20 +799,20 @@ const ReportPDFGenerator = ({
       yPos += 7;
       
       const nextSteps = [
-        "Research the recommended career paths in more detail",
-        "Speak with professionals in your field of interest",
-        "Explore educational institutions offering relevant programs",
-        "Develop a personal plan to address identified gaps",
-        "Consider shadowing or internship opportunities"
+        "Research the recommended career paths in more detail through online resources and career guides",
+        "Speak with professionals currently working in your fields of interest to gain first-hand insights",
+        "Explore educational institutions offering programs aligned with your career goals",
+        "Develop a personal action plan based on the recommendations in this report",
+        "Consider job shadowing, internships, or volunteer opportunities to gain practical experience"
       ];
       
       nextSteps.forEach((step, index) => {
         pdf.text(`${index + 1}. ${step}`, margin + 5, yPos);
-        yPos += 7;
+        yPos += 10;
       });
       
       // Certificate
-      yPos += 20;
+      yPos += 10;
       pdf.setFillColor(245, 245, 245);
       pdf.rect(margin, yPos, contentWidth, 40, 'F');
       
@@ -915,7 +901,7 @@ const ReportPDFGenerator = ({
         
         <div className="text-sm text-muted-foreground">
           <p className="italic">
-            This report is generated based on your actual assessment responses and provides enterprise-grade 
+            This report is generated based on your assessment responses and provides enterprise-grade 
             career guidance with specific recommendations tailored to your unique profile.
           </p>
         </div>

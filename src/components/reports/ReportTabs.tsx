@@ -1,17 +1,19 @@
 
+// We need to update this component to pass strengthAreas and developmentAreas to SkillAnalysisTab
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CareerMatchesTab from '@/components/reports/CareerMatchesTab';
-import SkillAnalysisTab from '@/components/reports/SkillAnalysisTab';
-import CareerInsightsCard from '@/components/reports/CareerInsightsCard';
+import CareerMatchesTab from './CareerMatchesTab';
+import SkillAnalysisTab from './SkillAnalysisTab';
+
+interface SkillData {
+  name: string;
+  value: number;
+  fullMark: number;
+}
 
 interface ReportTabsProps {
   reportId: string;
-  skillData: Array<{
-    name: string;
-    value: number;
-    fullMark: number;
-  }>;
+  skillData: SkillData[];
   responses?: Record<string, string> | null;
   strengthAreas?: string[];
   developmentAreas?: string[];
@@ -19,29 +21,29 @@ interface ReportTabsProps {
 
 const ReportTabs = ({ 
   reportId, 
-  skillData, 
+  skillData,
   responses,
-  strengthAreas,
-  developmentAreas
+  strengthAreas = [],
+  developmentAreas = []
 }: ReportTabsProps) => {
   return (
-    <Tabs defaultValue="careers" className="space-y-6">
-      <TabsList className="grid w-full max-w-md grid-cols-2">
+    <Tabs defaultValue="careers" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="careers">Career Matches</TabsTrigger>
         <TabsTrigger value="skills">Skill Analysis</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="careers" className="mt-0 space-y-6">
-        <CareerMatchesTab 
-          reportId={reportId} 
-          responses={responses} 
+      <TabsContent value="careers" className="mt-6">
+        <CareerMatchesTab reportId={reportId} />
+      </TabsContent>
+      
+      <TabsContent value="skills" className="mt-6">
+        <SkillAnalysisTab 
+          skillData={skillData} 
+          responses={responses}
           strengthAreas={strengthAreas}
           developmentAreas={developmentAreas}
         />
-      </TabsContent>
-      
-      <TabsContent value="skills" className="mt-0 space-y-6">
-        <SkillAnalysisTab skillData={skillData} responses={responses} />
       </TabsContent>
     </Tabs>
   );
