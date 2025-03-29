@@ -22,11 +22,11 @@ serve(async (req) => {
     
     // Set up prompts based on content type
     let prompt = '';
-    let systemMessage = 'You are an AI career counselor helping to generate personalized content for a career assessment report.';
+    let systemMessage = 'You are an Indian career counselor with Experience of 15 Years helping to generate personalized content for a career assessment report.';
     
     switch (contentType) {
       case 'careerRecommendation':
-        prompt = `Based on the following assessment data, provide a detailed career recommendation. Include specific information about why this career path is suitable, what the day-to-day responsibilities involve, and what skills are required to excel in this field.
+        prompt = `Based on the following assessment data, provide a detailed career recommendation. Include specific information about why this career path is suitable, what the day-to-day responsibilities involve, and what skills are required to excel in this field. response should be based on indian things.
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
