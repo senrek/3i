@@ -649,7 +649,7 @@ export const unifiedQuestions: Question[] = [
     category: 'aptitude'
   },
   
-  // Additional personality questions (59-77)
+  // Personality questions (59-77)
   {
     id: "per_1",
     text: "Which option describes you best?",
@@ -699,8 +699,8 @@ export const unifiedQuestions: Question[] = [
     id: "per_6",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I find it easy to introduce myself and interact with many people." },
-      { value: "B", label: "I find it difficult to introduce myself and interact with many people." }
+      { value: "A", label: "I find it easy to introduce myself and interact with many people" },
+      { value: "B", label: "I find it difficult to introduce myself and interact with many people" }
     ],
     category: 'personality'
   },
@@ -708,8 +708,8 @@ export const unifiedQuestions: Question[] = [
     id: "per_7",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I can easily be distracted while doing a task." },
-      { value: "B", label: "I can focus on a task for a longer duration without being distracted easily." }
+      { value: "A", label: "I can easily be distracted while doing a task" },
+      { value: "B", label: "I can focus on a task for a longer duration without being distracted easily" }
     ],
     category: 'personality'
   },
@@ -717,8 +717,8 @@ export const unifiedQuestions: Question[] = [
     id: "per_8",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I like to learn new things through observation and practical activities." },
-      { value: "B", label: "I like to learn new things through intensive thinking and imagination." }
+      { value: "A", label: "I like to learn new things through observation and practical activities" },
+      { value: "B", label: "I like to learn new things through intensive thinking and imagination" }
     ],
     category: 'personality'
   },
@@ -726,8 +726,8 @@ export const unifiedQuestions: Question[] = [
     id: "per_9",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I like to do things in proven ways." },
-      { value: "B", label: "I like to do things in new ways." }
+      { value: "A", label: "I like to do things in proven ways" },
+      { value: "B", label: "I like to do things in new ways" }
     ],
     category: 'personality'
   },
@@ -735,8 +735,8 @@ export const unifiedQuestions: Question[] = [
     id: "per_10",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I usually begin with facts and then build a bigger idea." },
-      { value: "B", label: "I usually build a bigger idea and then find out facts." }
+      { value: "A", label: "I usually begin with facts and then build a bigger idea" },
+      { value: "B", label: "I usually build a bigger idea and then find out facts" }
     ],
     category: 'personality'
   },
@@ -744,8 +744,8 @@ export const unifiedQuestions: Question[] = [
     id: "per_11",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I prefer to trust my actual experience." },
-      { value: "B", label: "I prefer to trust my gut instincts." }
+      { value: "A", label: "I prefer to trust my actual experience" },
+      { value: "B", label: "I prefer to trust my gut instincts" }
     ],
     category: 'personality'
   },
@@ -753,8 +753,8 @@ export const unifiedQuestions: Question[] = [
     id: "per_12",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I apply details and facts in my assignments." },
-      { value: "B", label: "I apply new ideas in my assignments." }
+      { value: "A", label: "I apply details and facts in my assignments" },
+      { value: "B", label: "I apply new ideas in my assignments" }
     ],
     category: 'personality'
   },
@@ -762,13 +762,385 @@ export const unifiedQuestions: Question[] = [
     id: "per_13",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label: "I prefer practical solutions in solving issues." },
-      { value: "B", label: "I prefer creative solutions in solving issues." }
+      { value: "A", label: "I prefer practical solutions in solving issues" },
+      { value: "B", label: "I prefer creative solutions in solving issues" }
     ],
     category: 'personality'
   },
+  
+  // Additional personality questions (14-19)
   {
     id: "per_14",
     text: "Which option describes you best?",
     options: [
-      { value: "A", label:
+      { value: "A", label: "I prefer to learn step by step in a structured way" },
+      { value: "B", label: "I prefer to learn in a non-orderly, random manner" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_15",
+    text: "How do you take decisions?",
+    options: [
+      { value: "A", label: "I usually take decisions with my head and focus on facts" },
+      { value: "B", label: "I usually take decisions with my heart and consider others' feelings" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_16",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "Usually, I am not sensitive to other people's opinions and comments about me" },
+      { value: "B", label: "I am sensitive to other people's opinions and comments about me" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_17",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I see myself as a precise, scientific, and intellectual person" },
+      { value: "B", label: "I see myself as a helpful, friendly, and caring person" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_18",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I am usually tough-minded" },
+      { value: "B", label: "I am usually soft-hearted" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_19",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I usually give direct and honest opinions to others" },
+      { value: "B", label: "I am usually careful not to hurt others with my comments" }
+    ],
+    category: 'personality'
+  },
+  
+  // More personality questions (20-25)
+  {
+    id: "per_20",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I am motivated by achievement" },
+      { value: "B", label: "I am motivated by appreciation" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_21",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I give more importance to facts, tasks, and logical considerations" },
+      { value: "B", label: "I give more importance to the personal value system and social considerations" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_22",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I like to make plans and schedules and try to stick with them" },
+      { value: "B", label: "I like to be flexible and keep plans to a minimum" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_23",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I usually take tasks without making a plan" },
+      { value: "B", label: "I usually plan everything first in advance before moving into action" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_24",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I often juggle multiple tasks at a time" },
+      { value: "B", label: "I usually do one task at a time" }
+    ],
+    category: 'personality'
+  },
+  
+  // Interest questions (1-7)
+  {
+    id: "int_1",
+    text: "Given an option, how much would you like to choose the given value in your dream job? Adventurous and excitement involving physical risk.",
+    options: [
+      { value: "A", label: "Always" },
+      { value: "B", label: "Most of the time" },
+      { value: "C", label: "Not really" },
+      { value: "D", label: "Definitely No" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_2",
+    text: "Given an option, how much would you like to choose the given value in your dream job? Freedom to work alone, make my own decisions, plan my own work.",
+    options: [
+      { value: "A", label: "Always, I like to work alone" },
+      { value: "B", label: "Most of the time" },
+      { value: "C", label: "Not really, mostly I like to work in groups" },
+      { value: "D", label: "Definitely No, in fact, I enjoy working in groups" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_3",
+    text: "Given an option, how much would you like to choose the given value in your dream job? Work on the frontiers of knowledge that requires continuous learning.",
+    options: [
+      { value: "A", label: "Always, I would like to upgrade my skills" },
+      { value: "B", label: "Most of the time" },
+      { value: "C", label: "Not really" },
+      { value: "D", label: "Definitely No" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_4",
+    text: "Given an option, how much would you like to choose the given value in your dream job? Work that has a high degree of competition, challenge, pace, and excitement.",
+    options: [
+      { value: "A", label: "Always, I would like to work in a high-paced, challenging work environment" },
+      { value: "B", label: "Most of the time" },
+      { value: "C", label: "Not really" },
+      { value: "D", label: "Definitely No, the working environment should be pleasant and peaceful, requiring honesty" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_5",
+    text: "Given an option, how much would you like to choose the given value in your dream job? Structured work environment requiring a high level of accuracy, reliability, and set procedures in work.",
+    options: [
+      { value: "A", label: "Always" },
+      { value: "B", label: "Most of the time" },
+      { value: "C", label: "Not really" },
+      { value: "D", label: "Definitely No, the work environment should be casual and flexible" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_6",
+    text: "Given an option, how much would you like to choose the given value in your dream job? Engage in creative work in any form of art.",
+    options: [
+      { value: "A", label: "Always" },
+      { value: "B", label: "Most of the time" },
+      { value: "C", label: "Not really" },
+      { value: "D", label: "Definitely No" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_7",
+    text: "Given an option, how much would you like to choose the given value in your dream job? Work should involve social services, responsibility, and welfare of people and society.",
+    options: [
+      { value: "A", label: "Always" },
+      { value: "B", label: "Most of the time" },
+      { value: "C", label: "Not really" },
+      { value: "D", label: "Definitely No" }
+    ],
+    category: 'interest'
+  },
+  
+  // Learning style questions (1-8)
+  {
+    id: "lrn_1",
+    text: "You are not sure whether a word should be spelled 'dependent' or 'dependant'. You would:",
+    options: [
+      { value: "A", label: "Look it up in the dictionary" },
+      { value: "B", label: "Picturize the word in your mind and choose the way it looks" },
+      { value: "C", label: "Spell it out loud to see if it sounds right" },
+      { value: "D", label: "Write both versions down on paper and choose one" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "lrn_2",
+    text: "When you study, what makes you learn better?",
+    options: [
+      { value: "A", label: "Read and re-write notes, headings in a book" },
+      { value: "B", label: "Listen to a lecture, discuss it, or repeat loudly to yourself" },
+      { value: "C", label: "Move around and learn by practicals, demonstrations" },
+      { value: "D", label: "Convert text to labeled diagrams, flowcharts, images, and illustrations" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "lrn_3",
+    text: "To learn how a computer works, would you rather:",
+    options: [
+      { value: "A", label: "Watch a demo video about it?" },
+      { value: "B", label: "Listen to someone explaining it?" },
+      { value: "C", label: "Take the computer apart and try to figure it out by myself?" },
+      { value: "D", label: "Read the instructions and catalogue?" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "lrn_4",
+    text: "In a class or seminar, You usually:",
+    options: [
+      { value: "A", label: "Make plenty of notes on what the teacher says" },
+      { value: "B", label: "Listen carefully and make some notes" },
+      { value: "C", label: "Draw pictures, illustrations while listening" },
+      { value: "D", label: "Prefer more examples, demos, and real-time applications" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "lrn_5",
+    text: "You have to present your ideas to your class. You would:",
+    options: [
+      { value: "A", label: "Prefer creating a working model and demonstrating to others" },
+      { value: "B", label: "Prefer creating diagrams, flowcharts, and graphs to explain ideas" },
+      { value: "C", label: "Prefer to write and practice a few keywords by saying them over and over again" },
+      { value: "D", label: "Prefer to write down and practice my speech by reading it over and over again" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "lrn_6",
+    text: "Do you prefer a teacher or a presenter who uses:",
+    options: [
+      { value: "A", label: "Diagrams, charts, or graphs?" },
+      { value: "B", label: "Question and answer, talk, group discussion, or guest speakers?" },
+      { value: "C", label: "Handouts, books, or readings?" },
+      { value: "D", label: "Demonstrations, models, or practical sessions?" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "lrn_7",
+    text: "You are about to purchase a digital camera or a mobile phone. Apart from the price, what would have the most influence on your decision?",
+    options: [
+      { value: "A", label: "Trying or testing it" },
+      { value: "B", label: "Reading the details or checking its features online" },
+      { value: "C", label: "Modern design and sleek looks" },
+      { value: "D", label: "The salesperson telling me about its features" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "lrn_8",
+    text: "Remember a time when you learned how to do something new. Avoid choosing a physical skill, e.g., Riding a bike. You learned best by:",
+    options: [
+      { value: "A", label: "Watching a demonstration" },
+      { value: "B", label: "Listening to somebody explaining it and asking questions" },
+      { value: "C", label: "Diagrams, maps, and charts - visual clues" },
+      { value: "D", label: "Written instructions, e.g., a manual or book" }
+    ],
+    category: 'learning-style'
+  },
+  
+  // Additional interest questions (8-15)
+  {
+    id: "int_8",
+    text: "Do you like physical activities that require strength rather than sitting and watching?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_9",
+    text: "Do you like to participate in stage shows, events, or art competitions?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_10",
+    text: "Do you enjoy participating in debates, speeches, or presentations?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_11",
+    text: "Do you like to work with a variety of colors and designs?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_12",
+    text: "Can you imagine different pictures, colors, and designs when you close your eyes and visualize how things would look from different angles?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_13",
+    text: "Can you convince people to do things your way?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_14",
+    text: "Do you like to participate in social events, community service, and volunteering?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_15",
+    text: "Do you like to learn more about new technologies and how things work?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  
+  // More interest questions (16-17)
+  {
+    id: "int_16",
+    text: "Do you enjoy repairing or fixing gadgets, home appliances, etc.?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_17",
+    text: "Do you have an affinity for numbers and an interest in business and the economy?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  }
+];
