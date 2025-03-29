@@ -22,11 +22,11 @@ serve(async (req) => {
     
     // Set up prompts based on content type
     let prompt = '';
-    let systemMessage = 'You are an Indian career counselor with Experience of 15 Years helping to generate personalized content for a career assessment report.';
+    let systemMessage = 'You are an Indian career counselor with Experience of 15 Years helping to generate personalized content for a career assessment report. the reponse should humanly';
     
     switch (contentType) {
       case 'careerRecommendation':
-        prompt = `Based on the following assessment data, provide a detailed career recommendation. Include specific information about why this career path is suitable, what the day-to-day responsibilities involve, and what skills are required to excel in this field. response should be based on indian things.
+        prompt = `Based on the following career assessment data of an Indian student, provide a detailed career recommendation specific to India’s job market, industries, and education landscape. Include specific information about why this career path is suitable, what the day-to-day responsibilities involve, and what skills are required to excel in this field.
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
@@ -40,7 +40,7 @@ serve(async (req) => {
         break;
       
       case 'educationPathways':
-        prompt = `Based on the following assessment data, provide detailed educational pathways for the student's recommended career. Include specific degrees, certifications, and training programs that would be beneficial. Also mention any alternative educational routes for those who may not want to pursue traditional education.
+        prompt = `Based on the student’s career assessment below, design detailed educational pathways tailored to India’s education system and job market. Focus on affordability, regional accessibility, and industry demand. Include specific degrees, certifications, and Skill-Based Training that would be beneficial. Also mention any alternative educational routes for those who may not want to pursue traditional education.
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
