@@ -40,15 +40,15 @@ const QuestionCard = ({
   const getCategoryColor = (category: string) => {
     switch(category) {
       case 'aptitude':
-        return 'bg-blue-500';
+        return 'bg-blue-600 hover:bg-blue-700';
       case 'personality':
-        return 'bg-purple-500';
+        return 'bg-purple-600 hover:bg-purple-700';
       case 'interest':
-        return 'bg-green-500';
+        return 'bg-green-600 hover:bg-green-700';
       case 'learning-style':
-        return 'bg-amber-500';
+        return 'bg-amber-600 hover:bg-amber-700';
       default:
-        return 'bg-gray-500';
+        return 'bg-gray-600 hover:bg-gray-700';
     }
   };
 
@@ -66,13 +66,33 @@ const QuestionCard = ({
         return 'Other';
     }
   };
+  
+  // Get gradient background for category
+  const getCategoryGradient = (category: string) => {
+    switch(category) {
+      case 'aptitude':
+        return 'bg-gradient-to-r from-blue-500 to-blue-700';
+      case 'personality':
+        return 'bg-gradient-to-r from-purple-500 to-purple-700';
+      case 'interest':
+        return 'bg-gradient-to-r from-green-500 to-green-700';
+      case 'learning-style':
+        return 'bg-gradient-to-r from-amber-500 to-amber-700';
+      default:
+        return 'bg-gradient-to-r from-gray-500 to-gray-700';
+    }
+  };
+
+  const categoryColor = getCategoryColor(question.category);
+  const categoryGradient = getCategoryGradient(question.category);
 
   return (
     <Card className="w-full max-w-3xl mx-auto border border-border/50 rounded-2xl overflow-hidden shadow-lg animate-fade-in">
+      <div className={`${categoryGradient} h-2`}></div>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between mb-2">
           <Badge 
-            className={`${getCategoryColor(question.category)} text-white px-3 py-1 text-xs font-medium`}
+            className={`${categoryColor} text-white px-3 py-1 text-xs font-medium shadow-sm`}
           >
             {getCategoryLabel(question.category)}
           </Badge>
@@ -91,7 +111,9 @@ const QuestionCard = ({
           {question.options.map((option) => (
             <div
               key={option.value}
-              className="flex items-center space-x-2 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+              className={`flex items-center space-x-2 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50 ${
+                selectedAnswer === option.value ? 'bg-primary/10 border-primary/50' : ''
+              }`}
             >
               <RadioGroupItem 
                 value={option.value} 
@@ -120,7 +142,7 @@ const QuestionCard = ({
         <Button
           onClick={onNext}
           disabled={!selectedAnswer}
-          className="rounded-xl"
+          className={`rounded-xl ${categoryColor}`}
         >
           {isLastQuestion ? 'Finish' : 'Next'}
         </Button>
