@@ -2395,7 +2395,7 @@ export const formatLearningImprovement = (style: string): string[] => {
       'Replace words with symbols and initials where possible.',
       'Draw mind maps to connect concepts and ideas.',
       'Use flashcards with drawings and diagrams.',
-      'Watch videos related to the topics you're studying.',
+      'Watch videos related to the topics youre studying.',
       'Create visual timelines for historical events or processes.',
       'Use graphic organizers to arrange information visually.',
       'Sketch out concepts rather than writing them in words.'
@@ -2404,7 +2404,7 @@ export const formatLearningImprovement = (style: string): string[] => {
       'Take frequent breaks to move around while studying.',
       'Use physical objects or props to explain concepts.',
       'Role-play scenarios to understand complex ideas.',
-      'Create models or physical representations of what you're learning.',
+      'Create models or physical representations of what youre learning.',
       'Take notes while standing or pacing.',
       'Use finger tracing when reading or looking at diagrams.',
       'Engage in laboratory experiments and hands-on activities.',
