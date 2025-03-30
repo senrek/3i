@@ -554,9 +554,9 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
       const interestDescription = pdf.splitTextToSize(
         'The Career Interest Assessment will help you understand which careers might be the best fit for you. It is ' +
         'meant to help you find careers that you might enjoy. Understanding your Top career interest will help you ' +
-        'identify a career focus and begin your career planning and career exploration process.\n\n' +
+        'identify a career focus and begin your career planning and career exploration process.' +
         'The Career Interest Assessment (CIA) measures six broad interest patterns that can be used to ' +
-        'describe your career interest. Most people's interests are reflected by two or three themes, combined to ' +
+        'describe your career interest. Most peoples interests are reflected by two or three themes, combined to ' +
         'form a cluster of interests. This career interest is directly linked to your occupational interest.',
         180
       );
