@@ -558,7 +558,6 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
         'The Career Interest Assessment (CIA) measures six broad interest patterns that can be used to ' +
         'describe your career interest. Most peoples interests are reflected by two or three themes, combined to ' +
         'form a cluster of interests. This career interest is directly linked to your occupational interest.',
-        180
       );
       
       pdf.setFontSize(11);
