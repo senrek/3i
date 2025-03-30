@@ -1,3 +1,4 @@
+
 // PDF formatting utility functions
 
 export const formatPersonalityType = (personalityType: string) => {
@@ -63,62 +64,6 @@ export const formatCareerClusters = (
   ].sort((a, b) => b.value - a.value);
 };
 
-export const formatSubjectRecommendations = (
-  aptitude: number,
-  personality: number,
-  interest: number
-): Record<string, any> => {
-  // This function is not needed for 10th grade as mentioned by the user
-  // We'll return an empty object or simplified data to avoid errors
-  return {
-    scienceMath: {
-      score: Math.round(aptitude * 1.2),
-      mandatory: ['Maths', 'Physics', 'Chemistry'],
-      optional: [
-        { name: 'Computer science', value: 50 },
-        { name: 'Bio technology', value: 50 },
-        { name: 'Biology', value: 40 },
-        { name: 'Economics', value: 40 },
-        { name: 'Engineering drawing', value: 25 },
-        { name: 'Physical education', value: 15 }
-      ]
-    },
-    commerce: {
-      score: Math.round(aptitude * 0.9),
-      mandatory: ['Accountancy', 'Economics', 'Business Studies'],
-      optional: [
-        { name: 'Computer science', value: 50 },
-        { name: 'Business Maths', value: 40 },
-        { name: 'Entreprenuership', value: 30 },
-        { name: 'Physical education', value: 15 },
-        { name: 'Legal Studies', value: 10 }
-      ]
-    },
-    scienceBio: {
-      score: Math.round(aptitude * 0.85),
-      mandatory: ['Biology', 'Physics', 'Chemistry'],
-      optional: [
-        { name: 'Computer science', value: 50 },
-        { name: 'Agriculture', value: 45 },
-        { name: 'Maths', value: 40 },
-        { name: 'Economics', value: 40 },
-        { name: 'Physical education', value: 15 }
-      ]
-    },
-    humanities: {
-      score: Math.round(interest * 0.9),
-      mandatory: ['Language Arts', 'History'],
-      optional: [
-        { name: 'Economics', value: 40 },
-        { name: 'Maths', value: 40 },
-        { name: 'Graphical design', value: 15 },
-        { name: 'Physical education', value: 15 },
-        { name: 'Legal studies', value: 10 }
-      ]
-    }
-  };
-};
-
 export const generatePdfDate = () => {
   const today = new Date();
   return today.toLocaleDateString('en-IN', {
@@ -130,7 +75,7 @@ export const generatePdfDate = () => {
 
 // New PDF styling helpers for improved visuals
 
-export const getHeaderStyles = (color: string = '#1a237e') => ({
+export const getHeaderStyles = (color: string = '#2980b9') => ({
   fontSize: 18,
   bold: true,
   color: 'white',
@@ -140,30 +85,31 @@ export const getHeaderStyles = (color: string = '#1a237e') => ({
   padding: [15, 10, 15, 10]
 });
 
-export const getSectionHeaderStyles = (color: string = '#3949ab') => ({
+export const getSectionHeaderStyles = (color: string = '#3498db') => ({
   fontSize: 16,
   bold: true,
   color: 'white',
   fillColor: color,
   margin: [0, 5, 0, 5],
-  padding: [10, 7, 10, 7]
+  padding: [10, 7, 10, 7],
+  borderRadius: 3
 });
 
-export const getSubHeaderStyles = (color: string = '#3f51b5') => ({
+export const getSubHeaderStyles = (color: string = '#3498db') => ({
   fontSize: 14,
   bold: true,
   color: 'white',
   fillColor: color,
   margin: [0, 3, 0, 3],
   padding: [7, 5, 7, 5],
-  borderRadius: 5
+  borderRadius: 3
 });
 
 export const getProgressBarColors = (value: number) => {
-  if (value >= 80) return '#4caf50'; // Green for excellent
-  if (value >= 65) return '#8bc34a'; // Light green for good
-  if (value >= 50) return '#ffc107'; // Amber for average
-  return '#f44336'; // Red for below average
+  if (value >= 80) return '#2ecc71'; // Green for excellent
+  if (value >= 65) return '#27ae60'; // Darker green for good
+  if (value >= 50) return '#f39c12'; // Amber for average
+  return '#e74c3c'; // Red for below average
 };
 
 export const createMotivatorBlock = (name: string, value: number, descriptions: string[]) => {
@@ -173,13 +119,14 @@ export const createMotivatorBlock = (name: string, value: number, descriptions: 
     margin: [0, 5, 0, 15],
     stack: [
       {
-        fillColor: '#1a237e',
+        fillColor: '#2980b9',
         color: 'white',
         text: `${name}-${intensity}`,
         fontSize: 14,
         bold: true,
         padding: [10, 5, 10, 5],
-        margin: [0, 0, 0, 0]
+        margin: [0, 0, 0, 0],
+        borderRadius: 3
       },
       {
         columns: [
@@ -188,13 +135,14 @@ export const createMotivatorBlock = (name: string, value: number, descriptions: 
             stack: [
               {
                 margin: [5, 10, 5, 10],
-                fillColor: '#2e7d32',
+                fillColor: '#27ae60',
                 color: 'white',
                 text: name,
                 alignment: 'center',
                 fontSize: 14,
                 bold: true,
-                padding: [5, 30, 5, 30]
+                padding: [5, 30, 5, 30],
+                borderRadius: 3
               }
             ]
           },
@@ -210,7 +158,8 @@ export const createMotivatorBlock = (name: string, value: number, descriptions: 
         ],
         margin: [0, 0, 0, 0],
         border: [1, 0, 1, 1],
-        borderColor: ['#1a237e', '#1a237e', '#1a237e', '#1a237e']
+        borderColor: ['#2980b9', '#2980b9', '#2980b9', '#2980b9'],
+        borderRadius: [0, 0, 3, 3]
       }
     ]
   };
@@ -239,9 +188,9 @@ export const createProgressBar = (label: string, value: number, width: number = 
                     y: 0,
                     w: width,
                     h: 15,
-                    r: 3,
+                    r: 4,
                     fillOpacity: 0.5,
-                    color: '#e0e0e0'
+                    color: '#ecf0f1'
                   },
                   // Value colored bar
                   {
@@ -250,7 +199,7 @@ export const createProgressBar = (label: string, value: number, width: number = 
                     y: 0,
                     w: width * (value / 100),
                     h: 15,
-                    r: 3,
+                    r: 4,
                     color: barColor
                   }
                 ]
@@ -261,7 +210,8 @@ export const createProgressBar = (label: string, value: number, width: number = 
             width: '15%',
             text: valueLabel,
             alignment: 'left',
-            margin: [5, 0, 0, 0]
+            margin: [5, 0, 0, 0],
+            bold: true
           }
         ]
       },
@@ -292,7 +242,8 @@ export const createCareerClusterChart = (clusters: { name: string; value: number
       {
         width: '60%',
         text: cluster.name,
-        margin: [0, 2, 0, 2]
+        margin: [0, 2, 0, 2],
+        bold: true
       },
       {
         width: '40%',
@@ -305,9 +256,9 @@ export const createCareerClusterChart = (clusters: { name: string; value: number
                 y: 0,
                 w: 100,
                 h: 12,
-                r: 2,
+                r: 3,
                 fillOpacity: 0.3,
-                color: '#e0e0e0'
+                color: '#ecf0f1'
               },
               {
                 type: 'rect',
@@ -315,14 +266,210 @@ export const createCareerClusterChart = (clusters: { name: string; value: number
                 y: 0,
                 w: cluster.value,
                 h: 12,
-                r: 2,
+                r: 3,
                 color: getProgressBarColors(cluster.value)
               }
             ]
+          },
+          {
+            text: `${cluster.value}%`,
+            fontSize: 8,
+            bold: true,
+            alignment: 'right',
+            margin: [0, 1, 5, 0],
+            color: getProgressBarColors(cluster.value)
           }
         ]
       }
     ],
-    margin: [0, 3, 0, 3]
+    margin: [0, 4, 0, 4]
   }));
+};
+
+// New helper functions for enhanced PDF visuals
+export const createColoredSection = (title: string, content: string) => {
+  return {
+    stack: [
+      {
+        fillColor: '#3498db',
+        color: 'white',
+        text: title,
+        fontSize: 14,
+        bold: true,
+        margin: [0, 0, 0, 0],
+        padding: [7, 5, 7, 5],
+        borderRadius: [3, 3, 0, 0]
+      },
+      {
+        text: content,
+        fontSize: 11,
+        margin: [0, 0, 0, 0],
+        padding: [10, 10, 10, 10],
+        border: [1, 0, 1, 1],
+        borderColor: ['#3498db', '#3498db', '#3498db', '#3498db'],
+        borderRadius: [0, 0, 3, 3]
+      }
+    ],
+    margin: [0, 10, 0, 10]
+  };
+};
+
+export const createBulletList = (items: string[]) => {
+  return {
+    ul: items.map(item => ({
+      text: item.replace(/•\s*/, ''),
+      fontSize: 11,
+      margin: [0, 2, 0, 2]
+    })),
+    margin: [0, 5, 0, 10]
+  };
+};
+
+export const createStrengthsSection = (strengths: string[]) => {
+  return {
+    stack: [
+      {
+        fillColor: '#27ae60',
+        color: 'white',
+        text: 'Your Strengths',
+        fontSize: 14,
+        bold: true,
+        margin: [0, 0, 0, 0],
+        padding: [7, 5, 7, 5],
+        borderRadius: [3, 3, 0, 0]
+      },
+      {
+        stack: strengths.map(strength => ({
+          columns: [
+            {
+              width: 20,
+              stack: [
+                {
+                  canvas: [
+                    {
+                      type: 'rect',
+                      x: 5,
+                      y: 5,
+                      w: 10,
+                      h: 10,
+                      r: 5,
+                      color: '#27ae60'
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              width: '*',
+              text: strength.replace(/•\s*/, ''),
+              fontSize: 11,
+              margin: [0, 3, 0, 3]
+            }
+          ],
+          margin: [0, 2, 0, 2]
+        })),
+        padding: [10, 10, 10, 10],
+        border: [1, 0, 1, 1],
+        borderColor: ['#27ae60', '#27ae60', '#27ae60', '#27ae60'],
+        borderRadius: [0, 0, 3, 3]
+      }
+    ],
+    margin: [0, 10, 0, 10]
+  };
+};
+
+export const createPersonalityDimension = (
+  dimension: string, 
+  description: string,
+  traits: string[]
+) => {
+  return {
+    stack: [
+      {
+        fillColor: '#3498db',
+        color: 'white',
+        text: dimension,
+        fontSize: 14,
+        bold: true,
+        margin: [0, 0, 0, 0],
+        padding: [7, 5, 7, 5],
+        borderRadius: [3, 3, 0, 0]
+      },
+      {
+        stack: [
+          {
+            text: description,
+            fontSize: 11,
+            margin: [0, 5, 0, 10]
+          },
+          {
+            ul: traits.map(trait => ({
+              text: trait.replace(/•\s*/, ''),
+              fontSize: 11,
+              margin: [0, 2, 0, 2]
+            }))
+          }
+        ],
+        padding: [10, 10, 10, 10],
+        border: [1, 0, 1, 1],
+        borderColor: ['#3498db', '#3498db', '#3498db', '#3498db'],
+        borderRadius: [0, 0, 3, 3]
+      }
+    ],
+    margin: [0, 10, 0, 10]
+  };
+};
+
+export const createImprovedProgressBar = (label: string, value: number, color?: string) => {
+  const barColor = color || getProgressBarColors(value);
+  
+  return {
+    stack: [
+      {
+        columns: [
+          {
+            width: '*',
+            text: label,
+            fontSize: 11,
+            bold: true
+          },
+          {
+            width: 'auto',
+            text: `${value}%`,
+            fontSize: 11,
+            bold: true,
+            color: barColor
+          }
+        ],
+        margin: [0, 0, 0, 3]
+      },
+      {
+        canvas: [
+          // Background gray bar
+          {
+            type: 'rect',
+            x: 0,
+            y: 0,
+            w: 170,
+            h: 10,
+            r: 5,
+            fillOpacity: 0.5,
+            color: '#ecf0f1'
+          },
+          // Value colored bar
+          {
+            type: 'rect',
+            x: 0,
+            y: 0,
+            w: 170 * (value / 100),
+            h: 10,
+            r: 5,
+            color: barColor
+          }
+        ],
+        margin: [0, 0, 0, 5]
+      }
+    ],
+    margin: [0, 5, 0, 5]
+  };
 };
