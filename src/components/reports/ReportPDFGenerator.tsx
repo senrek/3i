@@ -11,7 +11,6 @@ import {
   formatSkillLevel,
   formatCurrentStage,
   formatCareerClusters,
-  formatSubjectRecommendations,
   generatePdfDate
 } from '@/utils/pdfFormatting';
 
