@@ -27,7 +27,7 @@ import {
   generatePdfDate,
   generateCareerReportContent,
 } from '@/utils/pdfFormatting';
-import { generateLearningImprovement } from "@/utils/pdfFormatting";
+//import { generateLearningImprovement } from "@/utils/pdfFormatting";
 
 interface ReportPDFGeneratorProps {
   reportId: string;
