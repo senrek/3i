@@ -64,64 +64,7 @@ export const formatCareerClusters = (
   ].sort((a, b) => b.value - a.value);
 };
 
-export const formatSubjectRecommendations = (
-  aptitude: number,
-  personality: number,
-  interest: number
-) => {
-  const scienceMathScore = Math.round(aptitude * 1.15);
-  const commerceScore = Math.round((aptitude * 0.6) + (personality * 0.3));
-  const scienceBioScore = Math.round(aptitude * 0.9);
-  const humanitiesScore = Math.round((personality * 0.2) + (interest * 0.2));
-  
-  return {
-    scienceMath: {
-      score: scienceMathScore,
-      mandatory: ['Maths', 'Physics', 'Chemistry'],
-      optional: [
-        { name: 'Computer science', value: 50 },
-        { name: 'Bio technology', value: 50 },
-        { name: 'Biology', value: 40 },
-        { name: 'Economics', value: 40 },
-        { name: 'Engineering drawing', value: 25 },
-        { name: 'Physical education', value: 15 }
-      ]
-    },
-    commerce: {
-      score: commerceScore,
-      mandatory: ['Accountancy', 'Economics', 'Business Studies'],
-      optional: [
-        { name: 'Computer science', value: 50 },
-        { name: 'Business Maths', value: 40 },
-        { name: 'Entreprenuership', value: 30 },
-        { name: 'Physical education', value: 15 },
-        { name: 'Legal Studies', value: 10 }
-      ]
-    },
-    scienceBio: {
-      score: scienceBioScore,
-      mandatory: ['Biology', 'Physics', 'Chemistry'],
-      optional: [
-        { name: 'Computer science', value: 50 },
-        { name: 'Agriculture', value: 45 },
-        { name: 'Maths', value: 40 },
-        { name: 'Economics', value: 40 },
-        { name: 'Physical education', value: 15 }
-      ]
-    },
-    humanities: {
-      score: humanitiesScore,
-      mandatory: ['Language Arts', 'History'],
-      optional: [
-        { name: 'Economics', value: 40 },
-        { name: 'Maths', value: 40 },
-        { name: 'Graphical design', value: 15 },
-        { name: 'Physical education', value: 15 },
-        { name: 'Legal studies', value: 10 }
-      ]
-    }
-  };
-};
+// Remove the formatSubjectRecommendations function as it's not needed for 10th grade
 
 export const generatePdfDate = () => {
   const today = new Date();
@@ -130,4 +73,203 @@ export const generatePdfDate = () => {
     month: '2-digit',
     year: 'numeric'
   });
+};
+
+// New PDF styling helpers for improved visuals
+
+export const getHeaderStyles = (color: string = '#1a237e') => ({
+  fontSize: 18,
+  bold: true,
+  color: 'white',
+  fillColor: color,
+  alignment: 'center',
+  margin: [0, 10, 0, 10],
+  padding: [15, 10, 15, 10]
+});
+
+export const getSectionHeaderStyles = (color: string = '#3949ab') => ({
+  fontSize: 16,
+  bold: true,
+  color: 'white',
+  fillColor: color,
+  margin: [0, 5, 0, 5],
+  padding: [10, 7, 10, 7]
+});
+
+export const getSubHeaderStyles = (color: string = '#3f51b5') => ({
+  fontSize: 14,
+  bold: true,
+  color: 'white',
+  fillColor: color,
+  margin: [0, 3, 0, 3],
+  padding: [7, 5, 7, 5],
+  borderRadius: 5
+});
+
+export const getProgressBarColors = (value: number) => {
+  if (value >= 80) return '#4caf50'; // Green for excellent
+  if (value >= 65) return '#8bc34a'; // Light green for good
+  if (value >= 50) return '#ffc107'; // Amber for average
+  return '#f44336'; // Red for below average
+};
+
+export const createMotivatorBlock = (name: string, value: number, descriptions: string[]) => {
+  const intensity = value >= 80 ? 'HIGH' : value >= 50 ? 'MEDIUM' : 'LOW';
+  
+  return {
+    margin: [0, 5, 0, 15],
+    stack: [
+      {
+        fillColor: '#1a237e',
+        color: 'white',
+        text: `${name}-${intensity}`,
+        fontSize: 14,
+        bold: true,
+        padding: [10, 5, 10, 5],
+        margin: [0, 0, 0, 0]
+      },
+      {
+        columns: [
+          {
+            width: '25%',
+            stack: [
+              {
+                margin: [5, 10, 5, 10],
+                fillColor: '#2e7d32',
+                color: 'white',
+                text: name,
+                alignment: 'center',
+                fontSize: 14,
+                bold: true,
+                padding: [5, 30, 5, 30]
+              }
+            ]
+          },
+          {
+            width: '75%',
+            margin: [10, 10, 0, 0],
+            ul: descriptions.map(desc => ({
+              text: desc,
+              fontSize: 11,
+              margin: [0, 3, 0, 3]
+            }))
+          }
+        ],
+        margin: [0, 0, 0, 0],
+        border: [1, 0, 1, 1],
+        borderColor: ['#1a237e', '#1a237e', '#1a237e', '#1a237e']
+      }
+    ]
+  };
+};
+
+export const createProgressBar = (label: string, value: number, width: number = 100) => {
+  const barColor = getProgressBarColors(value);
+  const valueLabel = `${value}%`;
+  const levelLabel = formatSkillLevel(value);
+  
+  return {
+    margin: [0, 5, 0, 15],
+    stack: [
+      { text: label, bold: true, margin: [0, 0, 0, 3] },
+      {
+        columns: [
+          {
+            width: '85%',
+            stack: [
+              {
+                canvas: [
+                  // Background gray bar
+                  {
+                    type: 'rect',
+                    x: 0,
+                    y: 0,
+                    w: width,
+                    h: 15,
+                    r: 3,
+                    fillOpacity: 0.5,
+                    color: '#e0e0e0'
+                  },
+                  // Value colored bar
+                  {
+                    type: 'rect',
+                    x: 0,
+                    y: 0,
+                    w: width * (value / 100),
+                    h: 15,
+                    r: 3,
+                    color: barColor
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            width: '15%',
+            text: valueLabel,
+            alignment: 'left',
+            margin: [5, 0, 0, 0]
+          }
+        ]
+      },
+      {
+        columns: [
+          { width: '*', text: '' },
+          {
+            width: 'auto',
+            text: levelLabel,
+            fontSize: 10,
+            color: barColor,
+            bold: true,
+            alignment: 'right'
+          }
+        ],
+        margin: [0, 2, 0, 0]
+      }
+    ]
+  };
+};
+
+export const createCareerClusterChart = (clusters: { name: string; value: number }[]) => {
+  // Only show top clusters to avoid too much clutter
+  const topClusters = clusters.slice(0, 12);
+  
+  return topClusters.map(cluster => ({
+    columns: [
+      {
+        width: '60%',
+        text: cluster.name,
+        margin: [0, 2, 0, 2]
+      },
+      {
+        width: '40%',
+        stack: [
+          {
+            canvas: [
+              {
+                type: 'rect',
+                x: 0,
+                y: 0,
+                w: 100,
+                h: 12,
+                r: 2,
+                fillOpacity: 0.3,
+                color: '#e0e0e0'
+              },
+              {
+                type: 'rect',
+                x: 0,
+                y: 0,
+                w: cluster.value,
+                h: 12,
+                r: 2,
+                color: getProgressBarColors(cluster.value)
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    margin: [0, 3, 0, 3]
+  }));
 };
