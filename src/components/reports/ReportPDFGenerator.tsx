@@ -804,7 +804,7 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
       pdf.text('Your Learning Style Types', 15, 65);
       
       // Draw the learning style chart
-      const learningStyleY = 75;
+      const learningStyley = 75;
       
       // Sort learning styles by value
       const sortedLearningStyles = [...reportContent.learningStyles].sort((a, b) => b.value - a.value);
