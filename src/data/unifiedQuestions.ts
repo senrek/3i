@@ -1,4 +1,3 @@
-
 export interface Question {
   id: string;
   text: string;
@@ -10,7 +9,7 @@ export interface Question {
 }
 
 export const unifiedQuestions: Question[] = [
-  // Aptitude Questions
+  // Aptitude Questions (1-20)
   {
     id: "apt_1",
     text: "Do you prefer physically active tasks over sitting and observing?",
@@ -286,8 +285,371 @@ export const unifiedQuestions: Question[] = [
     ],
     category: 'aptitude'
   },
+  {
+    id: "apt_26",
+    text: "Are you able to think critically and analyze information?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_27",
+    text: "Do you enjoy working with numbers and data?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_28",
+    text: "Are you good at communicating your ideas effectively?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_29",
+    text: "Do you have a strong sense of creativity and innovation?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_30",
+    text: "Are you able to adapt to new situations and challenges?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_31",
+    text: "Do you enjoy learning new things and expanding your knowledge?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_32",
+    text: "Are you good at solving technical problems?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_33",
+    text: "Do you have a strong sense of leadership?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_34",
+    text: "Are you able to work under pressure and meet deadlines?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_35",
+    text: "Do you enjoy working with people from diverse backgrounds?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_36",
+    text: "Are you good at negotiating and resolving conflicts?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_37",
+    text: "Do you have a strong work ethic and commitment to excellence?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_38",
+    text: "Are you able to think strategically and plan for the future?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_39",
+    text: "Do you enjoy taking on new challenges and responsibilities?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_40",
+    text: "Are you good at making decisions under pressure?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_41",
+    text: "Do you have a strong sense of empathy and compassion?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_42",
+    text: "Are you able to maintain a positive attitude in the face of adversity?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_43",
+    text: "Do you enjoy working in a fast-paced environment?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_44",
+    text: "Are you good at multitasking and managing multiple projects simultaneously?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_45",
+    text: "Do you have a strong sense of ethics and integrity?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_46",
+    text: "Are you able to think outside the box and come up with innovative solutions?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_47",
+    text: "Do you enjoy working with technology and learning about new advancements?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_48",
+    text: "Are you good at organizing and managing resources effectively?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_49",
+    text: "Do you have a strong sense of responsibility and accountability?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_50",
+    text: "Are you able to adapt to changing priorities and deadlines?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_51",
+    text: "Do you enjoy working in a collaborative environment?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_52",
+    text: "Are you good at problem-solving and finding creative solutions?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_53",
+    text: "Do you have a strong desire to make a positive impact on the world?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_54",
+    text: "Are you able to think critically and evaluate different perspectives?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_55",
+    text: "Do you enjoy working with your hands and creating tangible products?",
+    options: [
+      { value: "A", label: "Yes, I love it" },
+      { value: "B", label: "Sometimes" },
+      { value: "C", label: "Rarely" },
+      { value: "D", label: "No, I avoid it" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_56",
+    text: "Are you good at managing your finances and making sound investments?",
+    options: [
+      { value: "A", label: "Yes, very good" },
+      { value: "B", label: "Somewhat good" },
+      { value: "C", label: "Not so good" },
+      { value: "D", label: "Not at all good" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_57",
+    text: "Do you have a strong interest in science and technology?",
+    options: [
+      { value: "A", label: "Yes, very strong" },
+      { value: "B", label: "Somewhat strong" },
+      { value: "C", label: "Not so strong" },
+      { value: "D", label: "Not at all strong" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "apt_58",
+    text: "Are you able to communicate effectively with people from different cultures?",
+    options: [
+      { value: "A", label: "Yes, very able" },
+      { value: "B", label: "Somewhat able" },
+      { value: "C", label: "Not so able" },
+      { value: "D", label: "Not at all able" }
+    ],
+    category: 'aptitude'
+  },
   
-  // Personality questions
+  // Personality questions (59-77)
   {
     id: "per_1",
     text: "Which option describes you best?",
@@ -405,6 +767,8 @@ export const unifiedQuestions: Question[] = [
     ],
     category: 'personality'
   },
+  
+  // Additional personality questions (14-19)
   {
     id: "per_14",
     text: "Which option describes you best?",
@@ -423,8 +787,91 @@ export const unifiedQuestions: Question[] = [
     ],
     category: 'personality'
   },
+  {
+    id: "per_16",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "Usually, I am not sensitive to other people's opinions and comments about me" },
+      { value: "B", label: "I am sensitive to other people's opinions and comments about me" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_17",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I see myself as a precise, scientific, and intellectual person" },
+      { value: "B", label: "I see myself as a helpful, friendly, and caring person" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_18",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I am usually tough-minded" },
+      { value: "B", label: "I am usually soft-hearted" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_19",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I usually give direct and honest opinions to others" },
+      { value: "B", label: "I am usually careful not to hurt others with my comments" }
+    ],
+    category: 'personality'
+  },
   
-  // Interest questions
+  // More personality questions (20-25)
+  {
+    id: "per_20",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I am motivated by achievement" },
+      { value: "B", label: "I am motivated by appreciation" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_21",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I give more importance to facts, tasks, and logical considerations" },
+      { value: "B", label: "I give more importance to the personal value system and social considerations" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_22",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I like to make plans and schedules and try to stick with them" },
+      { value: "B", label: "I like to be flexible and keep plans to a minimum" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_23",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I usually take tasks without making a plan" },
+      { value: "B", label: "I usually plan everything first in advance before moving into action" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "per_24",
+    text: "Which option describes you best?",
+    options: [
+      { value: "A", label: "I often juggle multiple tasks at a time" },
+      { value: "B", label: "I usually do one task at a time" }
+    ],
+    category: 'personality'
+  },
+  
+  // Interest questions (1-7)
   {
     id: "int_1",
     text: "Given an option, how much would you like to choose the given value in your dream job? Adventurous and excitement involving physical risk.",
@@ -502,21 +949,8 @@ export const unifiedQuestions: Question[] = [
     ],
     category: 'interest'
   },
-  {
-    id: "int_8",
-    text: "Which activity would you like the most?",
-    options: [
-      { value: "A", label: "Lead People" },
-      { value: "B", label: "Help People" },
-      { value: "C", label: "Organize Data or Things" },
-      { value: "D", label: "Analyze Problems" },
-      { value: "E", label: "Build or Fix Objects" },
-      { value: "F", label: "Design or Decorate Objects" }
-    ],
-    category: 'interest'
-  },
   
-  // Learning style questions
+  // Learning style questions (1-8)
   {
     id: "lrn_1",
     text: "You are not sure whether a word should be spelled 'dependent' or 'dependant'. You would:",
@@ -604,5 +1038,109 @@ export const unifiedQuestions: Question[] = [
       { value: "D", label: "Written instructions, e.g., a manual or book" }
     ],
     category: 'learning-style'
+  },
+  
+  // Additional interest questions (8-15)
+  {
+    id: "int_8",
+    text: "Do you like physical activities that require strength rather than sitting and watching?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_9",
+    text: "Do you like to participate in stage shows, events, or art competitions?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_10",
+    text: "Do you enjoy participating in debates, speeches, or presentations?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_11",
+    text: "Do you like to work with a variety of colors and designs?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_12",
+    text: "Can you imagine different pictures, colors, and designs when you close your eyes and visualize how things would look from different angles?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_13",
+    text: "Can you convince people to do things your way?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_14",
+    text: "Do you like to participate in social events, community service, and volunteering?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_15",
+    text: "Do you like to learn more about new technologies and how things work?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  
+  // More interest questions (16-17)
+  {
+    id: "int_16",
+    text: "Do you enjoy repairing or fixing gadgets, home appliances, etc.?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "int_17",
+    text: "Do you have an affinity for numbers and an interest in business and the economy?",
+    options: [
+      { value: "A", label: "No" },
+      { value: "B", label: "Not sure" },
+      { value: "C", label: "Yes" }
+    ],
+    category: 'interest'
   }
 ];

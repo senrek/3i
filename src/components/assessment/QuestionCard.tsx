@@ -14,7 +14,6 @@ export interface Question {
   id: string;
   text: string;
   options: Option[];
-  category?: 'aptitude' | 'personality' | 'interest' | 'learning-style';
 }
 
 interface QuestionCardProps {
@@ -41,11 +40,6 @@ const QuestionCard = ({
       <CardHeader className="pb-2">
         <CardTitle className="text-xl font-medium leading-relaxed">
           {question.text}
-          {question.category && (
-            <span className="text-xs font-normal bg-secondary text-secondary-foreground px-2 py-1 rounded-full ml-2 align-middle">
-              {question.category.charAt(0).toUpperCase() + question.category.slice(1).replace('-', ' ')}
-            </span>
-          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
