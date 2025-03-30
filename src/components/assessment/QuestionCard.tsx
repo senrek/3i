@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 export interface Option {
   value: string;
@@ -14,6 +15,7 @@ export interface Question {
   id: string;
   text: string;
   options: Option[];
+  category: 'aptitude' | 'personality' | 'interest' | 'learning-style';
 }
 
 interface QuestionCardProps {
@@ -35,9 +37,47 @@ const QuestionCard = ({
   isLastQuestion,
   isFirstQuestion,
 }: QuestionCardProps) => {
+  const getCategoryColor = (category: string) => {
+    switch(category) {
+      case 'aptitude':
+        return 'bg-blue-500';
+      case 'personality':
+        return 'bg-purple-500';
+      case 'interest':
+        return 'bg-green-500';
+      case 'learning-style':
+        return 'bg-amber-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch(category) {
+      case 'aptitude':
+        return 'Aptitude';
+      case 'personality':
+        return 'Personality';
+      case 'interest':
+        return 'Interest';
+      case 'learning-style':
+        return 'Learning Style';
+      default:
+        return 'Other';
+    }
+  };
+
   return (
     <Card className="w-full max-w-3xl mx-auto border border-border/50 rounded-2xl overflow-hidden shadow-lg animate-fade-in">
       <CardHeader className="pb-2">
+        <div className="flex items-center justify-between mb-2">
+          <Badge 
+            className={`${getCategoryColor(question.category)} text-white px-3 py-1 text-xs font-medium`}
+          >
+            {getCategoryLabel(question.category)}
+          </Badge>
+          <span className="text-sm text-muted-foreground">Question ID: {question.id}</span>
+        </div>
         <CardTitle className="text-xl font-medium leading-relaxed">
           {question.text}
         </CardTitle>

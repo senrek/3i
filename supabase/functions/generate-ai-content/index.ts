@@ -22,104 +22,341 @@ serve(async (req) => {
     
     // Set up prompts based on content type
     let prompt = '';
-    let systemMessage = 'You are an Indian career counselor with Experience of 15 Years helping to generate personalized content for a career assessment report. the reponse should humanly';
+    let systemMessage = 'You are an Indian career counselor with Experience of 15 Years helping to generate personalized content for a career assessment report. Format your response as a comprehensive PDF section that could be included in a formal career assessment report. Use formal language and structure the information professionally.';
+    
+    // Get user profile information
+    const userName = assessmentData.userName || 'Student';
+    const userAge = assessmentData.age || '16-18'; // Default age range if not provided
+    const userLocation = assessmentData.location || 'India'; // Default location if not provided
+    const userEmail = assessmentData.email || 'Not provided';
+    const userPhone = assessmentData.phone || 'Not provided';
+    const completedDate = assessmentData.completedAt ? new Date(assessmentData.completedAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : (new Date()).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    
+    const topCareerTitle = assessmentData.topCareer?.careerTitle || "Not specified";
+    const topCareerMatch = assessmentData.topCareer?.suitabilityPercentage || 85;
+    const topCareerDescription = assessmentData.topCareer?.careerDescription || "";
+    
+    // Calculate personality type based on scores
+    const getPersonalityType = (personality, aptitude, interest) => {
+      let type = "";
+      
+      // Extrovert vs Introvert
+      type += personality > 70 ? "Extrovert" : "Introvert";
+      
+      // Sensing vs Intuitive
+      type += aptitude > 65 ? ":Sensing" : ":iNtuitive";
+      
+      // Thinking vs Feeling
+      type += aptitude > interest ? ":Thinking" : ":Feeling";
+      
+      // Judging vs Perceiving
+      type += personality > 60 ? ":Judging" : ":Perceiving";
+      
+      return type;
+    };
+    
+    // Prep assessment data for formatting
+    const personalityType = getPersonalityType(
+      assessmentData.scores.personality,
+      assessmentData.scores.aptitude,
+      assessmentData.scores.interest
+    );
+    
+    // Calculate personalized strength percentages
+    const strengthPercentages = {
+      introvert: assessmentData.scores.personality < 60 ? Math.round(100 - assessmentData.scores.personality * 0.8) : 14,
+      extrovert: assessmentData.scores.personality > 60 ? Math.round(assessmentData.scores.personality * 0.8) : 14,
+      sensing: assessmentData.scores.aptitude > 65 ? Math.round(assessmentData.scores.aptitude * 0.9) : 14,
+      intuitive: assessmentData.scores.aptitude < 65 ? Math.round(100 - assessmentData.scores.aptitude * 0.9) : 14,
+      thinking: assessmentData.scores.aptitude > assessmentData.scores.interest ? Math.round(70 + Math.random() * 10) : 29,
+      feeling: assessmentData.scores.aptitude < assessmentData.scores.interest ? Math.round(70 + Math.random() * 10) : 29,
+      judging: assessmentData.scores.personality > 60 ? Math.round(55 + Math.random() * 10) : 43,
+      perceiving: assessmentData.scores.personality < 60 ? Math.round(55 + Math.random() * 10) : 43
+    };
+    
+    // Format career interest types
+    const interestTypes = [
+      { name: 'Investigative', value: Math.round(assessmentData.scores.aptitude * 1.2) },
+      { name: 'Conventional', value: Math.round(assessmentData.scores.personality * 0.6) },
+      { name: 'Realistic', value: Math.round(assessmentData.scores.aptitude * 0.6) },
+      { name: 'Enterprising', value: Math.round(assessmentData.scores.personality * 0.4) },
+      { name: 'Artistic', value: Math.round(assessmentData.scores.interest * 0.3) },
+      { name: 'Social', value: Math.round(assessmentData.scores.personality * 0.15) }
+    ].sort((a, b) => b.value - a.value);
+    
+    // Format motivator types
+    const motivatorTypes = [
+      { name: 'Independence', value: Math.min(100, Math.round((100 - assessmentData.scores.personality) * 1.1)) },
+      { name: 'Continuous Learning', value: Math.min(100, Math.round(assessmentData.scores.aptitude * 1.1)) },
+      { name: 'Social Service', value: Math.min(100, Math.round(assessmentData.scores.personality * 1.1)) },
+      { name: 'Structured work environment', value: Math.round(assessmentData.scores.personality * 0.5) },
+      { name: 'Adventure', value: Math.round(assessmentData.scores.interest * 0.5) },
+      { name: 'High Paced Environment', value: Math.round(assessmentData.scores.aptitude * 0.3) },
+      { name: 'Creativity', value: Math.round(assessmentData.scores.interest * 0.25) }
+    ].sort((a, b) => b.value - a.value);
+    
+    // Format learning style types
+    const learningStyles = [
+      { name: 'Read & Write Learning', value: Math.round(assessmentData.scores.aptitude * 0.5) },
+      { name: 'Auditory learning', value: Math.round(assessmentData.scores.personality * 0.3) },
+      { name: 'Visual Learning', value: Math.round(assessmentData.scores.interest * 0.3) },
+      { name: 'Kinesthetic Learning', value: Math.round(assessmentData.scores.learningStyle * 0.2) }
+    ].sort((a, b) => b.value - a.value);
+    
+    // Format skills
+    const skillsAndAbilities = {
+      overall: Math.round(assessmentData.scores.aptitude * 0.7),
+      numerical: Math.round(assessmentData.scores.aptitude * 0.8),
+      logical: Math.round(assessmentData.scores.aptitude * 0.6),
+      verbal: Math.round(assessmentData.scores.personality * 1.2 > 100 ? 100 : assessmentData.scores.personality * 1.2),
+      clerical: Math.round(assessmentData.scores.personality * 0.5),
+      spatial: Math.round(assessmentData.scores.aptitude * 0.8),
+      leadership: Math.round(assessmentData.scores.personality * 0.6),
+      social: Math.round(assessmentData.scores.personality * 0.8),
+      mechanical: Math.round(assessmentData.scores.aptitude * 0.5)
+    };
+
+    // Calculate skill level labels
+    const getSkillLevel = (score) => {
+      if (score >= 80) return "Excellent";
+      if (score >= 65) return "Good";
+      if (score >= 50) return "Average";
+      return "Below Average";
+    };
     
     switch (contentType) {
       case 'careerRecommendation':
-        prompt = `Based on the following career assessment data of an Indian student, provide a detailed career recommendation specific to India’s job market, industries, and education landscape. Include specific information about why this career path is suitable, what the day-to-day responsibilities involve, and what skills are required to excel in this field.
+        prompt = `Generate a detailed career recommendation section for a career assessment report based on the following data:
+        
+        Student Info:
+        - Name: ${userName}
+        - Email: ${userEmail}
+        - Age: ${userAge}
+        - Location: ${userLocation}
+        - Assessment Date: ${completedDate}
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
         - Personality Score: ${assessmentData.scores.personality}
         - Interest Score: ${assessmentData.scores.interest}
         - Learning Style Score: ${assessmentData.scores.learningStyle}
+        - Personality Type: ${personalityType}
         - Strengths: ${assessmentData.strengthAreas.join(', ')}
         - Development Areas: ${assessmentData.developmentAreas.join(', ')}
         
-        Format your response as a career counselor would explain a primary career recommendation to a high school student (Class 11-12). Keep your response under 250 words.`;
+        Career Interest Types:
+        ${interestTypes.map(t => `- ${t.name}: ${t.value}`).join('\n')}
+        
+        Top Career Match: ${topCareerTitle} (${topCareerMatch}% match)
+        
+        Format your response in the style of a professional career assessment report with sections including:
+        1. Career Path Overview
+        2. Why This Career Path Suits You
+        3. Key Skills Required
+        4. Day-to-Day Responsibilities
+        5. Growth Prospects
+        
+        The content should be highly personalized to the student based on their assessment results. Make it formal, detailed, and actionable with specific information, not generic advice. Write around 500-600 words.`;
         break;
       
       case 'educationPathways':
-        prompt = `Based on the student’s career assessment below, design detailed educational pathways tailored to India’s education system and job market. Focus on affordability, regional accessibility, and industry demand. Include specific degrees, certifications, and Skill-Based Training that would be beneficial. Also mention any alternative educational routes for those who may not want to pursue traditional education.
+        prompt = `Generate a detailed education pathways section for a career assessment report based on the following data:
+        
+        Student Info:
+        - Name: ${userName}
+        - Email: ${userEmail}
+        - Age: ${userAge}
+        - Location: ${userLocation}
+        - Assessment Date: ${completedDate}
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
         - Personality Score: ${assessmentData.scores.personality}
         - Interest Score: ${assessmentData.scores.interest}
         - Learning Style Score: ${assessmentData.scores.learningStyle}
+        - Personality Type: ${personalityType}
         - Strengths: ${assessmentData.strengthAreas.join(', ')}
         - Development Areas: ${assessmentData.developmentAreas.join(', ')}
-        - Top Career Match: ${assessmentData.topCareer?.careerTitle || "Not specified"}
         
-        Format your response as a comprehensive yet concise educational roadmap for a high school student (Class 11-12). Include at least 3-4 specific educational pathways. Keep your response under 250 words.`;
+        Top Career Match: ${topCareerTitle} (${topCareerMatch}% match)
+        
+        Format your response as an "Educational Pathways" section of a formal career assessment report focusing on:
+        1. Required Education and Qualifications (degrees, diplomas, certifications)
+        2. Recommended Universities/Institutions in ${userLocation} or internationally
+        3. Alternative Educational Routes (part-time, online, vocational)
+        4. Recommended Subjects and Specializations
+        5. Timeline for Educational Milestones (high school to career entry)
+        
+        Make the content highly specific to both the career field and the student's assessment results. Consider their learning style preferences when recommending educational approaches. Include specific institution names, course names, and estimated timelines. Write approximately 500-600 words.`;
         break;
       
       case 'alternativeCareers':
-        prompt = `Based on the following assessment data, suggest 3 alternative career paths that may also suit this student, besides their top career match. For each alternative career, explain why it might be a good fit based on their assessment results, and mention 1-2 key skills needed for success in that field.
+        prompt = `Generate an "Alternative Career Paths" section for a career assessment report based on the following data:
+        
+        Student Info:
+        - Name: ${userName}
+        - Email: ${userEmail}
+        - Age: ${userAge}
+        - Location: ${userLocation}
+        - Assessment Date: ${completedDate}
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
         - Personality Score: ${assessmentData.scores.personality}
         - Interest Score: ${assessmentData.scores.interest}
         - Learning Style Score: ${assessmentData.scores.learningStyle}
+        - Personality Type: ${personalityType}
         - Strengths: ${assessmentData.strengthAreas.join(', ')}
         - Development Areas: ${assessmentData.developmentAreas.join(', ')}
-        - Top Career Match: ${assessmentData.topCareer?.careerTitle || "Not specified"}
         
-        Format your response as a career counselor presenting alternative options to a high school student (Class 11-12). Keep each career description brief but informative. Keep your total response under 300 words.`;
+        Career Interest Types:
+        ${interestTypes.map(t => `- ${t.name}: ${t.value}`).join('\n')}
+        
+        Top Career Match: ${topCareerTitle}
+        
+        Format your response as an "Alternative Career Paths" section for a formal career assessment report that recommends 3-4 alternative careers that match the student's profile but differ from their primary recommendation. For each alternative career:
+        
+        1. Name and brief description of the career
+        2. Why it suits their personality type, interests and aptitudes
+        3. Key skills they already possess that transfer to this field
+        4. Additional skills they would need to develop
+        5. Education/qualification requirements
+        6. Estimated salary range in ${userLocation}
+        
+        Use formal language appropriate for a professional report. Make specific, data-driven recommendations based on their assessment results. Write approximately 500-600 words.`;
         break;
       
       case 'developmentPlan':
-        prompt = `Based on the following assessment data, create a personalized development plan for the student. The plan should address their identified development areas and build upon their strengths. Include specific, actionable steps for short-term (next 6 months), medium-term (1-2 years), and long-term (3-5 years) development.
+        prompt = `Generate a comprehensive "Development Plan" section for a career assessment report based on the following data:
+        
+        Student Info:
+        - Name: ${userName}
+        - Email: ${userEmail}
+        - Age: ${userAge}
+        - Location: ${userLocation}
+        - Assessment Date: ${completedDate}
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
         - Personality Score: ${assessmentData.scores.personality}
         - Interest Score: ${assessmentData.scores.interest}
         - Learning Style Score: ${assessmentData.scores.learningStyle}
+        - Personality Type: ${personalityType}
         - Strengths: ${assessmentData.strengthAreas.join(', ')}
         - Development Areas: ${assessmentData.developmentAreas.join(', ')}
-        - Top Career Match: ${assessmentData.topCareer?.careerTitle || "Not specified"}
         
-        Format your response as a structured development plan with clear timeframes and actionable steps. Keep your response under 350 words.`;
+        Skills Assessment:
+        - Overall Skills: ${skillsAndAbilities.overall}% (${getSkillLevel(skillsAndAbilities.overall)})
+        - Numerical Ability: ${skillsAndAbilities.numerical}% (${getSkillLevel(skillsAndAbilities.numerical)})
+        - Logical Ability: ${skillsAndAbilities.logical}% (${getSkillLevel(skillsAndAbilities.logical)})
+        - Verbal Ability: ${skillsAndAbilities.verbal}% (${getSkillLevel(skillsAndAbilities.verbal)})
+        - Organizing Skills: ${skillsAndAbilities.clerical}% (${getSkillLevel(skillsAndAbilities.clerical)})
+        - Visualization Ability: ${skillsAndAbilities.spatial}% (${getSkillLevel(skillsAndAbilities.spatial)})
+        - Leadership Skills: ${skillsAndAbilities.leadership}% (${getSkillLevel(skillsAndAbilities.leadership)})
+        - Social Skills: ${skillsAndAbilities.social}% (${getSkillLevel(skillsAndAbilities.social)})
+        - Mechanical Ability: ${skillsAndAbilities.mechanical}% (${getSkillLevel(skillsAndAbilities.mechanical)})
+        
+        Top Career Match: ${topCareerTitle}
+        
+        Format your response as a "Gap Analysis & Development Plan" section for a formal career assessment report with these components:
+        
+        1. Skills Gap Analysis (current skills vs. required skills for their recommended career)
+        2. Short-Term Development Actions (next 6 months)
+           - Specific courses, workshops, books, projects
+           - Resources with actual names and links
+        3. Medium-Term Development Actions (1-2 years)
+           - Further education, certifications, internships
+           - Specific milestones to achieve
+        4. Long-Term Development Actions (3-5 years)
+           - Advanced qualifications, career progression steps
+           - Networking and professional development
+        5. Development Resources
+           - Recommended websites, organizations, mentorship opportunities
+        
+        Make the plan highly actionable with specific resources, timelines, and measurable outcomes. Tailor all recommendations to their specific assessment results, addressing their development areas while leveraging their strengths. Write approximately 600-700 words.`;
         break;
       
       case 'executiveSummary':
-        prompt = `Based on the following assessment data, create an executive summary of the student's career assessment results. Highlight key findings about their aptitudes, interests, personality traits, and learning style. Explain how these findings relate to potential career paths.
+        prompt = `Generate an "Executive Summary" section for a comprehensive career assessment report based on the following data:
+        
+        Student Info:
+        - Name: ${userName}
+        - Email: ${userEmail}
+        - Age: ${userAge}
+        - Location: ${userLocation}
+        - Assessment Date: ${completedDate}
         
         Assessment Data:
         - Aptitude Score: ${assessmentData.scores.aptitude}
         - Personality Score: ${assessmentData.scores.personality}
         - Interest Score: ${assessmentData.scores.interest}
         - Learning Style Score: ${assessmentData.scores.learningStyle}
-        - Strengths: ${assessmentData.strengthAreas.join(', ')}
-        - Development Areas: ${assessmentData.developmentAreas.join(', ')}
-        - Response highlights: ${JSON.stringify(assessmentData.responseHighlights || {})}
+        - Personality Type: ${personalityType}
         
-        Format your response as a professional executive summary for a career assessment report. Keep your response under 200 words.`;
+        Personality Breakdown:
+        - Introvert: ${strengthPercentages.introvert}% / Extrovert: ${strengthPercentages.extrovert}%
+        - Sensing: ${strengthPercentages.sensing}% / Intuitive: ${strengthPercentages.intuitive}%
+        - Thinking: ${strengthPercentages.thinking}% / Feeling: ${strengthPercentages.feeling}%
+        - Judging: ${strengthPercentages.judging}% / Perceiving: ${strengthPercentages.perceiving}%
+        
+        Career Interest Types:
+        ${interestTypes.map(t => `- ${t.name}: ${t.value}`).join('\n')}
+        
+        Career Motivator Types:
+        ${motivatorTypes.map(t => `- ${t.name}: ${t.value}`).join('\n')}
+        
+        Learning Style Types:
+        ${learningStyles.map(t => `- ${t.name}: ${t.value}`).join('\n')}
+        
+        Skills Assessment:
+        - Overall Skills: ${skillsAndAbilities.overall}% (${getSkillLevel(skillsAndAbilities.overall)})
+        - Numerical Ability: ${skillsAndAbilities.numerical}% (${getSkillLevel(skillsAndAbilities.numerical)})
+        - Logical Ability: ${skillsAndAbilities.logical}% (${getSkillLevel(skillsAndAbilities.logical)})
+        - Verbal Ability: ${skillsAndAbilities.verbal}% (${getSkillLevel(skillsAndAbilities.verbal)})
+        - Organizing Skills: ${skillsAndAbilities.clerical}% (${getSkillLevel(skillsAndAbilities.clerical)})
+        - Visualization Ability: ${skillsAndAbilities.spatial}% (${getSkillLevel(skillsAndAbilities.spatial)})
+        - Leadership Skills: ${skillsAndAbilities.leadership}% (${getSkillLevel(skillsAndAbilities.leadership)})
+        - Social Skills: ${skillsAndAbilities.social}% (${getSkillLevel(skillsAndAbilities.social)})
+        - Mechanical Ability: ${skillsAndAbilities.mechanical}% (${getSkillLevel(skillsAndAbilities.mechanical)})
+        
+        Strengths: ${assessmentData.strengthAreas.join(', ')}
+        Development Areas: ${assessmentData.developmentAreas.join(', ')}
+        
+        Top Career Recommendation: ${topCareerTitle}
+        Career Description: ${topCareerDescription}
+        
+        Format this as a comprehensive "Executive Summary" section that would appear at the beginning of a formal career assessment report. The summary should synthesize all assessment findings into a coherent overview, including:
+        
+        1. Current Career Planning Stage (Ignorant, Confused, Diffused, Methodical, or Optimized based on their scores)
+        2. Key Personality Insights
+        3. Dominant Interest Areas and Motivators
+        4. Preferred Learning Style
+        5. Notable Strengths and Development Areas
+        6. Primary Career Recommendation with brief justification
+        
+        Write in a professional, formal tone suitable for an official assessment document. Ensure all insights are directly tied to their assessment results. Write approximately 400-500 words.`;
         break;
       
       default:
         throw new Error('Invalid content type requested');
     }
 
-  
-    // Call OpenRouter API for DeepSeek R1 Free
+    // Call DeepSeek API using OpenRouter
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openrouterApiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://your-domain.com', // Required by OpenRouter
+        'HTTP-Referer': 'https://career-counsellor-app.com', // Required by OpenRouter
         'X-Title': 'Career Counselor AI' // Your application name
       },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-r1:free', // Correct model identifier
+        model: 'deepseek/deepseek-r1:free', // Using DeepSeek model
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 1000,
+        max_tokens: 2000, // Increased max tokens for more detailed content
         temperature: 0.7,
       }),
     });
@@ -133,7 +370,18 @@ serve(async (req) => {
     const data = await response.json();
     const generatedContent = data.choices[0].message.content;
 
-    return new Response(JSON.stringify({ content: generatedContent }), {
+    return new Response(JSON.stringify({ 
+      content: generatedContent,
+      metadata: {
+        userName,
+        personalityType,
+        strengthPercentages,
+        interestTypes,
+        motivatorTypes,
+        learningStyles,
+        skillsAndAbilities
+      } 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
