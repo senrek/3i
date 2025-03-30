@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -26,8 +25,9 @@ import {
   createSummarySheetSection,
   generatePdfDate,
   generateCareerReportContent,
+  formatSkillLevel,
+  formatLearningImprovement
 } from '@/utils/pdfFormatting';
-//import { generateLearningImprovement } from "@/utils/pdfFormatting";
 
 interface ReportPDFGeneratorProps {
   reportId: string;
@@ -58,10 +58,13 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
       setIsGenerating(true);
       toast.info("Generating your PDF report...", { duration: 5000 });
       
+      console.log("Starting PDF generation with scores:", scores);
+      
       // Get the current date in DD-MM-YYYY format for the report
       const reportDate = generatePdfDate();
       
       // Generate the report content
+      console.log("Generating report content...");
       const reportContent = await generateCareerReportContent({
         scores,
         userName,
@@ -70,7 +73,10 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
         developmentAreas
       }, userName);
       
+      console.log("Report content generated successfully");
+      
       // Create a new PDF document
+      console.log("Creating PDF document...");
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -81,34 +87,58 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
       const primaryColor = '#2980b9';
       const accentColor = '#27ae60';
       
-      // Add cover page
-      pdf.setFillColor(41, 128, 185); // A nice blue color
-      pdf.rect(0, 0, 210, 297, 'F');
+      // Initialize variables for PDF generation
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 15;
+      const contentWidth = pageWidth - (margin * 2);
       
-      // Add gradient overlay for visual appeal
-      const canvas = document.createElement('canvas');
-      canvas.width = 210;
-      canvas.height = 297;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        const gradient = ctx.createLinearGradient(0, 0, 0, 297);
+      try {
+        // Add cover page
+        console.log("Adding cover page...");
+        pdf.setFillColor(41, 128, 185); // A nice blue color
+        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+        
+        // Add gradient overlay for visual appeal
+        const canvas = document.createElement('canvas');
+        canvas.width = pageWidth;
+        canvas.height = pageHeight;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          throw new Error("Failed to get canvas context");
+        }
+        
+        console.log("Creating gradient overlay...");
+        const gradient = ctx.createLinearGradient(0, 0, 0, pageHeight);
         gradient.addColorStop(0, 'rgba(41, 128, 185, 1)');
         gradient.addColorStop(1, 'rgba(52, 152, 219, 0.8)');
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 210, 297);
+        ctx.fillRect(0, 0, pageWidth, pageHeight);
         
         // Add some decorative elements
         ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
         for (let i = 0; i < 20; i++) {
           const size = Math.random() * 50 + 10;
-          const x = Math.random() * 210;
-          const y = Math.random() * 297;
+          const x = Math.random() * pageWidth;
+          const y = Math.random() * pageHeight;
           ctx.beginPath();
           ctx.arc(x, y, size, 0, Math.PI * 2);
           ctx.fill();
         }
         
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
+        console.log("Converting canvas to image...");
+        const imageData = canvas.toDataURL('image/png');
+        if (!imageData) {
+          throw new Error("Failed to convert canvas to image data");
+        }
+        
+        pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, pageHeight);
+      } catch (canvasError) {
+        console.error("Error creating cover page:", canvasError);
+        // Continue without the gradient overlay
+        pdf.setFillColor(41, 128, 185);
+        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
       }
       
       // Add title to cover page
@@ -1359,6 +1389,12 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
       toast.success("PDF report generated successfully!");
     } catch (error) {
       console.error("Error generating PDF:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        scores: scores ? "present" : "missing",
+        userName: userName ? "present" : "missing"
+      });
       toast.error("Error generating PDF report. Please try again.");
     } finally {
       setIsGenerating(false);
