@@ -1,5 +1,10 @@
-
 import { jsPDF } from 'jspdf';
+
+// Helper function to safely render text (avoid null/undefined issues)
+const safeText = (text: any): string => {
+  if (text === null || text === undefined) return '';
+  return String(text);
+};
 
 /**
  * Add a header with logo to the PDF
@@ -40,13 +45,13 @@ export const addReportTitle = (pdf: jsPDF, title: string, withGradient = true) =
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(14);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(title, width / 2, 25 + gradHeight / 2, { align: 'center', baseline: 'middle' });
+    pdf.text(safeText(title), width / 2, 25 + gradHeight / 2, { align: 'center', baseline: 'middle' });
   } else {
     // Add title text without gradient
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(18);
     pdf.setTextColor(100, 149, 237); // Cornflower blue
-    pdf.text(title, width / 2, 30, { align: 'center' });
+    pdf.text(safeText(title), width / 2, 30, { align: 'center' });
   }
 };
 
@@ -70,10 +75,10 @@ export const addUserInfo = (pdf: jsPDF, userInfo: { label: string, value: string
   let yPos = 65;
   
   userInfo.forEach(item => {
-    pdf.text(`${item.label}:`, centerX - 60, yPos);
+    pdf.text(`${safeText(item.label)}:`, centerX - 60, yPos);
     
     pdf.setFont('helvetica', 'normal');
-    pdf.text(item.value, centerX - 60, yPos + 10);
+    pdf.text(safeText(item.value), centerX - 60, yPos + 10);
     pdf.setFont('helvetica', 'bold');
     
     yPos += 25;
@@ -88,12 +93,12 @@ export const addSectionTitle = (pdf: jsPDF, title: string, x: number, y: number)
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(16);
   pdf.setTextColor(100, 149, 237); // Cornflower blue
-  pdf.text(title, x, y);
+  pdf.text(safeText(title), x, y);
   
   // Add underline
   pdf.setDrawColor(100, 149, 237);
   pdf.setLineWidth(0.5);
-  pdf.line(x, y + 2, x + pdf.getTextWidth(title), y + 2);
+  pdf.line(x, y + 2, x + pdf.getTextWidth(safeText(title)), y + 2);
 };
 
 /**
@@ -112,7 +117,7 @@ export const addSkillBarChart = (pdf: jsPDF, skills: { name: string, value: numb
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
     pdf.setTextColor(0, 0, 0);
-    pdf.text(skill.name, startX, y);
+    pdf.text(safeText(skill.name), startX, y);
     
     // Bar background
     pdf.setDrawColor(230, 230, 230);
@@ -253,7 +258,7 @@ export const addInterestBarChart = (pdf: jsPDF, interests: { name: string, value
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
     pdf.setTextColor(70, 70, 70);
-    pdf.text(interest.name, startX, y);
+    pdf.text(safeText(interest.name), startX, y);
     
     // Bar background
     pdf.setDrawColor(230, 230, 230);
@@ -280,7 +285,7 @@ export const addInterestBarChart = (pdf: jsPDF, interests: { name: string, value
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(9);
     pdf.setTextColor(0, 0, 0);
-    pdf.text(`${interest.value}`, startX + maxBarWidth + 5, y + 7);
+    pdf.text(String(interest.value), startX + maxBarWidth + 5, y + 7);
   });
 };
 

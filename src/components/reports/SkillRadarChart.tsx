@@ -48,7 +48,7 @@ const SkillRadarChart = ({
   description = 'Your skills compared to career requirements' 
 }: SkillRadarChartProps) => {
   // Calculate the average value of all skills
-  const averageSkillValue = data.reduce((sum, skill) => sum + skill.value, 0) / data.length;
+  const averageSkillValue = data.reduce((sum, skill) => sum + skill.value, 0) / (data.length || 1); // Avoid division by zero
   
   // Determine fill color based on average skill value
   const fillColor = getRadarFillColor(averageSkillValue);

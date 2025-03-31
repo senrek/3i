@@ -1,60 +1,66 @@
-
-// We need to update this component to pass strengthAreas and developmentAreas to SkillAnalysisTab
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CareerMatchesTab from './CareerMatchesTab';
-import SkillAnalysisTab from './SkillAnalysisTab';
-import CareerInsightsCard from './CareerInsightsCard';
-
-interface SkillData {
-  name: string;
-  value: number;
-  fullMark: number;
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import SkillRadarChart from './SkillRadarChart';
+import RecommendationsList from './RecommendationsList';
+import AssessmentHistoryList from './AssessmentHistoryList';
 
 interface ReportTabsProps {
   reportId: string;
-  skillData: SkillData[];
-  responses?: Record<string, string> | null;
-  strengthAreas?: string[];
-  developmentAreas?: string[];
+  skillData: { name: string; value: number; fullMark: number }[];
+  responses: Record<string, string> | null;
+  strengthAreas: string[];
+  developmentAreas: string[];
 }
 
 const ReportTabs = ({ 
-  reportId, 
+  reportId,
   skillData,
   responses,
-  strengthAreas = [],
-  developmentAreas = []
+  strengthAreas,
+  developmentAreas
 }: ReportTabsProps) => {
   return (
-    <div className="space-y-8">
-      {/* Career insights card for strengths and development areas */}
-      <CareerInsightsCard 
-        strengthAreas={strengthAreas}
-        developmentAreas={developmentAreas}
-      />
+    <Tabs defaultValue="career-matches" className="w-full">
+      <TabsList className="grid grid-cols-4 mb-8">
+        <TabsTrigger value="career-matches">Career Matches</TabsTrigger>
+        <TabsTrigger value="skill-analysis">Skill Analysis</TabsTrigger>
+        <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+        <TabsTrigger value="history">History</TabsTrigger>
+      </TabsList>
       
-      <Tabs defaultValue="careers" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="careers">Career Matches</TabsTrigger>
-          <TabsTrigger value="skills">Skill Analysis</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="careers" className="mt-6">
-          <CareerMatchesTab reportId={reportId} />
-        </TabsContent>
-        
-        <TabsContent value="skills" className="mt-6">
-          <SkillAnalysisTab 
-            skillData={skillData} 
-            responses={responses}
-            strengthAreas={strengthAreas}
-            developmentAreas={developmentAreas}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+      <TabsContent value="career-matches" className="space-y-8">
+        <p className="text-muted-foreground">
+          Explore career paths that align with your unique skills and interests.
+        </p>
+        {/* Career Matches Content */}
+      </TabsContent>
+      
+      <TabsContent value="skill-analysis" className="space-y-8">
+        <p className="text-muted-foreground">
+          Understand your strengths and areas for development based on your assessment results.
+        </p>
+        <SkillRadarChart 
+          data={skillData}
+          title="Skill Analysis"
+          description="Your skills compared to career requirements"
+        />
+      </TabsContent>
+      
+      <TabsContent value="recommendations" className="space-y-8">
+        <p className="text-muted-foreground">
+          Personalized recommendations to help you achieve your career goals.
+        </p>
+        <RecommendationsList 
+          responses={responses}
+          strengthAreas={strengthAreas}
+          developmentAreas={developmentAreas}
+        />
+      </TabsContent>
+
+      <TabsContent value="history" className="space-y-8">
+        <AssessmentHistoryList />
+      </TabsContent>
+    </Tabs>
   );
 };
 

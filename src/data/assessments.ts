@@ -20,5 +20,14 @@ export const assessments: Assessment[] = [
     duration: 45,
     questionCount: 105,
     type: 'unified'
+  },
+  {
+    id: "career-analysis-junior",
+    title: "Career Analysis for Class 8th, 9th and 10th Assessment",
+    description: "Comprehensive assessment tailored for students in Class 8-10 to discover aptitude, personality traits, and interests for early career guidance.",
+    icon: Brain,
+    duration: 45,
+    questionCount: 105,
+    type: 'unified'
   }
 ];

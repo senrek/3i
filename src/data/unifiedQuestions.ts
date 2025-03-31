@@ -1142,5 +1142,447 @@ export const unifiedQuestions: Question[] = [
       { value: "C", label: "Yes" }
     ],
     category: 'interest'
+  },
+  
+  // Leadership & Decision-Making Questions
+  {
+    id: "ldm_1",
+    text: "How do you make crucial decisions?",
+    options: [
+      { value: "A", label: "My decision goes along with the majority." },
+      { value: "B", label: "I make decisions on my own." },
+      { value: "C", label: "I take advice before deciding." },
+      { value: "D", label: "I follow others' decisions." },
+      { value: "E", label: "Others decide for me." }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "ldm_2",
+    text: "If a team member struggles, what would you do?",
+    options: [
+      { value: "A", label: "Take over their tasks." },
+      { value: "B", label: "Assign easier tasks." },
+      { value: "C", label: "Offer help and support." },
+      { value: "D", label: "Ignore and focus on your work." }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "ldm_3",
+    text: "I can determine the best solution to a problem.",
+    options: [
+      { value: "A", label: "Almost always" },
+      { value: "B", label: "Quite often" },
+      { value: "C", label: "Sometimes" },
+      { value: "D", label: "Not very often" },
+      { value: "E", label: "Never" }
+    ],
+    category: 'aptitude'
+  },
+  
+  // Administrative & Organizational Skills
+  {
+    id: "aos_1",
+    text: "Do you plan your work?",
+    options: [
+      { value: "A", label: "Plan at the last moment." },
+      { value: "B", label: "Plan when time is minimal." },
+      { value: "C", label: "Schedule before starting." },
+      { value: "D", label: "No planning (waste of time)." },
+      { value: "E", label: "Plan while working." }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "aos_2",
+    text: "Find the exact copy of the code: ###HIFH257O388I.",
+    options: [
+      { value: "A", label: "###HIFH257O388I" },
+      { value: "B", label: "###HIFE257O388I" },
+      { value: "C", label: "###HIFH257O388I" },
+      { value: "D", label: "###HIFH257O388I" },
+      { value: "E", label: "###HIFH257O388I" }
+    ],
+    category: 'aptitude'
+  },
+  
+  // Mechanical/Logical Reasoning
+  {
+    id: "mlr_1",
+    text: "The bob on the two pendulums have the same weight. If both the pendulums are swung at the same time, which one will swing faster?",
+    options: [
+      { value: "A", label: "A" },
+      { value: "B", label: "B" },
+      { value: "C", label: "Both will swing at the same pace" },
+      { value: "D", label: "Not Sure" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "mlr_2",
+    text: "If a car and a bowling ball went off a 100-metre cliff at the same time, which would hit the ground first? (Do not consider air friction)",
+    options: [
+      { value: "A", label: "Car" },
+      { value: "B", label: "Bowling Ball" },
+      { value: "C", label: "Both will hit the ground at same time" },
+      { value: "D", label: "Not Sure" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "mlr_3",
+    text: "In which direction will the gear on the right turn?",
+    options: [
+      { value: "A", label: "Clockwise" },
+      { value: "B", label: "Anti-Clockwise" },
+      { value: "C", label: "It will be steady" },
+      { value: "D", label: "Not sure" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "mlr_4",
+    text: "A sister weighs 100 Kg and her brother weighs 50 Kg. If the brother is sitting 6 meters from the pivot (midpoint), how many meters should the sister sit to balance the seesaw?",
+    options: [
+      { value: "A", label: "6 meters" },
+      { value: "B", label: "5 meters" },
+      { value: "C", label: "4 meters" },
+      { value: "D", label: "3 meters" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "mlr_5",
+    text: "Two men are carrying a heavy box using a plank. Who is carrying most of the load?",
+    options: [
+      { value: "A", label: "A" },
+      { value: "B", label: "B" },
+      { value: "C", label: "Both are carrying equal amount." },
+      { value: "D", label: "None of the above" }
+    ],
+    category: 'aptitude'
+  },
+  
+  // Verbal Ability
+  {
+    id: "va_1",
+    text: "Find the verb in the sentence: 'The goats crossed the stream.'",
+    options: [
+      { value: "A", label: "The" },
+      { value: "B", label: "goats" },
+      { value: "C", label: "crossed" },
+      { value: "D", label: "the" },
+      { value: "E", label: "stream" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "va_2",
+    text: "Find the word with the correct spelling.",
+    options: [
+      { value: "A", label: "Sacrifice" },
+      { value: "B", label: "Occasion" },
+      { value: "C", label: "Ocurrence" },
+      { value: "D", label: "Intelligence" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "va_3",
+    text: "Spot the grammatical error in: '(A)/ The teacher was angry (B)/ when he found that (C)/ you are not there (D)/ in the class.'",
+    options: [
+      { value: "A", label: "Error in clause A" },
+      { value: "B", label: "Error in clause B" },
+      { value: "C", label: "Error in clause C" },
+      { value: "D", label: "Error in clause D" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "va_4",
+    text: "Instruction: Fill in the blanks. 'I have ______ the presentation for you. I ______ it during my lunch break.'",
+    options: [
+      { value: "A", label: "wrote & done" },
+      { value: "B", label: "prepared & did" },
+      { value: "C", label: "write & did" },
+      { value: "D", label: "prepared & done" },
+      { value: "E", label: "None of the above" }
+    ],
+    category: 'aptitude'
+  },
+  
+  // Numerical Ability
+  {
+    id: "na_1",
+    text: "Which one is a prime number?",
+    options: [
+      { value: "A", label: "33" },
+      { value: "B", label: "81" },
+      { value: "C", label: "93" },
+      { value: "D", label: "83" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "na_2",
+    text: "If 7 spiders spin 7 webs in 7 days, then how many days will a spider take to spin a web?",
+    options: [
+      { value: "A", label: "7" },
+      { value: "B", label: "5" },
+      { value: "C", label: "3" },
+      { value: "D", label: "2" },
+      { value: "E", label: "1" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "na_3",
+    text: "Find the series: 4, 8, 16, 32, ---?",
+    options: [
+      { value: "A", label: "48" },
+      { value: "B", label: "64" },
+      { value: "C", label: "40" },
+      { value: "D", label: "50" }
+    ],
+    category: 'aptitude'
+  },
+  
+  // Logical Reasoning
+  {
+    id: "lr_1",
+    text: "Some greens are blue. No blues are white. Therefore:",
+    options: [
+      { value: "A", label: "Some greens are white" },
+      { value: "B", label: "No whites are green" },
+      { value: "C", label: "No greens are white" },
+      { value: "D", label: "None of the above" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "lr_2",
+    text: "Pick the odd one out:",
+    options: [
+      { value: "A", label: "Index" },
+      { value: "B", label: "Glossary" },
+      { value: "C", label: "Chapter" },
+      { value: "D", label: "Book" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "lr_3",
+    text: "Complete the following series: BD CEF DFGH ?",
+    options: [
+      { value: "A", label: "EGHIJ" },
+      { value: "B", label: "EGHI" },
+      { value: "C", label: "EHGIJ" },
+      { value: "D", label: "EGHIJK" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "lr_4",
+    text: "Statement I - The government has imported large quantities of sugar as per trade agreement with other countries. Statement II - The prices of sugar in the domestic market have fallen sharply in the recent months.",
+    options: [
+      { value: "A", label: "Statement I is the cause and statement II is its effect." },
+      { value: "B", label: "Statement II is the cause and statement I is its effect." },
+      { value: "C", label: "Both the statements I and II are independent causes." },
+      { value: "D", label: "Both the statements I and II are effects of another common cause." }
+    ],
+    category: 'aptitude'
+  },
+  
+  // Spatial & Visualization Ability
+  {
+    id: "sva_1",
+    text: "What will a figure look like after the extra piece is folded over?",
+    options: [
+      { value: "A", label: "A" },
+      { value: "B", label: "B" },
+      { value: "C", label: "C" },
+      { value: "D", label: "D" },
+      { value: "E", label: "E" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "sva_2",
+    text: "What do you see in this image?",
+    options: [
+      { value: "A", label: "21" },
+      { value: "B", label: "75" },
+      { value: "C", label: "95" },
+      { value: "D", label: "94" },
+      { value: "E", label: "74" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "sva_3",
+    text: "Which image can be made from the three shapes shown?",
+    options: [
+      { value: "A", label: "A" },
+      { value: "B", label: "B" },
+      { value: "C", label: "C" },
+      { value: "D", label: "D" },
+      { value: "E", label: "E" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "sva_4",
+    text: "Look at this picture. Identify the missing part.",
+    options: [
+      { value: "A", label: "A" },
+      { value: "B", label: "B" },
+      { value: "C", label: "C" },
+      { value: "D", label: "D" },
+      { value: "E", label: "E" }
+    ],
+    category: 'aptitude'
+  },
+  {
+    id: "sva_5",
+    text: "How does the image look after mixing two images?",
+    options: [
+      { value: "A", label: "A" },
+      { value: "B", label: "B" },
+      { value: "C", label: "C" },
+      { value: "D", label: "D" },
+      { value: "E", label: "E" }
+    ],
+    category: 'aptitude'
+  },
+  
+  // Social & Cooperation Skills
+  {
+    id: "scs_1",
+    text: "You find that your friend's performance in school is going down. What will you do?",
+    options: [
+      { value: "A", label: "Inform parents/teachers for help." },
+      { value: "B", label: "Help improve their performance." },
+      { value: "C", label: "Understand the reason behind the decline." },
+      { value: "D", label: "Ask a common friend to help." },
+      { value: "E", label: "Feel good about outperforming them." }
+    ],
+    category: 'personality'
+  },
+  
+  // Career Preferences & Personality
+  {
+    id: "cpp_1",
+    text: "What do you like most?",
+    options: [
+      { value: "A", label: "Social Activities" },
+      { value: "B", label: "Managing tasks" },
+      { value: "C", label: "Influencing People" },
+      { value: "D", label: "Creativity" },
+      { value: "E", label: "Research" },
+      { value: "F", label: "Outdoor and Physical Activities" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "cpp_2",
+    text: "How do you see yourself?",
+    options: [
+      { value: "A", label: "Precise, Scientific, Intellectual" },
+      { value: "B", label: "Expressive, Imaginative, Creative" },
+      { value: "C", label: "Helpful, Friendly, Trustworthy" },
+      { value: "D", label: "Energetic, Influential, Sociable" },
+      { value: "E", label: "Planned, Organized, Accurate" },
+      { value: "F", label: "Practical, Mechanical, Physically Active" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "cpp_3",
+    text: "Which motivates you?",
+    options: [
+      { value: "A", label: "Achievement" },
+      { value: "B", label: "Appreciation" }
+    ],
+    category: 'personality'
+  },
+  {
+    id: "cpp_4",
+    text: "Prefer facts or values?",
+    options: [
+      { value: "A", label: "Facts & logic" },
+      { value: "B", label: "Personal & social values" }
+    ],
+    category: 'personality'
+  },
+  
+  // Learning Style
+  {
+    id: "ls_1",
+    text: "To learn a computer, would you rather:",
+    options: [
+      { value: "A", label: "Watch a video" },
+      { value: "B", label: "Listen" },
+      { value: "C", label: "Disassemble" },
+      { value: "D", label: "Read instructions" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "ls_2",
+    text: "When studying, you learn better by:",
+    options: [
+      { value: "A", label: "Rewriting notes" },
+      { value: "B", label: "Listening & discussing" },
+      { value: "C", label: "Practicums" },
+      { value: "D", label: "Diagrams" }
+    ],
+    category: 'learning-style'
+  },
+  {
+    id: "ls_3",
+    text: "Preferred teacher style:",
+    options: [
+      { value: "A", label: "Diagrams" },
+      { value: "B", label: "Q&A" },
+      { value: "C", label: "Handouts" },
+      { value: "D", label: "Demos" }
+    ],
+    category: 'learning-style'
+  },
+  
+  // Job Value Preferences
+  {
+    id: "jvp_1",
+    text: "How much would you want adventure and excitement involving physical risk in your dream job?",
+    options: [
+      { value: "A", label: "Very much" },
+      { value: "B", label: "Somewhat" },
+      { value: "C", label: "Not much" },
+      { value: "D", label: "Not at all" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "jvp_2",
+    text: "How much would you want autonomy to work independently in your dream job?",
+    options: [
+      { value: "A", label: "Very much" },
+      { value: "B", label: "Somewhat" },
+      { value: "C", label: "Not much" },
+      { value: "D", label: "Not at all" }
+    ],
+    category: 'interest'
+  },
+  {
+    id: "jvp_3",
+    text: "How much would you want continuous learning in your dream job?",
+    options: [
+      { value: "A", label: "Very much" },
+      { value: "B", label: "Somewhat" },
+      { value: "C", label: "Not much" },
+      { value: "D", label: "Not at all" }
+    ],
+    category: 'interest'
   }
 ];
