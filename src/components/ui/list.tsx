@@ -1,6 +1,6 @@
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 const List = React.forwardRef<
   HTMLUListElement,
@@ -11,8 +11,8 @@ const List = React.forwardRef<
     className={cn("space-y-1 text-sm", className)}
     {...props}
   />
-))
-List.displayName = "List"
+));
+List.displayName = "List";
 
 const ListItem = React.forwardRef<
   HTMLLIElement,
@@ -23,7 +23,7 @@ const ListItem = React.forwardRef<
     className={cn("leading-normal", className)}
     {...props}
   />
-))
-ListItem.displayName = "ListItem"
+));
+ListItem.displayName = "ListItem";
 
-export { List, ListItem }
+export { List, ListItem };

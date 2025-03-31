@@ -1,24 +1,29 @@
+
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SkillRadarChart from './SkillRadarChart';
 import RecommendationsList from './RecommendationsList';
 import AssessmentHistoryList from './AssessmentHistoryList';
 
 interface ReportTabsProps {
   reportId: string;
-  skillData: { name: string; value: number; fullMark: number }[];
+  skillData: Array<{
+    name: string;
+    value: number;
+    fullMark: number;
+  }>;
   responses: Record<string, string> | null;
   strengthAreas: string[];
   developmentAreas: string[];
 }
 
-const ReportTabs = ({ 
-  reportId,
-  skillData,
-  responses,
-  strengthAreas,
-  developmentAreas
-}: ReportTabsProps) => {
+const ReportTabs: React.FC<ReportTabsProps> = ({ 
+  reportId, 
+  skillData, 
+  responses, 
+  strengthAreas, 
+  developmentAreas 
+}) => {
   return (
     <Tabs defaultValue="career-matches" className="w-full">
       <TabsList className="grid grid-cols-4 mb-8">
@@ -32,13 +37,14 @@ const ReportTabs = ({
         <p className="text-muted-foreground">
           Explore career paths that align with your unique skills and interests.
         </p>
-        {/* Career Matches Content */}
+        {/* Career matches content will be implemented in future updates */}
       </TabsContent>
       
       <TabsContent value="skill-analysis" className="space-y-8">
         <p className="text-muted-foreground">
           Understand your strengths and areas for development based on your assessment results.
         </p>
+        
         <SkillRadarChart 
           data={skillData}
           title="Skill Analysis"
@@ -50,13 +56,14 @@ const ReportTabs = ({
         <p className="text-muted-foreground">
           Personalized recommendations to help you achieve your career goals.
         </p>
-        <RecommendationsList 
+        
+        <RecommendationsList
           responses={responses}
           strengthAreas={strengthAreas}
           developmentAreas={developmentAreas}
         />
       </TabsContent>
-
+      
       <TabsContent value="history" className="space-y-8">
         <AssessmentHistoryList />
       </TabsContent>

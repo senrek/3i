@@ -1,180 +1,303 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, Calendar } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { FileDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { generatePDF } from './ReportPDFGenerator'; // Assuming this is the function to generate PDF
-import { formatDistanceToNow } from 'date-fns';
+import { generatePDF } from './ReportPDFGenerator';
 
-interface AssessmentRecord {
+interface Assessment {
   id: string;
   completed_at: string;
+  report_generated_at: string | null;
   assessment_id: string;
   scores: any;
-  responses: any;
+  responses: Record<string, string>;
 }
 
-const AssessmentHistoryList = () => {
+const AssessmentHistoryList: React.FC = () => {
   const { user } = useAuth();
-  const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isGenerating, setIsGenerating] = useState<Record<string, boolean>>({});
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [generatingPDF, setGeneratingPDF] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchAssessmentHistory() {
-      if (!user?.id) return;
-      
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('user_assessments')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('completed_at', { ascending: false });
-          
-        if (error) {
-          console.error('Error fetching assessment history:', error);
-          toast.error('Failed to load assessment history');
-          return;
-        }
-        
-        setAssessments(data || []);
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        toast.error('An unexpected error occurred');
-      } finally {
-        setIsLoading(false);
-      }
+    if (user) {
+      fetchAssessments();
     }
-    
-    fetchAssessmentHistory();
   }, [user]);
 
-  const handleDownloadPDF = async (assessment: AssessmentRecord) => {
+  const fetchAssessments = async () => {
     try {
-      setIsGenerating(prev => ({ ...prev, [assessment.id]: true }));
-      
-      // Fetch the user profile to get name
-      const { data: profile } = await supabase
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('user_assessments')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('completed_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setAssessments(data || []);
+    } catch (error) {
+      console.error('Error fetching assessments:', error);
+      toast.error('Failed to load assessment history');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async (assessment: Assessment) => {
+    try {
+      setGeneratingPDF(assessment.id);
+
+      // Determine assessment type (junior vs senior)
+      const isJuniorAssessment = assessment.assessment_id?.includes('junior') || 
+                                assessment.responses?.assessment_type === 'career-analysis-junior';
+
+      // Get profile info for the user
+      const { data: profileData } = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, email')
         .eq('id', user?.id)
         .single();
-      
-      const userName = profile?.first_name && profile?.last_name 
-        ? `${profile.first_name} ${profile.last_name}`
+
+      // Construct user name
+      const firstName = profileData?.first_name || '';
+      const lastName = profileData?.last_name || '';
+      const userName = (firstName || lastName) 
+        ? `${firstName} ${lastName}`.trim()
         : user?.email || 'User';
-      
+
+      // Analyze responses to determine strengths and development areas
+      const { strengthAreas, developmentAreas } = analyzeResponses(assessment.responses);
+
+      // Generate PDF
       await generatePDF(
         assessment.id,
         userName,
         assessment.scores,
         assessment.responses,
-        // Default strengths and weaknesses if not available
-        assessment.scores?.strengthAreas || ['Problem Solving', 'Critical Thinking'],
-        assessment.scores?.developmentAreas || ['Technical Skills', 'Time Management']
+        strengthAreas,
+        developmentAreas,
+        isJuniorAssessment
       );
-      
-      toast.success('PDF generated successfully');
+
+      // Update the report_generated_at timestamp in Supabase
+      await supabase
+        .from('user_assessments')
+        .update({ report_generated_at: new Date().toISOString() })
+        .eq('id', assessment.id);
+
+      // Update local state
+      setAssessments(prev => 
+        prev.map(a => 
+          a.id === assessment.id 
+            ? { ...a, report_generated_at: new Date().toISOString() } 
+            : a
+        )
+      );
+
+      toast.success('PDF report generated successfully!');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
+      toast.error('Failed to generate PDF report');
     } finally {
-      setIsGenerating(prev => ({ ...prev, [assessment.id]: false }));
+      setGeneratingPDF(null);
     }
   };
 
+  // Helper function to analyze responses to determine strengths and development areas
+  const analyzeResponses = (responses: Record<string, string>) => {
+    // Default values if can't analyze properly
+    const defaultStrengths = ['Problem Solving', 'Critical Thinking', 'Adaptability'];
+    const defaultDevelopmentAreas = ['Technical Skills', 'Leadership', 'Time Management'];
+
+    try {
+      if (!responses) {
+        return {
+          strengthAreas: defaultStrengths,
+          developmentAreas: defaultDevelopmentAreas
+        };
+      }
+
+      // Categorize responses by question type
+      const aptitudeQuestions = Object.entries(responses).filter(([id]) => 
+        id.startsWith('apt_') || (Number(id.replace(/\D/g, '')) >= 1 && Number(id.replace(/\D/g, '')) <= 53)
+      );
+      
+      const personalityQuestions = Object.entries(responses).filter(([id]) => 
+        id.startsWith('per_') || (Number(id.replace(/\D/g, '')) >= 54 && Number(id.replace(/\D/g, '')) <= 77)
+      );
+      
+      const interestQuestions = Object.entries(responses).filter(([id]) => 
+        id.startsWith('int_') || (Number(id.replace(/\D/g, '')) >= 78 && Number(id.replace(/\D/g, '')) <= 92)
+      );
+
+      // Generate strength areas based on high-scoring answers (A and B)
+      const strengthAreas: string[] = [];
+      
+      if (aptitudeQuestions.filter(([, val]) => val === 'A' || val === 'B').length > 3) {
+        strengthAreas.push('Analytical Thinking');
+      }
+      
+      if (personalityQuestions.filter(([, val]) => val === 'A' || val === 'B').length > 3) {
+        strengthAreas.push('Communication Skills');
+      }
+      
+      if (interestQuestions.filter(([, val]) => val === 'A' || val === 'B').length > 3) {
+        strengthAreas.push('Creativity');
+      }
+      
+      if (aptitudeQuestions.filter(([, val]) => val === 'A').length > 2) {
+        strengthAreas.push('Problem Solving');
+      }
+      
+      if (personalityQuestions.filter(([, val]) => val === 'A').length > 2) {
+        strengthAreas.push('Leadership');
+      }
+
+      // Generate development areas based on low-scoring answers (C and D)
+      const developmentAreas: string[] = [];
+      
+      if (aptitudeQuestions.filter(([, val]) => val === 'C' || val === 'D').length > 2) {
+        developmentAreas.push('Technical Skills');
+      }
+      
+      if (personalityQuestions.filter(([, val]) => val === 'C' || val === 'D').length > 2) {
+        developmentAreas.push('Interpersonal Skills');
+      }
+      
+      if (interestQuestions.filter(([, val]) => val === 'C' || val === 'D').length > 2) {
+        developmentAreas.push('Career Focus');
+      }
+      
+      if (aptitudeQuestions.filter(([, val]) => val === 'D').length > 1) {
+        developmentAreas.push('Critical Thinking');
+      }
+
+      // Ensure we have at least some default values if nothing is detected
+      if (strengthAreas.length === 0) {
+        strengthAreas.push(...defaultStrengths);
+      }
+      
+      if (developmentAreas.length === 0) {
+        developmentAreas.push(...defaultDevelopmentAreas);
+      }
+
+      return {
+        strengthAreas,
+        developmentAreas
+      };
+    } catch (error) {
+      console.error('Error analyzing responses:', error);
+      return {
+        strengthAreas: defaultStrengths,
+        developmentAreas: defaultDevelopmentAreas
+      };
+    }
+  };
+
+  // Format date for display
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch (e) {
-      return 'Invalid date';
+        minute: '2-digit'
+      }).format(date);
+    } catch (error) {
+      return 'N/A';
     }
   };
 
-  const getAssessmentType = (id: string) => {
-    if (id === 'career-analysis') return 'Class 11-12 Assessment';
-    if (id === 'career-analysis-junior') return 'Class 8-10 Assessment';
-    return 'Career Assessment';
+  // Get assessment type display name
+  const getAssessmentTypeName = (assessmentId: string) => {
+    if (assessmentId.includes('junior')) {
+      return 'Class 8-10 Assessment';
+    } else {
+      return 'Class 11-12 Assessment';
+    }
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Assessment History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="py-8 text-center text-muted-foreground">
-            Loading assessment history...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (assessments.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Assessment History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="py-8 text-center text-muted-foreground">
-            No assessment history found. Complete an assessment to see your history.
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Assessment History</CardTitle>
+    <Card className="border border-border/50 rounded-lg shadow-sm">
+      <CardHeader className="bg-primary/5">
+        <CardTitle className="text-xl">Assessment History</CardTitle>
+        <CardDescription>
+          View and download your past assessment reports
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {assessments.map((assessment) => (
-            <div 
-              key={assessment.id} 
-              className="flex items-center justify-between p-4 rounded-lg border border-border/40 hover:bg-accent/10 transition-colors"
-            >
-              <div className="flex items-center space-x-4">
-                <Calendar className="h-10 w-10 text-primary/70" />
-                <div>
-                  <h4 className="font-medium">{getAssessmentType(assessment.assessment_id)}</h4>
-                  <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span>{formatDate(assessment.completed_at)}</span>
-                    <span className="text-xs bg-primary/10 px-2 py-0.5 rounded-full">
-                      {formatDistanceToNow(new Date(assessment.completed_at), { addSuffix: true })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => handleDownloadPDF(assessment)}
-                disabled={isGenerating[assessment.id]}
-              >
-                <FileDown className="h-4 w-4" />
-                {isGenerating[assessment.id] ? 'Generating...' : 'Download PDF'}
-              </Button>
-            </div>
-          ))}
-        </div>
+      <CardContent className="pt-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-48">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : assessments.length === 0 ? (
+          <div className="text-center py-12">
+            <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-semibold">No assessment history</h3>
+            <p className="text-muted-foreground mt-2">
+              Complete an assessment to see your history here
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date Taken</TableHead>
+                  <TableHead>Assessment Type</TableHead>
+                  <TableHead>Last Generated</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {assessments.map((assessment) => (
+                  <TableRow key={assessment.id}>
+                    <TableCell className="font-medium">
+                      {formatDate(assessment.completed_at)}
+                    </TableCell>
+                    <TableCell>
+                      {getAssessmentTypeName(assessment.assessment_id)}
+                    </TableCell>
+                    <TableCell>
+                      {assessment.report_generated_at 
+                        ? formatDate(assessment.report_generated_at) 
+                        : 'Never'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownloadPDF(assessment)}
+                        disabled={generatingPDF === assessment.id}
+                        className="flex items-center gap-1"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        {generatingPDF === assessment.id ? 'Generating...' : 'Download PDF'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
