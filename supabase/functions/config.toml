@@ -1,0 +1,7 @@
+
+project_id = "vvmuotlxxdsfgvgbiwhm"
+
+[api]
+enabled = true
+[functions.generate-ai-content]
+verify_jwt = false
