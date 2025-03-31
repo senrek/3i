@@ -159,6 +159,15 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     const leadershipQuestions = ['6', '16', '17', '26', '43', '49'];
     const businessQuestions = ['11', '25', '48'];
     
+    // Include new questions
+    const newLeadershipQuestions = ['1', '3', '4', '5', '6', '7', '8'];
+    leadershipQuestions.push(...newLeadershipQuestions);
+    
+    const newAdminQuestions = ['2'];
+    const newMechanicalQuestions = ['30', '31', '32', '33', '34'];
+    const newVerbalQuestions = ['25', '26', '27', '28', '29'];
+    const newNumericalQuestions = ['15', '16', '17', '18', '19'];
+    
     // Categorize responses
     const technicalResponses = Object.entries(responses).filter(([id]) => 
       technicalQuestions.some(num => isQuestionAbout(id, [num]))
@@ -184,6 +193,18 @@ export const useAssessment = (assessment: any, questions: any[]) => {
       businessQuestions.some(num => isQuestionAbout(id, [num]))
     );
     
+    const mechanicalResponses = Object.entries(responses).filter(([id]) => 
+      newMechanicalQuestions.some(num => isQuestionAbout(id, [num]))
+    );
+    
+    const verbalResponses = Object.entries(responses).filter(([id]) => 
+      newVerbalQuestions.some(num => isQuestionAbout(id, [num]))
+    );
+    
+    const numericalResponses = Object.entries(responses).filter(([id]) => 
+      newNumericalQuestions.some(num => isQuestionAbout(id, [num]))
+    );
+
     // Count of A/B/C/D answers for each category
     const analyzeResponsePattern = (responsesList: [string, string][]) => {
       return {
@@ -200,6 +221,9 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     const socialAnalysis = analyzeResponsePattern(socialResponses);
     const leadershipAnalysis = analyzeResponsePattern(leadershipResponses);
     const businessAnalysis = analyzeResponsePattern(businessResponses);
+    const mechanicalAnalysis = analyzeResponsePattern(mechanicalResponses);
+    const verbalAnalysis = analyzeResponsePattern(verbalResponses);
+    const numericalAnalysis = analyzeResponsePattern(numericalResponses);
     
     // Analyze personality questions
     const personalityResponses = Object.entries(responses).filter(([id]) => 
@@ -244,6 +268,9 @@ export const useAssessment = (assessment: any, questions: any[]) => {
     const socialAptitude = calculateSkillScore(socialResponses);
     const leadershipAptitude = calculateSkillScore(leadershipResponses);
     const businessAptitude = calculateSkillScore(businessResponses);
+    const mechanicalAptitude = calculateSkillScore(mechanicalResponses);
+    const verbalAptitude = calculateSkillScore(verbalResponses);
+    const numericalAptitude = calculateSkillScore(numericalResponses);
     
     // Extract key personality traits
     const isExtroverted = personalityResponses.filter(([id]) => 
@@ -290,6 +317,18 @@ export const useAssessment = (assessment: any, questions: any[]) => {
       // Business domain
       if (businessAptitude > 70) strengths.push("Business Acumen");
       else if (businessAptitude < 50) gaps.push("Business Knowledge");
+      
+      // Verbal domain
+      if (verbalAptitude > 70) strengths.push("Verbal Communication");
+      else if (verbalAptitude < 50) gaps.push("Verbal Skills");
+      
+      // Numerical domain
+      if (numericalAptitude > 70) strengths.push("Numerical Aptitude");
+      else if (numericalAptitude < 50) gaps.push("Mathematical Skills");
+      
+      // Mechanical domain
+      if (mechanicalAptitude > 70) strengths.push("Mechanical Reasoning");
+      else if (mechanicalAptitude < 50) gaps.push("Mechanical Understanding");
       
       // Personality-based
       if (isExtroverted) strengths.push("Team Collaboration");
@@ -416,7 +455,10 @@ export const useAssessment = (assessment: any, questions: any[]) => {
         analytical: analyticalAptitude,
         social: socialAptitude,
         leadership: leadershipAptitude,
-        business: businessAptitude
+        business: businessAptitude,
+        mechanical: mechanicalAptitude,
+        verbal: verbalAptitude,
+        numerical: numericalAptitude
       },
       personalityTraits: {
         extroverted: isExtroverted,
@@ -434,6 +476,9 @@ export const useAssessment = (assessment: any, questions: any[]) => {
         social: socialAnalysis,
         leadership: leadershipAnalysis,
         business: businessAnalysis,
+        mechanical: mechanicalAnalysis,
+        verbal: verbalAnalysis,
+        numerical: numericalAnalysis,
         personality: personalityAnalysis,
         interest: interestAnalysis,
         learningStyle: learningStyleAnalysis
