@@ -79,6 +79,9 @@ Remember that this plan should be flexible and adapted as you gain experience an
         metadata: {
           userName: assessmentData?.userName || 'Student',
           personalityType: 'Introvert:Sensing:Thinking:Judging',
+          careerPlanningStage: 'Diffused',
+          careerRisks: 'Career misalignment, career path misjudgment, wrong career path projections, unnecessary stress',
+          careerActionPlan: 'Explore career path > Align your abilities and interests with the best possible career path > Realistic Execution Plan > Timely Review of Action Plan',
           strengthPercentages: {
             introvert: 86,
             extrovert: 14,
