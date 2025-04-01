@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
@@ -50,27 +49,35 @@ export const generatePDF = async (
       pdfUtils.addPageFooter(doc, userInfo.name, currentPage);
       
       // Return starting Y position for content
-      return headerEndY.lastY;
+      return typeof headerEndY === 'number' ? headerEndY : headerEndY.lastY;
+    };
+    
+    // Helper function to get the Y position from a result that might be a number or {lastY: number}
+    const getYPosition = (result: any): number => {
+      if (typeof result === 'number') {
+        return result;
+      }
+      return result.lastY;
     };
     
     // Start building the report
     // Add header
-    let yPosition = pdfUtils.addHeaderWithLogo(doc).lastY;
+    let yPosition = getYPosition(pdfUtils.addHeaderWithLogo(doc));
     
     // Add report title
-    yPosition = pdfUtils.addReportTitle(doc).lastY;
+    yPosition = getYPosition(pdfUtils.addReportTitle(doc));
     
     // Add user info
-    yPosition = pdfUtils.addUserInfo(doc, userInfo);
+    yPosition = getYPosition(pdfUtils.addUserInfo(doc, userInfo));
     
     // Add disclaimer
-    yPosition = pdfUtils.addDisclaimer(doc, yPosition);
+    yPosition = getYPosition(pdfUtils.addDisclaimer(doc, yPosition));
     
     // Add page footer
     pdfUtils.addPageFooter(doc, userInfo.name, currentPage);
     
     // Add section title for profiling
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Career Planning Profiling');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Planning Profiling'));
     
     // Prepare profiling data based on enhancedContent
     const profilingData = {
@@ -96,14 +103,14 @@ export const generatePDF = async (
     const profilingEndY = pdfUtils.addProfilingSection(doc, yPosition, profilingData);
     
     // Check if we need to add a new page
-    if (profilingEndY.lastY > doc.internal.pageSize.height - 40) {
+    if (getYPosition(profilingEndY) > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = profilingEndY.lastY + 10;
+      yPosition = getYPosition(profilingEndY) + 10;
     }
     
     // Add section title for personality
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Career Personality');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Personality'));
     
     // Prepare personality data
     const personalityType = enhancedContent?.metadata?.personalityType || 
@@ -119,10 +126,10 @@ export const generatePDF = async (
     const personalityChartEndY = pdfUtils.addPersonalityTypeChart(doc, yPosition, personalityData, personalityType);
     
     // Check if we need to add a new page
-    if (personalityChartEndY.lastY > doc.internal.pageSize.height - 40) {
+    if (getYPosition(personalityChartEndY) > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = personalityChartEndY.lastY + 10;
+      yPosition = getYPosition(personalityChartEndY) + 10;
     }
     
     // Add personality analysis
@@ -156,7 +163,7 @@ export const generatePDF = async (
     yPosition = addNewPage();
     
     // Add section title for interest
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Career Interest');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Interest'));
     
     // Prepare interest data
     const interestData = [
@@ -171,10 +178,10 @@ export const generatePDF = async (
     const interestChartEndY = pdfUtils.addInterestBarChart(doc, yPosition, interestData);
     
     // Check if we need to add a new page
-    if (interestChartEndY.lastY > doc.internal.pageSize.height - 40) {
+    if (getYPosition(interestChartEndY) > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = interestChartEndY.lastY + 10;
+      yPosition = getYPosition(interestChartEndY) + 10;
     }
     
     // Add interest analysis
@@ -203,7 +210,7 @@ export const generatePDF = async (
     yPosition = addNewPage();
     
     // Add section title for motivator
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Career Motivator');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Motivator'));
     
     // Prepare motivator data
     const motivatorData = [
@@ -219,10 +226,10 @@ export const generatePDF = async (
     const motivatorChartEndY = pdfUtils.addCareerMotivatorChart(doc, yPosition, motivatorData);
     
     // Check if we need to add a new page
-    if (motivatorChartEndY.lastY > doc.internal.pageSize.height - 40) {
+    if (getYPosition(motivatorChartEndY) > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = motivatorChartEndY.lastY + 10;
+      yPosition = getYPosition(motivatorChartEndY) + 10;
     }
     
     // Add motivator analysis
@@ -251,7 +258,7 @@ export const generatePDF = async (
     yPosition = addNewPage();
     
     // Add section title for learning style
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Learning Style');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Learning Style'));
     
     // Prepare learning style data
     const learningStyleData = [
@@ -264,10 +271,10 @@ export const generatePDF = async (
     const learningStyleChartEndY = pdfUtils.addLearningStylePieChart(doc, yPosition, learningStyleData);
     
     // Check if we need to add a new page
-    if (learningStyleChartEndY.lastY > doc.internal.pageSize.height - 40) {
+    if (getYPosition(learningStyleChartEndY) > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = learningStyleChartEndY.lastY + 10;
+      yPosition = getYPosition(learningStyleChartEndY) + 10;
     }
     
     // Add learning style analysis
@@ -290,7 +297,7 @@ export const generatePDF = async (
     yPosition = addNewPage();
     
     // Add section title for skills
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Skills and Abilities');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Skills and Abilities'));
     
     // Prepare skills data
     const skillsData = [
@@ -335,7 +342,7 @@ export const generatePDF = async (
     yPosition = addNewPage();
     
     // Add section title for career clusters
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Career Clusters');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Clusters'));
     
     // Prepare clusters data
     const clustersData = [
@@ -352,10 +359,10 @@ export const generatePDF = async (
     const clustersChartEndY = pdfUtils.addCareerClusters(doc, yPosition, clustersData);
     
     // Check if we need to add a new page
-    if (clustersChartEndY.lastY > doc.internal.pageSize.height - 40) {
+    if (getYPosition(clustersChartEndY) > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = clustersChartEndY.lastY + 10;
+      yPosition = getYPosition(clustersChartEndY) + 10;
     }
     
     // Add selected career clusters
@@ -386,7 +393,7 @@ export const generatePDF = async (
     yPosition = addNewPage();
     
     // Add section title for career paths
-    yPosition = pdfUtils.addSectionTitle(doc, yPosition, 'Career Paths');
+    yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Paths'));
     
     // Prepare career paths data
     const careerPathsData = [
@@ -411,10 +418,10 @@ export const generatePDF = async (
     const careerPathsEndY = pdfUtils.addCareerPaths(doc, yPosition, careerPathsData);
     
     // Check if we need to add a new page
-    if (careerPathsEndY.lastY > doc.internal.pageSize.height - 40) {
+    if (getYPosition(careerPathsEndY) > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = careerPathsEndY.lastY + 10;
+      yPosition = getYPosition(careerPathsEndY) + 10;
     }
     
     // Add summary sheet
