@@ -46,7 +46,12 @@ export const generatePDF = async (
       if (typeof result === 'number') {
         return result;
       }
-      return result.lastY;
+      if (result && typeof result.lastY === 'number') {
+        return result.lastY;
+      }
+      // Default value if result is unexpected
+      console.warn('Unexpected Y position result:', result);
+      return 20;
     };
     
     // Helper function to add a new page
@@ -108,13 +113,18 @@ export const generatePDF = async (
         `Focus on developing your ${developmentAreas.join(', ')} while leveraging your strengths in ${strengthAreas.join(', ')}`
     };
     
-    const profilingEndY = pdfUtils.addProfilingSection(doc, yPosition, profilingData);
+    try {
+      const profilingEndY = pdfUtils.addProfilingSection(doc, yPosition, profilingData);
+      yPosition = getYPosition(profilingEndY) + 10;
+    } catch (error) {
+      console.error('Error adding profiling section:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Check if we need to add a new page
-    if (getYPosition(profilingEndY) > pageHeight - 40) {
+    if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
-    } else {
-      yPosition = getYPosition(profilingEndY) + 10;
     }
     
     // Add section title for personality
@@ -144,13 +154,18 @@ export const generatePDF = async (
       }
     };
     
-    const personalityChartEndY = pdfUtils.addPersonalityTypeChart(doc, yPosition, personalityData, personalityType);
+    try {
+      const personalityChartEndY = pdfUtils.addPersonalityTypeChart(doc, yPosition, personalityData, personalityType);
+      yPosition = getYPosition(personalityChartEndY) + 10;
+    } catch (error) {
+      console.error('Error adding personality chart:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Check if we need to add a new page
-    if (getYPosition(personalityChartEndY) > pageHeight - 40) {
+    if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
-    } else {
-      yPosition = getYPosition(personalityChartEndY) + 10;
     }
     
     // Customize personality analysis descriptions based on personality traits
@@ -188,7 +203,14 @@ export const generatePDF = async (
       ]
     };
     
-    const personalityAnalysisEndY = pdfUtils.addPersonalityAnalysis(doc, yPosition, personalityAnalysisData);
+    try {
+      const personalityAnalysisEndY = pdfUtils.addPersonalityAnalysis(doc, yPosition, personalityAnalysisData);
+      yPosition = getYPosition(personalityAnalysisEndY) + 10;
+    } catch (error) {
+      console.error('Error adding personality analysis:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Add new page for Interest section
     yPosition = addNewPage();
@@ -233,13 +255,18 @@ export const generatePDF = async (
     // Sort interest data by value in descending order
     interestData.sort((a, b) => b.value - a.value);
     
-    const interestChartEndY = pdfUtils.addInterestBarChart(doc, yPosition, interestData);
+    try {
+      const interestChartEndY = pdfUtils.addInterestBarChart(doc, yPosition, interestData);
+      yPosition = getYPosition(interestChartEndY) + 10;
+    } catch (error) {
+      console.error('Error adding interest chart:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Check if we need to add a new page
-    if (getYPosition(interestChartEndY) > pageHeight - 40) {
+    if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
-    } else {
-      yPosition = getYPosition(interestChartEndY) + 10;
     }
     
     // Prepare interest analysis based on top interests
@@ -292,7 +319,14 @@ export const generatePDF = async (
       };
     });
     
-    const interestAnalysisEndY = pdfUtils.addInterestAnalysis(doc, yPosition, interestAnalysisData);
+    try {
+      const interestAnalysisEndY = pdfUtils.addInterestAnalysis(doc, yPosition, interestAnalysisData);
+      yPosition = getYPosition(interestAnalysisEndY) + 10;
+    } catch (error) {
+      console.error('Error adding interest analysis:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Add new page for Career Motivator section
     yPosition = addNewPage();
@@ -335,13 +369,18 @@ export const generatePDF = async (
     // Sort motivator data by value in descending order
     motivatorData.sort((a, b) => b.value - a.value);
     
-    const motivatorChartEndY = pdfUtils.addCareerMotivatorChart(doc, yPosition, motivatorData);
+    try {
+      const motivatorChartEndY = pdfUtils.addCareerMotivatorChart(doc, yPosition, motivatorData);
+      yPosition = getYPosition(motivatorChartEndY) + 10;
+    } catch (error) {
+      console.error('Error adding motivator chart:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Check if we need to add a new page
-    if (getYPosition(motivatorChartEndY) > pageHeight - 40) {
+    if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
-    } else {
-      yPosition = getYPosition(motivatorChartEndY) + 10;
     }
     
     // Prepare motivator analysis based on top motivators
@@ -394,7 +433,14 @@ export const generatePDF = async (
       };
     });
     
-    const motivatorAnalysisEndY = pdfUtils.addMotivatorAnalysis(doc, yPosition, motivatorAnalysisData);
+    try {
+      const motivatorAnalysisEndY = pdfUtils.addMotivatorAnalysis(doc, yPosition, motivatorAnalysisData);
+      yPosition = getYPosition(motivatorAnalysisEndY) + 10;
+    } catch (error) {
+      console.error('Error adding motivator analysis:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Add new page for Learning Style section
     yPosition = addNewPage();
@@ -429,13 +475,18 @@ export const generatePDF = async (
       item.value = Math.round((item.value / totalValue) * 100);
     });
     
-    const learningStyleChartEndY = pdfUtils.addLearningStylePieChart(doc, yPosition, learningStyleData);
+    try {
+      const learningStyleChartEndY = pdfUtils.addLearningStylePieChart(doc, yPosition, learningStyleData);
+      yPosition = getYPosition(learningStyleChartEndY) + 10;
+    } catch (error) {
+      console.error('Error adding learning style chart:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Check if we need to add a new page
-    if (getYPosition(learningStyleChartEndY) > pageHeight - 40) {
+    if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
-    } else {
-      yPosition = getYPosition(learningStyleChartEndY) + 10;
     }
     
     // Prepare learning style analysis based on dominant style
@@ -509,7 +560,14 @@ export const generatePDF = async (
       strategies: learningStyleStrategies
     };
     
-    const learningStyleAnalysisEndY = pdfUtils.addLearningStyleAnalysis(doc, yPosition, learningStyleAnalysisData);
+    try {
+      const learningStyleAnalysisEndY = pdfUtils.addLearningStyleAnalysis(doc, yPosition, learningStyleAnalysisData);
+      yPosition = getYPosition(learningStyleAnalysisEndY) + 10;
+    } catch (error) {
+      console.error('Error adding learning style analysis:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Add new page for Skills section
     yPosition = addNewPage();
@@ -568,7 +626,14 @@ export const generatePDF = async (
       }
     ];
     
-    const skillsEndY = pdfUtils.addSkillBarChart(doc, yPosition, skillsData);
+    try {
+      const skillsEndY = pdfUtils.addSkillBarChart(doc, yPosition, skillsData);
+      yPosition = getYPosition(skillsEndY) + 10;
+    } catch (error) {
+      console.error('Error adding skills chart:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Add new page for Career Clusters section
     yPosition = addNewPage();
@@ -580,29 +645,29 @@ export const generatePDF = async (
     const generateClusterScore = (clusterName: string) => {
       switch(clusterName) {
         case 'Information Technology':
-          return Math.round((specificAptitudes.technical * 0.4) + (specificAptitudes.analytical * 0.4) + (specificAptitudes.numerical * 0.2));
+          return Math.round((specificAptitudes.technical || 50) * 0.4 + (specificAptitudes.analytical || 50) * 0.4 + (specificAptitudes.numerical || 50) * 0.2);
         case 'Science, Maths and Engineering':
-          return Math.round((specificAptitudes.analytical * 0.5) + (specificAptitudes.numerical * 0.3) + (specificAptitudes.technical * 0.2));
+          return Math.round((specificAptitudes.analytical || 50) * 0.5 + (specificAptitudes.numerical || 50) * 0.3 + (specificAptitudes.technical || 50) * 0.2);
         case 'Manufacturing':
-          return Math.round((specificAptitudes.technical * 0.5) + (specificAptitudes.mechanical * 0.5));
+          return Math.round((specificAptitudes.technical || 50) * 0.5 + (specificAptitudes.mechanical || 50) * 0.5);
         case 'Accounts and Finance':
-          return Math.round((specificAptitudes.numerical * 0.5) + (specificAptitudes.analytical * 0.3) + (specificAptitudes.detail * 0.2));
+          return Math.round((specificAptitudes.numerical || 50) * 0.5 + (specificAptitudes.analytical || 50) * 0.3 + (specificAptitudes.detail || 50) * 0.2);
         case 'Logistics and Transportation':
-          return Math.round((specificAptitudes.mechanical * 0.4) + (specificAptitudes.technical * 0.3) + (specificAptitudes.detail * 0.3));
+          return Math.round((specificAptitudes.mechanical || 50) * 0.4 + (specificAptitudes.technical || 50) * 0.3 + (specificAptitudes.detail || 50) * 0.3);
         case 'Bio Science and Research':
-          return Math.round((specificAptitudes.analytical * 0.5) + (specificAptitudes.detail * 0.3) + (specificAptitudes.technical * 0.2));
+          return Math.round((specificAptitudes.analytical || 50) * 0.5 + (specificAptitudes.detail || 50) * 0.3 + (specificAptitudes.technical || 50) * 0.2);
         case 'Agriculture':
-          return Math.round((specificAptitudes.mechanical * 0.4) + (specificAptitudes.technical * 0.3) + (specificAptitudes.analytical * 0.3));
+          return Math.round((specificAptitudes.mechanical || 50) * 0.4 + (specificAptitudes.technical || 50) * 0.3 + (specificAptitudes.analytical || 50) * 0.3);
         case 'Health Science':
-          return Math.round((specificAptitudes.analytical * 0.4) + (specificAptitudes.social * 0.4) + (specificAptitudes.detail * 0.2));
+          return Math.round((specificAptitudes.analytical || 50) * 0.4 + (specificAptitudes.social || 50) * 0.4 + (specificAptitudes.detail || 50) * 0.2);
         case 'Creative Arts':
-          return Math.round((specificAptitudes.creative * 0.7) + (specificAptitudes.social * 0.3));
+          return Math.round((specificAptitudes.creative || 50) * 0.7 + (specificAptitudes.social || 50) * 0.3);
         case 'Education':
-          return Math.round((specificAptitudes.social * 0.5) + (specificAptitudes.verbal * 0.3) + (specificAptitudes.leadership * 0.2));
+          return Math.round((specificAptitudes.social || 50) * 0.5 + (specificAptitudes.verbal || 50) * 0.3 + (specificAptitudes.leadership || 50) * 0.2);
         case 'Business Management':
-          return Math.round((specificAptitudes.leadership * 0.5) + (specificAptitudes.social * 0.3) + (specificAptitudes.business * 0.2));
+          return Math.round((specificAptitudes.leadership || 50) * 0.5 + (specificAptitudes.social || 50) * 0.3 + (specificAptitudes.business || 50) * 0.2);
         case 'Media and Communication':
-          return Math.round((specificAptitudes.verbal * 0.4) + (specificAptitudes.creative * 0.4) + (specificAptitudes.social * 0.2));
+          return Math.round((specificAptitudes.verbal || 50) * 0.4 + (specificAptitudes.creative || 50) * 0.4 + (specificAptitudes.social || 50) * 0.2);
         default:
           return 50; // Default baseline score
       }
@@ -635,13 +700,18 @@ export const generatePDF = async (
     // Take top 8 clusters
     clustersData = clustersData.slice(0, 8);
     
-    const clustersChartEndY = pdfUtils.addCareerClusters(doc, yPosition, clustersData);
+    try {
+      const clustersChartEndY = pdfUtils.addCareerClusters(doc, yPosition, clustersData);
+      yPosition = getYPosition(clustersChartEndY) + 10;
+    } catch (error) {
+      console.error('Error adding career clusters chart:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Check if we need to add a new page
-    if (getYPosition(clustersChartEndY) > pageHeight - 40) {
+    if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
-    } else {
-      yPosition = getYPosition(clustersChartEndY) + 10;
     }
     
     // Add selected career clusters (top 2)
@@ -706,7 +776,14 @@ export const generatePDF = async (
       };
     });
     
-    const selectedClustersEndY = pdfUtils.addSelectedCareerClusters(doc, yPosition, selectedClustersData);
+    try {
+      const selectedClustersEndY = pdfUtils.addSelectedCareerClusters(doc, yPosition, selectedClustersData);
+      yPosition = getYPosition(selectedClustersEndY) + 10;
+    } catch (error) {
+      console.error('Error adding selected career clusters:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Add new page for Career Paths section
     yPosition = addNewPage();
@@ -720,8 +797,8 @@ export const generatePDF = async (
     if (careerRecommendations && careerRecommendations.length > 0) {
       // Use actual career recommendations from assessment
       careerPathsData = careerRecommendations.slice(0, 2).map(career => ({
-        careerTitle: career.careerTitle || career.title,
-        category: selectedClustersData[0].name, // Associate with top cluster
+        careerTitle: career.careerTitle || career.title || "Career Path",
+        category: selectedClustersData[0]?.name || "General", // Associate with top cluster
         description: career.keySkills?.join(', ') || 'Requires analytical and technical skills',
         psychAnalysis: { 
           score: career.suitabilityPercentage || career.match || 90, 
@@ -775,13 +852,18 @@ export const generatePDF = async (
       });
     }
     
-    const careerPathsEndY = pdfUtils.addCareerPaths(doc, yPosition, careerPathsData);
+    try {
+      const careerPathsEndY = pdfUtils.addCareerPaths(doc, yPosition, careerPathsData);
+      yPosition = getYPosition(careerPathsEndY) + 10;
+    } catch (error) {
+      console.error('Error adding career paths:', error);
+      // Continue with next section
+      yPosition += 10;
+    }
     
     // Check if we need to add a new page
-    if (getYPosition(careerPathsEndY) > pageHeight - 40) {
+    if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
-    } else {
-      yPosition = getYPosition(careerPathsEndY) + 10;
     }
     
     // Add summary sheet
@@ -801,7 +883,13 @@ export const generatePDF = async (
       selectedClusters: selectedClusters
     };
     
-    const summaryEndY = pdfUtils.addSummarySheet(doc, yPosition, summaryData);
+    try {
+      const summaryEndY = pdfUtils.addSummarySheet(doc, yPosition, summaryData);
+      yPosition = getYPosition(summaryEndY) + 10;
+    } catch (error) {
+      console.error('Error adding summary sheet:', error);
+      // Proceed to save the PDF anyway
+    }
     
     // Save the PDF
     const reportName = `career_report_${reportId}.pdf`;
