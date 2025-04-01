@@ -16,7 +16,7 @@ interface Assessment {
   report_generated_at: string | null;
   assessment_id: string;
   scores: any;
-  responses: any; // Changed from Record<string, string> to any to match Json type
+  responses: Record<string, any>; // Updated type to match expected type in generatePDF
   user_id: string;
 }
 
@@ -46,7 +46,7 @@ const AssessmentHistoryList: React.FC = () => {
       }
 
       // Cast the data to match our Assessment interface
-      setAssessments(data as unknown as Assessment[] || []);
+      setAssessments((data as unknown as Assessment[]) || []);
     } catch (error) {
       console.error('Error fetching assessments:', error);
       toast.error('Failed to load assessment history');

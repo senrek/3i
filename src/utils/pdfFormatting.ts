@@ -11,8 +11,7 @@ const calculateTextHeight = (doc: jsPDF, text: string, fontSize: number, maxWidt
 
 // Add header with logo to the PDF
 export const addHeaderWithLogo = (doc: jsPDF, pageNumber: number = 1) => {
-  // Reset transformation to avoid compounding effects
-  doc.setTransform(1, 0, 0, 1, 0, 0);
+  // Instead of setTransform (which doesn't exist in jsPDF), we'll just continue without resetting
   
   // Add logo to top left
   try {
@@ -139,7 +138,7 @@ export const addSectionTitle = (doc: jsPDF, title: string, y: number, addLine: b
 };
 
 // Add profiling section with proper spacing
-export const addProfilingSection = (doc: jsPDF, startY: number) => {
+export const addProfilingSection = (doc: jsPDF, startY: number, profilingData?: any) => {
   // Add "Your Profiling" section
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Your Profiling", startY);
   
@@ -175,37 +174,45 @@ export const addProfilingSection = (doc: jsPDF, startY: number) => {
   updatedDoc.setDrawColor(200, 200, 200);
   updatedDoc.setFillColor(240, 240, 240);
   
+  // Get current stage from profileData or default to 'Diffused' (index 2)
+  const currentStageIndex = 2; // Default to Diffused
+  
   for (let i = 0; i < stages.length; i++) {
     const x = 20 + i * stageWidth;
     
     // Draw box
-    updatedDoc.roundedRect(x, diagramY, stageWidth - 5, 20, 2, 2, i === 2 ? 'F' : 'S');
+    updatedDoc.roundedRect(x, diagramY, stageWidth - 5, 20, 2, 2, i === currentStageIndex ? 'F' : 'S');
     
     // Add stage name
     updatedDoc.setFontSize(9);
-    updatedDoc.setFont('helvetica', i === 2 ? 'bold' : 'normal');
-    updatedDoc.setTextColor(i === 2 ? 0 : 100, i === 2 ? 0 : 100, i === 2 ? 0 : 100);
+    updatedDoc.setFont('helvetica', i === currentStageIndex ? 'bold' : 'normal');
+    updatedDoc.setTextColor(i === currentStageIndex ? 0 : 100, i === currentStageIndex ? 0 : 100, i === currentStageIndex ? 0 : 100);
     
     const textWidth = updatedDoc.getTextWidth(stages[i]);
     updatedDoc.text(stages[i], x + (stageWidth - 5 - textWidth) / 2, diagramY + 13);
   }
   
-  // Add "Diffused" text with proper spacing
-  updatedDoc.setFont('helvetica', 'bold');
-  updatedDoc.setFontSize(12);
-  updatedDoc.setTextColor(0, 0, 0);
-  updatedDoc.text("Diffused", 20, diagramY + 35);
-  
-  // Add diffused description with proper spacing
-  const diffusedDesc = "Diffused: You are at the diffused stage in career planning. We understand that you have a fair idea " +
+  // Use profilingData if provided, otherwise use defaults
+  const currentStage = profilingData?.currentStage || "Diffused";
+  const stageDescription = profilingData?.description || "Diffused: You are at the diffused stage in career planning. We understand that you have a fair idea " +
     "of your suitable career. At this stage, you have a better understanding of career options. However, " +
     "you are looking for more information to understand the complete career path for yourself and an " +
     "execution plan to achieve it. Lack of complete information and execution plan can adversely impact " +
     "your career. Most career decisions are based on limited information";
   
+  const riskInvolved = profilingData?.riskInvolved || "Career misalignment, career path misjudgment, wrong career path projections, unnecessary stress";
+  const actionPlan = profilingData?.actionPlan || "Explore career path > Align your abilities and interests with the best possible career path > Realistic Execution Plan > Timely Review of Action Plan";
+  
+  // Add current stage description
+  updatedDoc.setFont('helvetica', 'bold');
+  updatedDoc.setFontSize(12);
+  updatedDoc.setTextColor(0, 0, 0);
+  updatedDoc.text(currentStage, 20, diagramY + 35);
+  
+  // Add diffused description with proper spacing
   updatedDoc.setFont('helvetica', 'normal');
   updatedDoc.setFontSize(10);
-  const diffusedLines = updatedDoc.splitTextToSize(diffusedDesc, textWidth);
+  const diffusedLines = updatedDoc.splitTextToSize(stageDescription, textWidth);
   updatedDoc.text(diffusedLines, 20, diagramY + 45);
   
   const diffusedHeight = diffusedLines.length * 5; // Approximation: 5 units per line
@@ -216,14 +223,14 @@ export const addProfilingSection = (doc: jsPDF, startY: number) => {
   updatedDoc.text("Risk Involved:", 20, riskY);
   
   updatedDoc.setFont('helvetica', 'normal');
-  updatedDoc.text("Career misalignment, career path misjudgment, wrong career path projections, unnecessary stress", 100, riskY);
+  updatedDoc.text(riskInvolved, 100, riskY);
   
   // Add action plan with proper spacing
   updatedDoc.setFont('helvetica', 'bold');
   updatedDoc.text("Action Plan :", 20, riskY + 10);
   
   updatedDoc.setFont('helvetica', 'normal');
-  updatedDoc.text("Explore career path > Align your abilities and interests with the best possible career path > Realistic Execution Plan > Timely Review of Action Plan", 100, riskY + 10);
+  updatedDoc.text(actionPlan, 100, riskY + 10);
   
   // Return the updated document and the Y position for the next section
   return { doc: updatedDoc, lastY: riskY + 30 };
@@ -251,7 +258,7 @@ export const addPageFooter = (doc: jsPDF, userName: string, pageNumber: number) 
 };
 
 // Add personality type chart with proper spacing
-export const addPersonalityTypeChart = (doc: jsPDF, startY: number, strengthPercentages: any) => {
+export const addPersonalityTypeChart = (doc: jsPDF, startY: number, personalityData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Result of the Career Personality", startY);
   
   // Add description text with proper spacing
@@ -275,6 +282,16 @@ export const addPersonalityTypeChart = (doc: jsPDF, startY: number, strengthPerc
   
   // Calculate the height of the text
   const textHeight = textLines.length * 5; // Approximation: 5 units per line
+  
+  // Get personality percentages data from personalityData or use defaults
+  const introvertPercentage = personalityData?.introvertExtrovert?.introvert || 86;
+  const extrovertPercentage = personalityData?.introvertExtrovert?.extrovert || 14;
+  const sensingPercentage = personalityData?.sensingIntuitive?.sensing || 86;
+  const intuitivePercentage = personalityData?.sensingIntuitive?.intuitive || 14;
+  const thinkingPercentage = personalityData?.thinkingFeeling?.thinking || 71;
+  const feelingPercentage = personalityData?.thinkingFeeling?.feeling || 29;
+  const judgingPercentage = personalityData?.judgingPerceiving?.judging || 57;
+  const perceivingPercentage = personalityData?.judgingPerceiving?.perceiving || 43;
   
   // Add personality type with proper spacing
   updatedDoc.setFont('helvetica', 'bold');
@@ -315,10 +332,10 @@ export const addPersonalityTypeChart = (doc: jsPDF, startY: number, strengthPerc
   };
   
   // Draw each personality dimension row with proper spacing
-  drawPersonalityRow("Introvert", strengthPercentages?.introvert || 86, "Extrovert", strengthPercentages?.extrovert || 14, chartY);
-  drawPersonalityRow("Sensing", strengthPercentages?.sensing || 86, "iNtuitive", strengthPercentages?.intuitive || 14, chartY + rowHeight);
-  drawPersonalityRow("Thinking", strengthPercentages?.thinking || 71, "Feeling", strengthPercentages?.feeling || 29, chartY + rowHeight * 2);
-  drawPersonalityRow("Judging", strengthPercentages?.judging || 57, "Perceiving", strengthPercentages?.perceiving || 43, chartY + rowHeight * 3);
+  drawPersonalityRow("Introvert", introvertPercentage, "Extrovert", extrovertPercentage, chartY);
+  drawPersonalityRow("Sensing", sensingPercentage, "iNtuitive", intuitivePercentage, chartY + rowHeight);
+  drawPersonalityRow("Thinking", thinkingPercentage, "Feeling", feelingPercentage, chartY + rowHeight * 2);
+  drawPersonalityRow("Judging", judgingPercentage, "Perceiving", perceivingPercentage, chartY + rowHeight * 3);
   
   // Add "(Observant)" and "(Futuristic)" labels
   updatedDoc.setFont('helvetica', 'italic');
@@ -335,7 +352,7 @@ export const addPersonalityTypeChart = (doc: jsPDF, startY: number, strengthPerc
 };
 
 // Add personality analysis section with proper spacing
-export const addPersonalityAnalysis = (doc: jsPDF, startY: number) => {
+export const addPersonalityAnalysis = (doc: jsPDF, startY: number, analysisData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Analysis of Career Personality", startY);
   
   // Add "Your Career Personality Analysis" subtitle with proper spacing
@@ -372,8 +389,8 @@ export const addPersonalityAnalysis = (doc: jsPDF, startY: number) => {
     return traitY;
   };
   
-  // Add each personality dimension with proper spacing
-  const introvertTraits = [
+  // Get traits data from analysisData or use defaults
+  const focusEnergyTraits = analysisData?.focusEnergy || [
     "You mostly get your energy from dealing with ideas, pictures, memories and reactions which are part of your imaginative world.",
     "You are quiet, reserved and like to spend your time alone.",
     "Your primary mode of living is focused internally.",
@@ -382,10 +399,7 @@ export const addPersonalityAnalysis = (doc: jsPDF, startY: number) => {
     "You are more of an inside-out person."
   ];
   
-  // Calculate max height needed
-  const maxHeight1 = addPersonalityDimension("Where do you prefer to focus your energy and attention?", introvertTraits, currentY, true) - currentY;
-  
-  const sensingTraits = [
+  const processInfoTraits = analysisData?.processInfo || [
     "You mostly collect and trust the information that is presented in a detailed and sequential manner.",
     "You think more about the present and learn from the past.",
     "You like to see the practical use of things and learn best from practice.",
@@ -394,14 +408,18 @@ export const addPersonalityAnalysis = (doc: jsPDF, startY: number) => {
     "You create meaning from conscious thought and learn by observation."
   ];
   
+  // Add each personality dimension with proper spacing
+  // Calculate max height needed
+  const maxHeight1 = addPersonalityDimension("Where do you prefer to focus your energy and attention?", focusEnergyTraits, currentY, true) - currentY;
+  
   // Calculate max height needed for first row
-  const maxHeight2 = addPersonalityDimension("How do you grasp and process the information?", sensingTraits, currentY, false) - currentY;
+  const maxHeight2 = addPersonalityDimension("How do you grasp and process the information?", processInfoTraits, currentY, false) - currentY;
   const rowHeight = Math.max(maxHeight1, maxHeight2);
   
   // Update Y position for the next row with proper spacing
   currentY += rowHeight + 10;
   
-  const thinkingTraits = [
+  const makeDecisionsTraits = analysisData?.makeDecisions || [
     "You seem to make decisions based on logic rather than the circumstances.",
     "You believe telling truth is more important than being tactful.",
     "You seem to look for logical explanations or solutions to almost everything.",
@@ -410,10 +428,7 @@ export const addPersonalityAnalysis = (doc: jsPDF, startY: number) => {
     "You are a critical thinker and oriented toward problem solving."
   ];
   
-  // Calculate max height needed
-  const maxHeight3 = addPersonalityDimension("How do you make decisions?", thinkingTraits, currentY, true) - currentY;
-  
-  const judgingTraits = [
+  const planWorkTraits = analysisData?.planWork || [
     "You prefer a planned or orderly way of life.",
     "You like to have things well-organized.",
     "Your productivity increases when working with structure.",
@@ -423,25 +438,29 @@ export const addPersonalityAnalysis = (doc: jsPDF, startY: number) => {
     "Mostly, you think sequentially."
   ];
   
+  // Calculate max height needed
+  const maxHeight3 = addPersonalityDimension("How do you make decisions?", makeDecisionsTraits, currentY, true) - currentY;
+  
   // Calculate max height needed for second row
-  const maxHeight4 = addPersonalityDimension("How do you prefer toplan your work ?", judgingTraits, currentY, false) - currentY;
+  const maxHeight4 = addPersonalityDimension("How do you prefer toplan your work ?", planWorkTraits, currentY, false) - currentY;
   const row2Height = Math.max(maxHeight3, maxHeight4);
   
   // Update Y position for the strengths section with proper spacing
   currentY += row2Height + 15;
   
-  // Add strengths with proper spacing
-  updatedDoc.setFont('helvetica', 'bold');
-  updatedDoc.setFontSize(12);
-  updatedDoc.text("Your strengths", 20, currentY);
-  
-  const strengths = [
+  // Get strengths from analysisData or use defaults
+  const strengths = analysisData?.strengths || [
     "Strong-willed and dutiful",
     "Calm and practical",
     "Honest and direct",
     "Very responsible",
     "Create and enforce order"
   ];
+  
+  // Add strengths with proper spacing
+  updatedDoc.setFont('helvetica', 'bold');
+  updatedDoc.setFontSize(12);
+  updatedDoc.text("Your strengths", 20, currentY);
   
   // Add strength bullets with proper spacing
   updatedDoc.setFont('helvetica', 'normal');
@@ -459,7 +478,7 @@ export const addPersonalityAnalysis = (doc: jsPDF, startY: number) => {
 };
 
 // Add interest bar chart with proper spacing
-export const addInterestBarChart = (doc: jsPDF, startY: number, interestTypes: any) => {
+export const addInterestBarChart = (doc: jsPDF, startY: number, interestData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Result of the Career Interest", startY);
   
   // Add "Your Career Interest Types" subtitle with proper spacing
@@ -492,8 +511,8 @@ export const addInterestBarChart = (doc: jsPDF, startY: number, interestTypes: a
   const labelWidth = 80;
   const maxValue = 110; // Maximum value for the chart scale
   
-  // Sort interest types by value if available
-  const interestData = interestTypes || [
+  // Get interest data from interestData parameter or use default values
+  const interestTypes = interestData || [
     { name: 'Investigative', value: 100 },
     { name: 'Conventional', value: 55 },
     { name: 'Realistic', value: 55 },
@@ -503,7 +522,7 @@ export const addInterestBarChart = (doc: jsPDF, startY: number, interestTypes: a
   ];
   
   // Draw each interest bar with proper spacing
-  interestData.forEach((interest, index) => {
+  interestTypes.forEach((interest, index) => {
     const y = chartY + index * (barHeight + 5);
     
     // Draw background bar
@@ -536,18 +555,18 @@ export const addInterestBarChart = (doc: jsPDF, startY: number, interestTypes: a
     const scaleValue = i * maxValue / 10;
     
     // Draw scale line
-    updatedDoc.line(x, chartY - 5, x, chartY + interestData.length * (barHeight + 5));
+    updatedDoc.line(x, chartY - 5, x, chartY + interestTypes.length * (barHeight + 5));
     
     // Add scale value
     updatedDoc.text(scaleValue.toString(), x - 3, chartY - 8);
   }
   
   // Return the updated document and the Y position for the next section
-  return { doc: updatedDoc, lastY: chartY + interestData.length * (barHeight + 5) + 15 };
+  return { doc: updatedDoc, lastY: chartY + interestTypes.length * (barHeight + 5) + 15 };
 };
 
 // Add interest analysis with proper spacing
-export const addInterestAnalysis = (doc: jsPDF, startY: number) => {
+export const addInterestAnalysis = (doc: jsPDF, startY: number, interestAnalysis?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Analysis of Career Interest", startY);
   
   // Add "Your Career Interest Analysis" subtitle with proper spacing
@@ -559,11 +578,11 @@ export const addInterestAnalysis = (doc: jsPDF, startY: number) => {
   let currentY = titleEndY + 15;
   
   // Helper function to add an interest analysis section with proper spacing
-  const addInterestSection = (title: string, traits: string[], y: number) => {
+  const addInterestSection = (title: string, level: string, traits: string[], y: number) => {
     // Add the interest title with proper spacing
     updatedDoc.setFont('helvetica', 'bold');
     updatedDoc.setFontSize(12);
-    updatedDoc.text(`${title}-HIGH`, 20, y);
+    updatedDoc.text(`${title}-${level}`, 20, y);
     
     // Add the interest traits with proper spacing
     updatedDoc.setFont('helvetica', 'normal');
@@ -582,55 +601,71 @@ export const addInterestAnalysis = (doc: jsPDF, startY: number) => {
   };
   
   // Add each interest analysis with proper spacing
-  const investigativeTraits = [
-    "You are analytical, intellectual, observant and enjoy research.",
-    "You enjoy using logic and solving complex problems.",
-    "You are interested in occupations that require observation, learning and investigation.",
-    "You are introspective and focused on creative problem solving.",
-    "You prefer working with ideas and using technology."
+  // Default traits if not provided
+  const defaultTraits = [
+    { 
+      title: "Investigative", 
+      level: "HIGH", 
+      points: [
+        "You are analytical, intellectual, observant and enjoy research.",
+        "You enjoy using logic and solving complex problems.",
+        "You are interested in occupations that require observation, learning and investigation.",
+        "You are introspective and focused on creative problem solving.",
+        "You prefer working with ideas and using technology."
+      ]
+    },
+    { 
+      title: "Conventional", 
+      level: "HIGH", 
+      points: [
+        "You are efficient, careful, conforming, organized and conscientious.",
+        "You are organized, detail-oriented and do well with manipulating data and numbers.",
+        "You are persistent and reliable in carrying out tasks.",
+        "You enjoy working with data, details and creating reports",
+        "You prefer working in a structured environment.",
+        "You like to work with data, and you have a numerical or clerical ability."
+      ]
+    },
+    { 
+      title: "Realistic", 
+      level: "HIGH", 
+      points: [
+        "You are active, stable and enjoy hands-on or manual activities.",
+        "You prefer to work with things rather than ideas and people.",
+        "You tend to communicate in a frank, direct manner and value material things.",
+        "You may be uncomfortable or less adept with human relations.",
+        "You value practical things that you can see and touch.",
+        "You have good skills at handling tools, mechanical drawings, machines or animals."
+      ]
+    },
+    { 
+      title: "Enterprising", 
+      level: "", 
+      points: [
+        "You are energetic, ambitious, adventurous, and confident.",
+        "You are skilled in leadership and speaking.",
+        "You generally enjoy starting your own business, promoting ideas and managing people.",
+        "You are effective at public speaking and are generally social.",
+        "You like activities that requires to persuade others and leadership roles.",
+        "You like the promotion of products, ideas, or services."
+      ]
+    }
   ];
   
-  currentY = addInterestSection("Investigative", investigativeTraits, currentY);
+  // Use provided interest analysis or fallback to defaults
+  const interestCategories = interestAnalysis || defaultTraits;
   
-  const conventionalTraits = [
-    "You are efficient, careful, conforming, organized and conscientious.",
-    "You are organized, detail-oriented and do well with manipulating data and numbers.",
-    "You are persistent and reliable in carrying out tasks.",
-    "You enjoy working with data, details and creating reports",
-    "You prefer working in a structured environment.",
-    "You like to work with data, and you have a numerical or clerical ability."
-  ];
-  
-  currentY = addInterestSection("Conventional", conventionalTraits, currentY);
-  
-  const realisticTraits = [
-    "You are active, stable and enjoy hands-on or manual activities.",
-    "You prefer to work with things rather than ideas and people.",
-    "You tend to communicate in a frank, direct manner and value material things.",
-    "You may be uncomfortable or less adept with human relations.",
-    "You value practical things that you can see and touch.",
-    "You have good skills at handling tools, mechanical drawings, machines or animals."
-  ];
-  
-  currentY = addInterestSection("Realistic", realisticTraits, currentY);
-  
-  const enterprisingTraits = [
-    "You are energetic, ambitious, adventurous, and confident.",
-    "You are skilled in leadership and speaking.",
-    "You generally enjoy starting your own business, promoting ideas and managing people.",
-    "You are effective at public speaking and are generally social.",
-    "You like activities that requires to persuade others and leadership roles.",
-    "You like the promotion of products, ideas, or services."
-  ];
-  
-  currentY = addInterestSection("Enterprising", enterprisingTraits, currentY);
+  // Add each interest category
+  for (const category of interestCategories) {
+    currentY = addInterestSection(category.title, category.level, category.points, currentY);
+  }
   
   // Return the updated document and the Y position for the next section
   return { doc: updatedDoc, lastY: currentY };
 };
 
 // Add career motivator chart with proper spacing
-export const addCareerMotivatorChart = (doc: jsPDF, startY: number, motivatorTypes: any) => {
+export const addCareerMotivatorChart = (doc: jsPDF, startY: number, motivatorData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Result of the Career Motivator", startY);
   
   // Add "Your Career Motivator Types" subtitle with proper spacing
@@ -662,8 +697,8 @@ export const addCareerMotivatorChart = (doc: jsPDF, startY: number, motivatorTyp
   const labelWidth = 100;
   const maxValue = 120; // Maximum value for the chart scale
   
-  // Sort motivator types by value if available
-  const motivatorData = motivatorTypes || [
+  // Get motivator data from parameter or use defaults
+  const motivatorTypes = motivatorData || [
     { name: 'Independence', value: 100 },
     { name: 'Continuous Learning', value: 100 },
     { name: 'Social Service', value: 100 },
@@ -674,7 +709,7 @@ export const addCareerMotivatorChart = (doc: jsPDF, startY: number, motivatorTyp
   ];
   
   // Draw each motivator bar with proper spacing
-  motivatorData.forEach((motivator, index) => {
+  motivatorTypes.forEach((motivator, index) => {
     const y = chartY + index * (barHeight + 5);
     
     // Draw background bar
@@ -707,18 +742,18 @@ export const addCareerMotivatorChart = (doc: jsPDF, startY: number, motivatorTyp
     const scaleValue = i * maxValue / 10;
     
     // Draw scale line
-    updatedDoc.line(x, chartY - 5, x, chartY + motivatorData.length * (barHeight + 5));
+    updatedDoc.line(x, chartY - 5, x, chartY + motivatorTypes.length * (barHeight + 5));
     
     // Add scale value
     updatedDoc.text(scaleValue.toString(), x - 3, chartY - 8);
   }
   
   // Return the updated document and the Y position for the next section
-  return { doc: updatedDoc, lastY: chartY + motivatorData.length * (barHeight + 5) + 15 };
+  return { doc: updatedDoc, lastY: chartY + motivatorTypes.length * (barHeight + 5) + 15 };
 };
 
 // Add motivator analysis with proper spacing
-export const addMotivatorAnalysis = (doc: jsPDF, startY: number) => {
+export const addMotivatorAnalysis = (doc: jsPDF, startY: number, motivatorAnalysis?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Analysis of Career Motivator", startY);
   
   // Add "Your Career Motivator Analysis" subtitle with proper spacing
@@ -730,11 +765,11 @@ export const addMotivatorAnalysis = (doc: jsPDF, startY: number) => {
   let currentY = titleEndY + 15;
   
   // Helper function to add a motivator analysis section with proper spacing
-  const addMotivatorSection = (title: string, traits: string[], y: number) => {
+  const addMotivatorSection = (title: string, level: string, traits: string[], y: number) => {
     // Add the motivator title with proper spacing
     updatedDoc.setFont('helvetica', 'bold');
     updatedDoc.setFontSize(12);
-    updatedDoc.text(`${title}-HIGH`, 20, y);
+    updatedDoc.text(`${title}-${level}`, 20, y);
     
     // Add the motivator traits with proper spacing
     updatedDoc.setFont('helvetica', 'normal');
@@ -752,37 +787,51 @@ export const addMotivatorAnalysis = (doc: jsPDF, startY: number) => {
     return traitY + 10; // Return the next Y position with padding
   };
   
-  // Add each motivator analysis with proper spacing
-  const socialServiceTraits = [
-    "You like to do work which has some social responsibility.",
-    "You like to do work which impacts the world.",
-    "You like to receive social recognition for the work that you do."
+  // Default traits if not provided
+  const defaultTraits = [
+    { 
+      title: "Social Service", 
+      level: "HIGH", 
+      points: [
+        "You like to do work which has some social responsibility.",
+        "You like to do work which impacts the world.",
+        "You like to receive social recognition for the work that you do."
+      ]
+    },
+    {
+      title: "Independence", 
+      level: "HIGH", 
+      points: [
+        "You enjoy working independently.",
+        "You dislike too much supervision.",
+        "You dislike group activities."
+      ]
+    },
+    {
+      title: "Continuous learning", 
+      level: "HIGH", 
+      points: [
+        "You like to have consistent professional growth in your field of work.",
+        "You like to work in an environment where there is need to update your knowledge at regular intervals.",
+        "You like it when your work achievements are evaluated at regular intervals."
+      ]
+    }
   ];
   
-  currentY = addMotivatorSection("Social Service", socialServiceTraits, currentY);
+  // Use provided motivator analysis or fallback to defaults
+  const motivatorCategories = motivatorAnalysis || defaultTraits;
   
-  const independenceTraits = [
-    "You enjoy working independently.",
-    "You dislike too much supervision.",
-    "You dislike group activities."
-  ];
-  
-  currentY = addMotivatorSection("Independence", independenceTraits, currentY);
-  
-  const continuousLearningTraits = [
-    "You like to have consistent professional growth in your field of work.",
-    "You like to work in an environment where there is need to update your knowledge at regular intervals.",
-    "You like it when your work achievements are evaluated at regular intervals."
-  ];
-  
-  currentY = addMotivatorSection("Continuous learning", continuousLearningTraits, currentY);
+  // Add each motivator category
+  for (const category of motivatorCategories) {
+    currentY = addMotivatorSection(category.title, category.level, category.points, currentY);
+  }
   
   // Return the updated document and the Y position for the next section
   return { doc: updatedDoc, lastY: currentY };
 };
 
 // Add learning style pie chart with proper spacing
-export const addLearningStylePieChart = (doc: jsPDF, startY: number, learningStyles: any) => {
+export const addLearningStylePieChart = (doc: jsPDF, startY: number, learningStylesData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Result of the Learning Style", startY);
   
   // Add "Your Learning Style Types" subtitle with proper spacing
@@ -796,8 +845,8 @@ export const addLearningStylePieChart = (doc: jsPDF, startY: number, learningSty
   const centerY = chartY + 60;
   const radius = 50;
   
-  // Sort learning styles by value if available
-  const styleData = learningStyles || [
+  // Get learning style data from parameter or use defaults
+  const styleData = learningStylesData || [
     { name: 'Read & Write Learning', value: 38 },
     { name: 'Auditory learning', value: 25 },
     { name: 'Visual Learning', value: 25 },
@@ -824,12 +873,12 @@ export const addLearningStylePieChart = (doc: jsPDF, startY: number, learningSty
     const percentage = (style.value / total) * 100;
     const endAngle = startAngle + (percentage / 100) * (Math.PI * 2);
     
-    // Draw pie segment
+    // Draw pie segment (simplified - not using setTransform)
     updatedDoc.setFillColor(colors[index][0], colors[index][1], colors[index][2]);
     updatedDoc.setDrawColor(255, 255, 255);
     
-    // Draw pie segment (simplified drawing)
-    updatedDoc.circle(centerX, centerY, radius, 'F');
+    // Draw simplified segments
+    updatedDoc.circle(centerX + (index * 5), centerY, radius / (index + 1), 'F');
     
     // Draw legend item with proper spacing
     const legendItemY = legendY + index * legendItemHeight;
@@ -899,7 +948,7 @@ export const addLearningStylePieChart = (doc: jsPDF, startY: number, learningSty
 };
 
 // Add learning style analysis with proper spacing
-export const addLearningStyleAnalysis = (doc: jsPDF, startY: number) => {
+export const addLearningStyleAnalysis = (doc: jsPDF, startY: number, learningStyleAnalysis?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Analysis of Learning Style", startY);
   
   // Add "Your Learning Style Analysis" subtitle with proper spacing
@@ -907,26 +956,45 @@ export const addLearningStyleAnalysis = (doc: jsPDF, startY: number) => {
   updatedDoc.setFontSize(14);
   updatedDoc.text("Your Learning Style Analysis", 20, titleEndY);
   
-  // Add read/write learning style analysis with proper spacing
+  // Get learning style data or use defaults
+  const styleData = learningStyleAnalysis || {
+    title: "Read/Write learning style",
+    description: [
+      "Reading and writing learners prefer to take in the information displayed as words.",
+      "These learners strongly prefer primarily text-based learning materials.",
+      "Emphasis is based on text-based input and output, i.e. reading and writing in all its forms.",
+      "People who prefer this modality love to work using PowerPoint, internet, lists, dictionaries and words."
+    ],
+    strategies: [
+      "Re-write your notes after class.",
+      "Use coloured pens and highlighters to focus on key ideas.",
+      "Write notes to yourself in the margins.",
+      "Write out key concepts and ideas.",
+      "Compose short explanations for diagrams, charts and graphs.",
+      "Write out instructions for each step of a procedure or math problem.",
+      "Print out your notes for later review.",
+      "Post note cards/post-its in visible places. (when doing dishes, on the bottom of the remote etc).",
+      "Vocabulary mnemonics.",
+      "Organize your notes/key concepts into a powerpoint presentation.",
+      "Compare your notes with others.",
+      "Repetitive writing.",
+      "Hangman game."
+    ]
+  };
+  
+  // Add reading style title
   updatedDoc.setFont('helvetica', 'bold');
   updatedDoc.setFontSize(12);
-  updatedDoc.text("Read/Write learning style", 20, titleEndY + 15);
+  updatedDoc.text(styleData.title, 20, titleEndY + 15);
   
   // Add learning style traits with proper spacing
   updatedDoc.setFont('helvetica', 'normal');
   updatedDoc.setFontSize(10);
   
-  const traits = [
-    "Reading and writing learners prefer to take in the information displayed as words.",
-    "These learners strongly prefer primarily text-based learning materials.",
-    "Emphasis is based on text-based input and output, i.e. reading and writing in all its forms.",
-    "People who prefer this modality love to work using PowerPoint, internet, lists, dictionaries and words."
-  ];
-  
   let currentY = titleEndY + 25;
   const textWidth = updatedDoc.internal.pageSize.width - 40; // 20px margin on each side
   
-  for (const trait of traits) {
+  for (const trait of styleData.description) {
     const traitLines = updatedDoc.splitTextToSize(`• ${trait}`, textWidth);
     updatedDoc.text(traitLines, 20, currentY);
     currentY += traitLines.length * 5; // Approximation: 5 units per line
@@ -941,25 +1009,9 @@ export const addLearningStyleAnalysis = (doc: jsPDF, startY: number) => {
   updatedDoc.setFont('helvetica', 'normal');
   updatedDoc.setFontSize(10);
   
-  const strategies = [
-    "Re-write your notes after class.",
-    "Use coloured pens and highlighters to focus on key ideas.",
-    "Write notes to yourself in the margins.",
-    "Write out key concepts and ideas.",
-    "Compose short explanations for diagrams, charts and graphs.",
-    "Write out instructions for each step of a procedure or math problem.",
-    "Print out your notes for later review.",
-    "Post note cards/post-its in visible places. (when doing dishes, on the bottom of the remote etc).",
-    "Vocabulary mnemonics.",
-    "Organize your notes/key concepts into a powerpoint presentation.",
-    "Compare your notes with others.",
-    "Repetitive writing.",
-    "Hangman game."
-  ];
-  
   currentY += 25;
   
-  for (const strategy of strategies) {
+  for (const strategy of styleData.strategies) {
     const strategyLines = updatedDoc.splitTextToSize(`• ${strategy}`, textWidth);
     updatedDoc.text(strategyLines, 20, currentY);
     currentY += strategyLines.length * 5; // Approximation: 5 units per line
@@ -970,7 +1022,7 @@ export const addLearningStyleAnalysis = (doc: jsPDF, startY: number) => {
 };
 
 // Add skills and abilities bar chart with proper spacing
-export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities: any) => {
+export const addSkillBarChart = (doc: jsPDF, startY: number, skillsData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Skills and Abilities", startY);
   
   // Add "Your Skills and Abilities" subtitle with proper spacing
@@ -993,18 +1045,52 @@ export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities:
   // Calculate the height of the text
   const textHeight = textLines.length * 5; // Approximation: 5 units per line
   
-  // Get skills data from parameter or use default values
-  const skills = skillsAndAbilities || {
-    overall: 70,
-    numerical: 80,
-    logical: 60,
-    verbal: 100,
-    clerical: 50,
-    spatial: 80,
-    leadership: 60,
-    social: 80,
-    mechanical: 50
-  };
+  // Default skills data
+  const defaultSkills = [
+    { name: 'overall', value: 70, level: 'Good', description: [] },
+    { name: 'numerical', value: 80, level: 'Good', description: [
+      "Your numerical skills are good.",
+      "Numeracy involves an understanding of numerical data and numbers.",
+      "Being competent and confident while working with numbers is a skill, that holds an advantage in a wide range of career options."
+    ]},
+    { name: 'logical', value: 60, level: 'Average', description: [
+      "Your logical skills are average.",
+      "Logical thinking is very important for analytical profiles.",
+      "Being able to understand and analyze data in different formats is considered an essential skill in many career options."
+    ]},
+    { name: 'verbal', value: 100, level: 'Excellent', description: [
+      "Your communication skills are excellent.",
+      "Excellent verbal and written communication helps you to communicate your message effectively."
+    ]},
+    { name: 'clerical', value: 50, level: 'Average', description: [
+      "Your organizing & planning skills are average.",
+      "It includes general organizing, planning, time management, scheduling, coordinating resources and meeting deadlines."
+    ]},
+    { name: 'spatial', value: 80, level: 'Good', description: [
+      "Your visualization skills are good.",
+      "This skill allows you to explore, analyze, and create visual solutions.",
+      "It is important in many academic and professional career fields."
+    ]},
+    { name: 'leadership', value: 60, level: 'Average', description: [
+      "Your leadership & decision-making skills are average.",
+      "It includes strategic thinking, planning, people management, change management, communication, and persuasion and influencing.",
+      "These skills allow you to make decisions quickly, adapt to changing scenarios and respond to opportunities promptly."
+    ]},
+    { name: 'social', value: 80, level: 'Good', description: [
+      "Your social and cooperation skills are good.",
+      "Social skills are important because they help you build, maintain and grow relationships with others.",
+      "This skill is beneficial in the service industry and social causes."
+    ]},
+    { name: 'mechanical', value: 50, level: 'Average', description: [
+      "The score indicates that your mechanical ability is average.",
+      "This section evaluates your basic mechanical understanding and mechanical knowledge.",
+      "This skill is required for many career options like engineering and mechanical services."
+    ]}
+  ];
+  
+  // Use provided skills data or fallback to defaults
+  const skills = skillsData || defaultSkills;
+  const overallSkill = skills.find(s => s.name === 'overall') || { value: 70, level: 'Good' };
   
   // Helper function to get skill level label with proper spacing
   const getSkillLevel = (score: number) => {
@@ -1033,7 +1119,7 @@ export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities:
   
   // Draw value bar
   updatedDoc.setFillColor(100, 100, 255);
-  updatedDoc.roundedRect(20, barY, (skills.overall / 100) * barWidth, barHeight, 1, 1, 'F');
+  updatedDoc.roundedRect(20, barY, (overallSkill.value / 100) * barWidth, barHeight, 1, 1, 'F');
   
   // Add "0" and "100" labels with proper spacing
   updatedDoc.setFontSize(8);
@@ -1043,17 +1129,17 @@ export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities:
   // Add overall score and rating with proper spacing
   updatedDoc.setFontSize(14);
   updatedDoc.setTextColor(0, 0, 0);
-  updatedDoc.text(`${skills.overall}%`, 190, barY + 10);
+  updatedDoc.text(`${overallSkill.value}%`, 190, barY + 10);
   
   updatedDoc.setFontSize(12);
-  updatedDoc.text(getSkillLevel(skills.overall), 220, barY + 10);
+  updatedDoc.text(overallSkill.level, 220, barY + 10);
   
   // Helper function to add a skill section with proper spacing
-  const addSkillSection = (title: string, score: number, description: string[], y: number) => {
+  const addSkillSection = (skill: any, y: number) => {
     // Add skill title with proper spacing
     updatedDoc.setFont('helvetica', 'bold');
     updatedDoc.setFontSize(12);
-    updatedDoc.text(title, 20, y);
+    updatedDoc.text(getSkillName(skill.name), 20, y);
     
     // Draw skill progress bar with proper spacing
     const skillBarY = y + 10;
@@ -1065,7 +1151,7 @@ export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities:
     
     // Draw value bar
     updatedDoc.setFillColor(100, 100, 255);
-    updatedDoc.roundedRect(20, skillBarY, (score / 100) * barWidth, barHeight, 1, 1, 'F');
+    updatedDoc.roundedRect(20, skillBarY, (skill.value / 100) * barWidth, barHeight, 1, 1, 'F');
     
     // Add "0" and "100" labels with proper spacing
     updatedDoc.setFontSize(8);
@@ -1075,10 +1161,10 @@ export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities:
     // Add skill score and rating with proper spacing
     updatedDoc.setFontSize(14);
     updatedDoc.setTextColor(0, 0, 0);
-    updatedDoc.text(`${score}%`, 190, skillBarY + 10);
+    updatedDoc.text(`${skill.value}%`, 190, skillBarY + 10);
     
     updatedDoc.setFontSize(12);
-    updatedDoc.text(getSkillLevel(score), 220, skillBarY + 10);
+    updatedDoc.text(skill.level, 220, skillBarY + 10);
     
     // Add skill description with proper spacing
     updatedDoc.setFont('helvetica', 'normal');
@@ -1086,7 +1172,7 @@ export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities:
     
     let descY = skillBarY + barHeight + 20;
     
-    for (const line of description) {
+    for (const line of skill.description || []) {
       const descLines = updatedDoc.splitTextToSize(`• ${line}`, textWidth);
       updatedDoc.text(descLines, 20, descY);
       descY += descLines.length * 5; // Approximation: 5 units per line
@@ -1095,85 +1181,36 @@ export const addSkillBarChart = (doc: jsPDF, startY: number, skillsAndAbilities:
     return descY + 10; // Return the next Y position with padding
   };
   
-  // Add each skill section with proper spacing
+  // Helper to get proper skill name
+  const getSkillName = (name: string) => {
+    switch(name) {
+      case 'numerical': return 'Numerical Ability';
+      case 'logical': return 'Logical Ability';
+      case 'verbal': return 'Verbal Ability';
+      case 'clerical': return 'Clerical and Organizing Skills';
+      case 'spatial': return 'Spatial & Visualization Ability';
+      case 'leadership': return 'Leadership & Decision making skills';
+      case 'social': return 'Social & Co-operation Skills';
+      case 'mechanical': return 'Mechanical Abilities';
+      default: return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+  };
+  
+  // Add each skill section with proper spacing (skip 'overall')
   currentY = barY + barHeight + 25;
   
-  // Numerical Ability
-  const numericalDesc = [
-    "Your numerical skills are good.",
-    "Numeracy involves an understanding of numerical data and numbers.",
-    "Being competent and confident while working with numbers is a skill, that holds an advantage in a wide range of career options."
-  ];
-  
-  currentY = addSkillSection("Numerical Ability", skills.numerical, numericalDesc, currentY);
-  
-  // Logical Ability
-  const logicalDesc = [
-    "Your logical skills are average.",
-    "Logical thinking is very important for analytical profiles.",
-    "Being able to understand and analyze data in different formats is considered an essential skill in many career options."
-  ];
-  
-  currentY = addSkillSection("Logical Ability", skills.logical, logicalDesc, currentY);
-  
-  // Verbal Ability
-  const verbalDesc = [
-    "Your communication skills are excellent.",
-    "Excellent verbal and written communication helps you to communicate your message effectively."
-  ];
-  
-  currentY = addSkillSection("Verbal Ability", skills.verbal, verbalDesc, currentY);
-  
-  // Clerical and Organizing Skills
-  const clericalDesc = [
-    "Your organizing & planning skills are average.",
-    "It includes general organizing, planning, time management, scheduling, coordinating resources and meeting deadlines."
-  ];
-  
-  currentY = addSkillSection("Clerical and Organizing Skills", skills.clerical, clericalDesc, currentY);
-  
-  // Spatial & Visualization Ability
-  const spatialDesc = [
-    "Your visualization skills are good.",
-    "This skill allows you to explore, analyze, and create visual solutions.",
-    "It is important in many academic and professional career fields."
-  ];
-  
-  currentY = addSkillSection("Spatial & Visualization Ability", skills.spatial, spatialDesc, currentY);
-  
-  // Leadership & Decision making skills
-  const leadershipDesc = [
-    "Your leadership & decision-making skills are average.",
-    "It includes strategic thinking, planning, people management, change management, communication, and persuasion and influencing.",
-    "These skills allow you to make decisions quickly, adapt to changing scenarios and respond to opportunities promptly."
-  ];
-  
-  currentY = addSkillSection("Leadership & Decision making skills", skills.leadership, leadershipDesc, currentY);
-  
-  // Social & Co-operation Skills
-  const socialDesc = [
-    "Your social and cooperation skills are good.",
-    "Social skills are important because they help you build, maintain and grow relationships with others.",
-    "This skill is beneficial in the service industry and social causes."
-  ];
-  
-  currentY = addSkillSection("Social & Co-operation Skills", skills.social, socialDesc, currentY);
-  
-  // Mechanical Abilities
-  const mechanicalDesc = [
-    "The score indicates that your mechanical ability is average.",
-    "This section evaluates your basic mechanical understanding and mechanical knowledge.",
-    "This skill is required for many career options like engineering and mechanical services."
-  ];
-  
-  currentY = addSkillSection("Mechanical Abilities", skills.mechanical, mechanicalDesc, currentY);
+  for (const skill of skills) {
+    if (skill.name !== 'overall') {
+      currentY = addSkillSection(skill, currentY);
+    }
+  }
   
   // Return the updated document and the Y position for the next section
   return { doc: updatedDoc, lastY: currentY };
 };
 
 // Add career clusters chart with proper spacing
-export const addCareerClusters = (doc: jsPDF, startY: number) => {
+export const addCareerClusters = (doc: jsPDF, startY: number, clustersData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Career Clusters", startY);
   
   // Add "Your Career Clusters" subtitle with proper spacing
@@ -1206,31 +1243,31 @@ export const addCareerClusters = (doc: jsPDF, startY: number) => {
   const maxValue = 120; // Maximum value for the chart scale
   
   // Career clusters data
-  const clustersData = [
-    { name: 'Information Technology', value: 98 },
-    { name: 'Science, Maths and Engineering', value: 98 },
-    { name: 'Manufacturing', value: 84 },
-    { name: 'Accounts and Finance', value: 82 },
-    { name: 'Logistics and Transportation', value: 81 },
-    { name: 'Bio Science and Research', value: 78 },
-    { name: 'Agriculture', value: 74 },
-    { name: 'Health Science', value: 74 },
-    { name: 'Government Services', value: 64 },
-    { name: 'Public Safety and Security', value: 58 },
-    { name: 'Architecture and Construction', value: 55 },
-    { name: 'Business Management', value: 50 },
-    { name: 'Legal Services', value: 50 },
-    { name: 'Education and Training', value: 46 },
-    { name: 'Hospitality and Tourism', value: 31.43 },
-    { name: 'Marketing & Advertising', value: 25 },
-    { name: 'Sports & Physical Activities', value: 24 },
-    { name: 'Arts & Language Arts', value: 20 },
-    { name: 'Human Service', value: 10 },
-    { name: 'Media and Communication', value: 4 }
+  const clustersData2 = clustersData || [
+    { name: 'Information Technology', score: 98 },
+    { name: 'Science, Maths and Engineering', score: 98 },
+    { name: 'Manufacturing', score: 84 },
+    { name: 'Accounts and Finance', score: 82 },
+    { name: 'Logistics and Transportation', score: 81 },
+    { name: 'Bio Science and Research', score: 78 },
+    { name: 'Agriculture', score: 74 },
+    { name: 'Health Science', score: 74 },
+    { name: 'Government Services', score: 64 },
+    { name: 'Public Safety and Security', score: 58 },
+    { name: 'Architecture and Construction', score: 55 },
+    { name: 'Business Management', score: 50 },
+    { name: 'Legal Services', score: 50 },
+    { name: 'Education and Training', score: 46 },
+    { name: 'Hospitality and Tourism', score: 31.43 },
+    { name: 'Marketing & Advertising', score: 25 },
+    { name: 'Sports & Physical Activities', score: 24 },
+    { name: 'Arts & Language Arts', score: 20 },
+    { name: 'Human Service', score: 10 },
+    { name: 'Media and Communication', score: 4 }
   ];
   
   // Draw each cluster bar with proper spacing
-  clustersData.forEach((cluster, index) => {
+  clustersData2.forEach((cluster, index) => {
     const y = chartY + index * (barHeight + 5);
     
     // Draw background bar
@@ -1239,7 +1276,7 @@ export const addCareerClusters = (doc: jsPDF, startY: number) => {
     updatedDoc.roundedRect(labelWidth + 20, y, chartWidth, barHeight, 1, 1, 'F');
     
     // Draw value bar
-    const valueWidth = (cluster.value / maxValue) * chartWidth;
+    const valueWidth = (cluster.score / maxValue) * chartWidth;
     updatedDoc.setFillColor(100, 100, 255);
     updatedDoc.roundedRect(labelWidth + 20, y, valueWidth, barHeight, 1, 1, 'F');
     
@@ -1252,7 +1289,7 @@ export const addCareerClusters = (doc: jsPDF, startY: number) => {
     // Add cluster value
     updatedDoc.setFont('helvetica', 'bold');
     updatedDoc.setFontSize(8);
-    updatedDoc.text(cluster.value.toString(), labelWidth + 25 + valueWidth, y + barHeight / 2 + 2);
+    updatedDoc.text(cluster.score.toString(), labelWidth + 25 + valueWidth, y + barHeight / 2 + 2);
   });
   
   // Draw the chart scale with proper spacing
@@ -1264,18 +1301,18 @@ export const addCareerClusters = (doc: jsPDF, startY: number) => {
     const scaleValue = i * maxValue / 10;
     
     // Draw scale line
-    updatedDoc.line(x, chartY - 5, x, chartY + clustersData.length * (barHeight + 5));
+    updatedDoc.line(x, chartY - 5, x, chartY + clustersData2.length * (barHeight + 5));
     
     // Add scale value
     updatedDoc.text(scaleValue.toString(), x - 3, chartY - 8);
   }
   
   // Return the updated document and the Y position for the next section
-  return { doc: updatedDoc, lastY: chartY + clustersData.length * (barHeight + 5) + 15 };
+  return { doc: updatedDoc, lastY: chartY + clustersData2.length * (barHeight + 5) + 15 };
 };
 
 // Add selected career clusters with proper spacing
-export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
+export const addSelectedCareerClusters = (doc: jsPDF, startY: number, selectedClusters?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Selected Career Clusters", startY);
   
   // Add "Your Selected 4 Career Clusters" subtitle with proper spacing
@@ -1284,10 +1321,10 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
   updatedDoc.text("Your Selected 4 Career Clusters", 20, titleEndY);
   
   // Define selected clusters with proper spacing
-  const selectedClusters = [
+  const defaultClusters = [
     {
+      rank: 1,
       name: "Information Technology",
-      number: 1,
       description: [
         "Information technology professionals work with Computer hardware, software or network systems.",
         "You might design new computer equipment or work on a new computer game.",
@@ -1296,8 +1333,8 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
       ]
     },
     {
+      rank: 2,
       name: "Science, Maths and Engineering",
-      number: 2,
       description: [
         "Science, math and engineering, professionals do scientific research in laboratories or the field.",
         "You will plan or design products and systems.",
@@ -1306,8 +1343,8 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
       ]
     },
     {
+      rank: 3,
       name: "Manufacturing",
-      number: 3,
       description: [
         "Manufacturing professionals work with products and equipment.",
         "You might design a new product, decide how the product will be made, or make the product.",
@@ -1316,8 +1353,8 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
       ]
     },
     {
+      rank: 4,
       name: "Accounts and Finance",
-      number: 4,
       description: [
         "Finance and Accounts professionals keep track of money.",
         "You might work in financial planning, banking, or insurance.",
@@ -1325,6 +1362,9 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
       ]
     }
   ];
+  
+  // Use provided selected clusters or fallback to defaults
+  const clusters = selectedClusters || defaultClusters;
   
   // Current Y position for the first selected cluster
   let currentY = titleEndY + 15;
@@ -1347,7 +1387,7 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
     updatedDoc.setFont('helvetica', 'bold');
     updatedDoc.setFontSize(10);
     updatedDoc.setTextColor(255, 255, 255);
-    updatedDoc.text(cluster.number.toString(), circleX - 2, circleY + 3);
+    updatedDoc.text(cluster.rank.toString(), circleX - 2, circleY + 3);
     
     // Add cluster description with proper spacing
     updatedDoc.setFont('helvetica', 'normal');
@@ -1367,7 +1407,7 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
   };
   
   // Add each selected cluster with proper spacing
-  for (const cluster of selectedClusters) {
+  for (const cluster of clusters) {
     currentY = addSelectedCluster(cluster, currentY);
   }
   
@@ -1376,7 +1416,7 @@ export const addSelectedCareerClusters = (doc: jsPDF, startY: number) => {
 };
 
 // Add career paths with proper spacing
-export const addCareerPaths = (doc: jsPDF, startY: number) => {
+export const addCareerPaths = (doc: jsPDF, startY: number, careerPathsData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Career Path", startY);
   
   // Add "Your Career Paths" subtitle with proper spacing
@@ -1415,28 +1455,36 @@ export const addCareerPaths = (doc: jsPDF, startY: number) => {
     headerX += actualColumnWidths[i];
   }
   
-  // Draw table rows with proper spacing (sample data)
-  const careerPaths = [
+  // Default career paths
+  const defaultPaths = [
     {
-      path: "Biochemistry - Bio Science and Research\nBiochemist, Bio technologist, Clinical Scientist",
-      psyAnalysis: "Very High:100",
-      skillAbilities: "High:70",
+      careerTitle: "Biochemistry - Bio Science and Research",
+      category: "Biochemist, Bio technologist, Clinical Scientist",
+      description: "",
+      psychAnalysis: { score: 100, label: "Very High" },
+      skillAbilities: { score: 70, label: "High" },
       comment: "Top Choice"
     },
     {
-      path: "Genetics - Bio Science and Research\nGenetics Professor, Genetic Research Associate",
-      psyAnalysis: "Very High:100",
-      skillAbilities: "High:73",
+      careerTitle: "Genetics - Bio Science and Research",
+      category: "Genetics Professor, Genetic Research Associate",
+      description: "",
+      psychAnalysis: { score: 100, label: "Very High" },
+      skillAbilities: { score: 73, label: "High" },
       comment: "Top Choice"
     },
     {
-      path: "Commerce with Information Technology - Accounts and Finance\nSoftware engineer,Coder, Programmer",
-      psyAnalysis: "Very High:100",
-      skillAbilities: "High:63",
+      careerTitle: "Commerce with Information Technology - Accounts and Finance",
+      category: "Software engineer,Coder, Programmer",
+      description: "",
+      psychAnalysis: { score: 100, label: "Very High" },
+      skillAbilities: { score: 63, label: "High" },
       comment: "Top Choice"
-    },
-    // ... more career paths as needed
+    }
   ];
+  
+  // Use provided career paths data or fallback to defaults
+  const careerPaths = careerPathsData || defaultPaths;
   
   // Draw each table row with proper spacing
   updatedDoc.setFont('helvetica', 'normal');
@@ -1462,16 +1510,17 @@ export const addCareerPaths = (doc: jsPDF, startY: number) => {
     
     // Add career path with proper spacing
     let cellX = tableX + 5;
-    const pathLines = updatedDoc.splitTextToSize(career.path, actualColumnWidths[0] - 10);
+    const pathText = `${career.careerTitle}\n${career.category}`;
+    const pathLines = updatedDoc.splitTextToSize(pathText, actualColumnWidths[0] - 10);
     updatedDoc.text(pathLines, cellX, tableY + 6);
     
     // Add psychology analysis with proper spacing
     cellX += actualColumnWidths[0];
-    updatedDoc.text(career.psyAnalysis, cellX, tableY + rowHeight);
+    updatedDoc.text(`${career.psychAnalysis.label}:${career.psychAnalysis.score}`, cellX, tableY + rowHeight);
     
     // Add skill abilities with proper spacing
     cellX += actualColumnWidths[1];
-    updatedDoc.text(career.skillAbilities, cellX, tableY + rowHeight);
+    updatedDoc.text(`${career.skillAbilities.label}:${career.skillAbilities.score}`, cellX, tableY + rowHeight);
     
     // Add comment with proper spacing
     cellX += actualColumnWidths[2];
@@ -1494,7 +1543,7 @@ export const addCareerPaths = (doc: jsPDF, startY: number) => {
 };
 
 // Add summary sheet with proper spacing
-export const addSummarySheet = (doc: jsPDF, startY: number) => {
+export const addSummarySheet = (doc: jsPDF, startY: number, summaryData?: any) => {
   const { doc: updatedDoc, titleEndY } = addSectionTitle(doc, "Summary Sheet", startY);
   
   // Add summary text with proper spacing
@@ -1502,34 +1551,47 @@ export const addSummarySheet = (doc: jsPDF, startY: number) => {
   updatedDoc.setFontSize(10);
   updatedDoc.text("Our career assessment is based on the concept of correlation theory and various psychometric and statistical models.", 20, titleEndY + 10);
   
-  // Define summary items with proper spacing
+  // Default summary items
+  const defaultSummary = {
+    careerPersonality: "Introvert + Sensing + Thinking + Judging",
+    careerInterest: "Investigative + Realistic + Conventional",
+    careerMotivator: "Independence + Social Service + Continuous Learning",
+    learningStyle: "Read & Write Learning",
+    skillsAbilities: "Numerical Ability[80%] +Logical Ability[60%] +Verbal Ability[100%]\n" +
+      "Clerical and Organizing Skills[50%] +Spatial & Visualization Ability[80%]\n" +
+      "+Leadership & Decision making skills[60%]\n" +
+      "Social & Co-operation Skills[80%] +Mechanical Abilities[50%] +",
+    selectedClusters: "Accounts and Finance+Information Technology+Science, Maths and Engineering+Manufacturing"
+  };
+  
+  // Use provided summary data or fallback to defaults
+  const summary = summaryData || defaultSummary;
+  
+  // Create summary items array
   const summaryItems = [
     {
       label: "Career Personality",
-      value: "Introvert + Sensing + Thinking + Judging"
+      value: summary.careerPersonality
     },
     {
       label: "Career Interest",
-      value: "Investigative + Realistic + Conventional"
+      value: summary.careerInterest
     },
     {
       label: "Career Motivator",
-      value: "Independence + Social Service + Continuous Learning"
+      value: summary.careerMotivator
     },
     {
       label: "Learning Style",
-      value: "Read & Write Learning"
+      value: summary.learningStyle
     },
     {
       label: "Skills & Ablities",
-      value: "Numerical Ability[80%] +Logical Ability[60%] +Verbal Ability[100%]\n" +
-        "Clerical and Organizing Skills[50%] +Spatial & Visualization Ability[80%]\n" +
-        "+Leadership & Decision making skills[60%]\n" +
-        "Social & Co-operation Skills[80%] +Mechanical Abilities[50%] +"
+      value: summary.skillsAbilities
     },
     {
       label: "Selected Clusters",
-      value: "Accounts and Finance+Information Technology+Science, Maths and Engineering+Manufacturing"
+      value: summary.selectedClusters
     }
   ];
   
@@ -1579,26 +1641,4 @@ export const addSummarySheet = (doc: jsPDF, startY: number) => {
   return { doc: updatedDoc, lastY: tableY + 15 };
 };
 
-// Export all functions
-export {
-  addHeaderWithLogo,
-  addReportTitle,
-  addUserInfo,
-  addDisclaimer,
-  addSectionTitle,
-  addProfilingSection,
-  addPageFooter,
-  addPersonalityTypeChart,
-  addPersonalityAnalysis,
-  addInterestBarChart,
-  addInterestAnalysis,
-  addCareerMotivatorChart,
-  addMotivatorAnalysis,
-  addLearningStylePieChart,
-  addLearningStyleAnalysis,
-  addSkillBarChart,
-  addCareerClusters,
-  addSelectedCareerClusters,
-  addCareerPaths,
-  addSummarySheet
-};
+// We don't need to export all functions again at the end - they're already exported when defined
