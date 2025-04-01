@@ -46,7 +46,7 @@ const AssessmentHistoryList: React.FC = () => {
       }
 
       // Cast the data to match our Assessment interface
-      setAssessments((data as unknown as Assessment[]) || []);
+      setAssessments((data || []) as Assessment[]);
     } catch (error) {
       console.error('Error fetching assessments:', error);
       toast.error('Failed to load assessment history');
@@ -66,7 +66,7 @@ const AssessmentHistoryList: React.FC = () => {
       // Get profile info for the user
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('first_name, last_name, email')
+        .select('first_name, last_name, email, phone, class, school')
         .eq('id', user?.id)
         .single();
 
@@ -76,6 +76,48 @@ const AssessmentHistoryList: React.FC = () => {
       const userName = (firstName || lastName) 
         ? `${firstName} ${lastName}`.trim()
         : user?.email || 'User';
+        
+      // Get additional user info for the report
+      const userInfo = {
+        name: userName,
+        email: profileData?.email || user?.email || '',
+        phone: profileData?.phone || '',
+        age: assessment.responses?.age || '',
+        location: assessment.responses?.location || 'India',
+        school: profileData?.school || '',
+        class: profileData?.class || ''
+      };
+
+      // Get AI-enhanced content for the report
+      let enhancedContent = null;
+      try {
+        const enhancedContentResponse = await fetch('/api/generate-ai-content', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contentType: 'executiveSummary',
+            assessmentData: {
+              userName,
+              ...userInfo,
+              scores: assessment.scores,
+              completedAt: assessment.completed_at,
+              strengthAreas: analyzeResponses(assessment.responses).strengthAreas,
+              developmentAreas: analyzeResponses(assessment.responses).developmentAreas,
+              topCareer: getTopCareer(assessment.scores),
+            }
+          })
+        });
+        
+        if (enhancedContentResponse.ok) {
+          enhancedContent = await enhancedContentResponse.json();
+          console.log("AI-enhanced content generated successfully");
+        }
+      } catch (aiError) {
+        console.warn("Could not generate AI content:", aiError);
+        // Will proceed with regular content generation if AI fails
+      }
 
       // Analyze responses to determine strengths and development areas
       const { strengthAreas, developmentAreas } = analyzeResponses(assessment.responses);
@@ -83,12 +125,13 @@ const AssessmentHistoryList: React.FC = () => {
       // Generate PDF
       await generatePDF(
         assessment.id,
-        userName,
+        userInfo,
         assessment.scores,
         assessment.responses,
         strengthAreas,
         developmentAreas,
-        isJuniorAssessment
+        isJuniorAssessment,
+        enhancedContent
       );
 
       // Update the report_generated_at timestamp in Supabase
@@ -112,6 +155,24 @@ const AssessmentHistoryList: React.FC = () => {
       toast.error('Failed to generate PDF report');
     } finally {
       setGeneratingPDF(null);
+    }
+  };
+
+  // Get top career recommendation from scores
+  const getTopCareer = (scores: any) => {
+    try {
+      if (scores?.careerRecommendations && scores.careerRecommendations.length > 0) {
+        return scores.careerRecommendations[0];
+      }
+      
+      return {
+        careerTitle: "Information Technology",
+        suitabilityPercentage: 95,
+        careerDescription: "Technology professionals work with computer hardware, software or network systems."
+      };
+    } catch (e) {
+      console.error("Error getting top career:", e);
+      return null;
     }
   };
 
