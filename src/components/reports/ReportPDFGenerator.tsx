@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +7,7 @@ import { FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import * as pdfUtils from '@/utils/pdfFormatting';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ReportPDFGeneratorProps {
   reportId: string;
@@ -39,6 +41,14 @@ export const generatePDF = async (
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
     
+    // Helper function to get the Y position from a result that might be a number or {lastY: number}
+    const getYPosition = (result: any): number => {
+      if (typeof result === 'number') {
+        return result;
+      }
+      return result.lastY;
+    };
+    
     // Helper function to add a new page
     const addNewPage = () => {
       doc.addPage();
@@ -49,15 +59,7 @@ export const generatePDF = async (
       pdfUtils.addPageFooter(doc, userInfo.name, currentPage);
       
       // Return starting Y position for content
-      return typeof headerEndY === 'number' ? headerEndY : headerEndY.lastY;
-    };
-    
-    // Helper function to get the Y position from a result that might be a number or {lastY: number}
-    const getYPosition = (result: any): number => {
-      if (typeof result === 'number') {
-        return result;
-      }
-      return result.lastY;
+      return getYPosition(headerEndY);
     };
     
     // Start building the report
@@ -76,34 +78,40 @@ export const generatePDF = async (
     // Add page footer
     pdfUtils.addPageFooter(doc, userInfo.name, currentPage);
     
+    // Extract data from scores to use for the report sections
+    const analysisInsights = scores?.analysisInsights || {};
+    const specificAptitudes = analysisInsights?.specificAptitudes || {};
+    const personalityTraits = analysisInsights?.personalityTraits || {};
+    const careerRecommendations = scores?.careerRecommendations || [];
+    
     // Add section title for profiling
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Planning Profiling'));
     
-    // Prepare profiling data based on enhancedContent
-    const profilingData = {
-      currentStage: 'Diffused',
-      description: 'You are at the diffused stage in career planning. We understand that you have a fair idea of your suitable career. At this stage, you have a better understanding of career options. However, you are looking for more information to understand the complete career path for yourself and an execution plan to achieve it.',
-      riskInvolved: 'Career misalignment, career path misjudgment, wrong career path projections, unnecessary stress',
-      actionPlan: 'Explore career path > Align your abilities and interests with the best possible career path > Realistic Execution Plan > Timely Review of Action Plan'
-    };
-    
-    // If we have AI-enhanced content, use it
-    if (enhancedContent && enhancedContent.metadata) {
-      if (enhancedContent.metadata.careerPlanningStage) {
-        profilingData.currentStage = enhancedContent.metadata.careerPlanningStage;
-      }
-      if (enhancedContent.metadata.careerRisks) {
-        profilingData.riskInvolved = enhancedContent.metadata.careerRisks;
-      }
-      if (enhancedContent.metadata.careerActionPlan) {
-        profilingData.actionPlan = enhancedContent.metadata.careerActionPlan;
-      }
+    // Determine career planning stage based on scores
+    let careerStage = 'Exploratory';
+    if (specificAptitudes.leadership > 70 && specificAptitudes.analytical > 65) {
+      careerStage = 'Focused';
+    } else if (specificAptitudes.social > 70 || specificAptitudes.creative > 70) {
+      careerStage = 'Growth-Oriented';
+    } else if (specificAptitudes.technical > 70) {
+      careerStage = 'Technical Specialist';
     }
+    
+    // Prepare profiling data based on user's scores
+    const profilingData = {
+      currentStage: careerStage,
+      description: enhancedContent?.metadata?.careerDescription || 
+        `Based on your assessment results, you are at the ${careerStage} stage in career planning. Your responses indicate specific strengths that can guide your career decisions.`,
+      riskInvolved: enhancedContent?.metadata?.careerRisks || 
+        'Potential career misalignment, uncertainty about path progression, skills-career mismatch',
+      actionPlan: enhancedContent?.metadata?.careerActionPlan || 
+        `Focus on developing your ${developmentAreas.join(', ')} while leveraging your strengths in ${strengthAreas.join(', ')}`
+    };
     
     const profilingEndY = pdfUtils.addProfilingSection(doc, yPosition, profilingData);
     
     // Check if we need to add a new page
-    if (getYPosition(profilingEndY) > doc.internal.pageSize.height - 40) {
+    if (getYPosition(profilingEndY) > pageHeight - 40) {
       yPosition = addNewPage();
     } else {
       yPosition = getYPosition(profilingEndY) + 10;
@@ -112,48 +120,71 @@ export const generatePDF = async (
     // Add section title for personality
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Personality'));
     
-    // Prepare personality data
+    // Determine personality type based on scores
     const personalityType = enhancedContent?.metadata?.personalityType || 
-      'Introvert:Sensing:Thinking:Judging'; // Default if not provided
-      
+      `${personalityTraits.extroverted ? 'Extrovert' : 'Introvert'}:${analysisInsights.aptitudeStyle === 'analytical' ? 'Sensing' : 'Intuitive'}:${personalityTraits.peopleOriented ? 'Feeling' : 'Thinking'}:${personalityTraits.structured ? 'Judging' : 'Perceiving'}`;
+    
+    // Prepare personality data with percentages based on user's scores
     const personalityData = {
-      introvertExtrovert: { introvert: 86, extrovert: 14 },
-      sensingIntuitive: { sensing: 86, intuitive: 14 },
-      thinkingFeeling: { thinking: 71, feeling: 29 },
-      judgingPerceiving: { judging: 57, perceiving: 43 }
+      introvertExtrovert: { 
+        introvert: personalityTraits.extroverted ? 30 : 70, 
+        extrovert: personalityTraits.extroverted ? 70 : 30 
+      },
+      sensingIntuitive: { 
+        sensing: analysisInsights.aptitudeStyle === 'analytical' ? 75 : 25, 
+        intuitive: analysisInsights.aptitudeStyle === 'analytical' ? 25 : 75 
+      },
+      thinkingFeeling: { 
+        thinking: personalityTraits.peopleOriented ? 40 : 60, 
+        feeling: personalityTraits.peopleOriented ? 60 : 40 
+      },
+      judgingPerceiving: { 
+        judging: personalityTraits.structured ? 65 : 35, 
+        perceiving: personalityTraits.structured ? 35 : 65 
+      }
     };
     
     const personalityChartEndY = pdfUtils.addPersonalityTypeChart(doc, yPosition, personalityData, personalityType);
     
     // Check if we need to add a new page
-    if (getYPosition(personalityChartEndY) > doc.internal.pageSize.height - 40) {
+    if (getYPosition(personalityChartEndY) > pageHeight - 40) {
       yPosition = addNewPage();
     } else {
       yPosition = getYPosition(personalityChartEndY) + 10;
     }
     
-    // Add personality analysis
+    // Customize personality analysis descriptions based on personality traits
     const personalityAnalysisData = {
-      focusEnergy: [
-        'You mostly get your energy from dealing with ideas, pictures, memories and reactions which are part of your imaginative world.',
-        'You are quiet, reserved and like to spend your time alone.'
+      focusEnergy: personalityTraits.extroverted ? [
+        'You thrive on external stimulation and interaction with others.',
+        'You enjoy collaborative work and social environments.'
+      ] : [
+        'You get your energy from reflection and internal processing.',
+        'You prefer quiet environments and deep concentration.'
       ],
-      processInfo: [
-        'You mostly collect and trust the information that is presented in a detailed and sequential manner.',
-        'You think more about the present and learn from the past.'
+      processInfo: analysisInsights.aptitudeStyle === 'analytical' ? [
+        'You collect and trust information that is detailed and sequential.',
+        'You focus on facts and practical applications.'
+      ] : [
+        'You see patterns and connections between concepts.',
+        'You value innovation and theoretical possibilities.'
       ],
-      makeDecisions: [
-        'You seem to make decisions based on logic rather than the circumstances.',
-        'You believe telling truth is more important than being tactful.'
+      makeDecisions: personalityTraits.peopleOriented ? [
+        'You make decisions based on values and how they affect people.',
+        'You consider the human element in complex situations.'
+      ] : [
+        'You make decisions based on logic and objective analysis.',
+        'You value consistency and fairness in decision-making.'
       ],
-      planWork: [
-        'You prefer a planned or orderly way of life.',
-        'You like to have things well-organized.'
+      planWork: personalityTraits.structured ? [
+        'You prefer a planned and organized approach to work.',
+        'You value structure, schedules, and clear expectations.'
+      ] : [
+        'You adapt well to changing circumstances and remain flexible.',
+        'You prefer to keep options open and adjust as needed.'
       ],
       strengths: [
-        'Strong-willed and dutiful',
-        'Calm and practical',
-        'Honest and direct'
+        ...strengthAreas.slice(0, 3)
       ]
     };
     
@@ -165,44 +196,101 @@ export const generatePDF = async (
     // Add section title for interest
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Interest'));
     
-    // Prepare interest data
+    // Generate interest data based on scores
+    const calculateInterestScore = (category: string, baseScore: number) => {
+      // Scale the score to be between 0-100
+      return Math.min(100, Math.max(0, baseScore));
+    };
+    
+    // Create interest profile based on assessment results
     const interestData = [
-      { name: 'Investigative', value: 100 },
-      { name: 'Conventional', value: 55 },
-      { name: 'Realistic', value: 55 },
-      { name: 'Enterprising', value: 33 },
-      { name: 'Artistic', value: 21 },
-      { name: 'Social', value: 12 }
+      { 
+        name: 'Investigative', 
+        value: calculateInterestScore('investigative', specificAptitudes.analytical || 50) 
+      },
+      { 
+        name: 'Conventional', 
+        value: calculateInterestScore('conventional', specificAptitudes.detail || 50) 
+      },
+      { 
+        name: 'Realistic', 
+        value: calculateInterestScore('realistic', specificAptitudes.technical || 50) 
+      },
+      { 
+        name: 'Enterprising', 
+        value: calculateInterestScore('enterprising', specificAptitudes.leadership || 50) 
+      },
+      { 
+        name: 'Artistic', 
+        value: calculateInterestScore('artistic', specificAptitudes.creative || 50) 
+      },
+      { 
+        name: 'Social', 
+        value: calculateInterestScore('social', specificAptitudes.social || 50) 
+      }
     ];
+    
+    // Sort interest data by value in descending order
+    interestData.sort((a, b) => b.value - a.value);
     
     const interestChartEndY = pdfUtils.addInterestBarChart(doc, yPosition, interestData);
     
     // Check if we need to add a new page
-    if (getYPosition(interestChartEndY) > doc.internal.pageSize.height - 40) {
+    if (getYPosition(interestChartEndY) > pageHeight - 40) {
       yPosition = addNewPage();
     } else {
       yPosition = getYPosition(interestChartEndY) + 10;
     }
     
-    // Add interest analysis
-    const interestAnalysisData = [
-      {
-        title: 'Investigative',
-        level: 'HIGH',
-        points: [
-          'You are analytical, intellectual, observant and enjoy research.',
-          'You enjoy using logic and solving complex problems.'
-        ]
-      },
-      {
-        title: 'Conventional',
-        level: 'HIGH',
-        points: [
-          'You are efficient, careful, conforming, organized and conscientious.',
-          'You are organized, detail-oriented and do well with manipulating data and numbers.'
-        ]
+    // Prepare interest analysis based on top interests
+    const interestAnalysisData = interestData.slice(0, 2).map(interest => {
+      let points: string[] = [];
+      
+      switch(interest.name) {
+        case 'Investigative':
+          points = [
+            'You are analytical, intellectual, and enjoy scientific or mathematical activities.',
+            'You excel in environments that require research and complex problem-solving.'
+          ];
+          break;
+        case 'Conventional':
+          points = [
+            'You are detail-oriented, organized, and methodical in your approach.',
+            'You thrive in structured environments with clear procedures and expectations.'
+          ];
+          break;
+        case 'Realistic':
+          points = [
+            'You enjoy working with your hands and solving practical problems.',
+            'You value concrete results and tangible outcomes from your work.'
+          ];
+          break;
+        case 'Enterprising':
+          points = [
+            'You are persuasive, leadership-oriented, and enjoy influencing others.',
+            'You thrive in competitive environments and enjoy taking initiative.'
+          ];
+          break;
+        case 'Artistic':
+          points = [
+            'You are creative, expressive, and value originality in your work.',
+            'You enjoy environments that allow for creative expression and innovation.'
+          ];
+          break;
+        case 'Social':
+          points = [
+            'You enjoy working with and helping others through teaching, counseling, or service.',
+            'You thrive in collaborative and supportive environments.'
+          ];
+          break;
       }
-    ];
+      
+      return {
+        title: interest.name,
+        level: interest.value > 70 ? 'HIGH' : interest.value > 50 ? 'MEDIUM' : 'LOW',
+        points
+      };
+    });
     
     const interestAnalysisEndY = pdfUtils.addInterestAnalysis(doc, yPosition, interestAnalysisData);
     
@@ -212,45 +300,99 @@ export const generatePDF = async (
     // Add section title for motivator
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Motivator'));
     
-    // Prepare motivator data
+    // Generate motivator data based on personality traits and interests
     const motivatorData = [
-      { name: 'Independence', value: 100 },
-      { name: 'Continuous Learning', value: 100 },
-      { name: 'Social Service', value: 100 },
-      { name: 'Structured work environment', value: 40 },
-      { name: 'Adventure', value: 40 },
-      { name: 'High Paced Environment', value: 20 },
-      { name: 'Creativity', value: 20 }
+      { 
+        name: 'Independence', 
+        value: personalityTraits.extroverted ? 40 : 100 
+      },
+      { 
+        name: 'Continuous Learning', 
+        value: analysisInsights.interestStyle === 'curious' ? 100 : 60 
+      },
+      { 
+        name: 'Social Service', 
+        value: personalityTraits.peopleOriented ? 100 : 40 
+      },
+      { 
+        name: 'Structured work environment', 
+        value: personalityTraits.structured ? 80 : 40 
+      },
+      { 
+        name: 'Adventure', 
+        value: specificAptitudes.leadership > 70 ? 80 : 40 
+      },
+      { 
+        name: 'High Paced Environment', 
+        value: specificAptitudes.leadership > 70 ? 80 : 20 
+      },
+      { 
+        name: 'Creativity', 
+        value: specificAptitudes.creative > 70 ? 100 : 20 
+      }
     ];
+    
+    // Sort motivator data by value in descending order
+    motivatorData.sort((a, b) => b.value - a.value);
     
     const motivatorChartEndY = pdfUtils.addCareerMotivatorChart(doc, yPosition, motivatorData);
     
     // Check if we need to add a new page
-    if (getYPosition(motivatorChartEndY) > doc.internal.pageSize.height - 40) {
+    if (getYPosition(motivatorChartEndY) > pageHeight - 40) {
       yPosition = addNewPage();
     } else {
       yPosition = getYPosition(motivatorChartEndY) + 10;
     }
     
-    // Add motivator analysis
-    const motivatorAnalysisData = [
-      {
-        title: 'Social Service',
-        level: 'HIGH',
-        points: [
-          'You like to do work which has some social responsibility.',
-          'You like to do work which impacts the world.'
-        ]
-      },
-      {
-        title: 'Independence',
-        level: 'HIGH',
-        points: [
-          'You enjoy working independently.',
-          'You dislike too much supervision.'
-        ]
+    // Prepare motivator analysis based on top motivators
+    const motivatorAnalysisData = motivatorData.slice(0, 2).map(motivator => {
+      let points: string[] = [];
+      
+      switch(motivator.name) {
+        case 'Social Service':
+          points = [
+            'You value work that contributes to the well-being of others and society.',
+            'You find fulfillment in helping people and making a positive difference.'
+          ];
+          break;
+        case 'Independence':
+          points = [
+            'You prefer work environments that allow for autonomy and self-direction.',
+            'You value the freedom to make decisions and work at your own pace.'
+          ];
+          break;
+        case 'Continuous Learning':
+          points = [
+            'You thrive in environments that offer ongoing growth and development.',
+            'You value opportunities to expand your knowledge and skills.'
+          ];
+          break;
+        case 'Structured work environment':
+          points = [
+            'You prefer clear expectations and well-defined processes.',
+            'You value stability and predictability in your work environment.'
+          ];
+          break;
+        case 'Adventure':
+          points = [
+            'You enjoy variety, new challenges, and dynamic work environments.',
+            'You thrive when taking calculated risks and exploring new territories.'
+          ];
+          break;
+        case 'Creativity':
+          points = [
+            'You value opportunities for creative expression and innovation.',
+            'You thrive when able to think outside the box and implement original ideas.'
+          ];
+          break;
       }
-    ];
+      
+      return {
+        title: motivator.name,
+        level: motivator.value > 70 ? 'HIGH' : motivator.value > 50 ? 'MEDIUM' : 'LOW',
+        points
+      };
+    });
     
     const motivatorAnalysisEndY = pdfUtils.addMotivatorAnalysis(doc, yPosition, motivatorAnalysisData);
     
@@ -260,35 +402,111 @@ export const generatePDF = async (
     // Add section title for learning style
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Learning Style'));
     
-    // Prepare learning style data
+    // Determine learning style percentages based on assessment
+    const learningStyleKey = analysisInsights.learningStyle || 'visual';
     const learningStyleData = [
-      { name: 'Read & Write Learning', value: 38 },
-      { name: 'Auditory learning', value: 25 },
-      { name: 'Visual Learning', value: 25 },
-      { name: 'Kinesthetic Learning', value: 13 }
+      { 
+        name: 'Read & Write Learning', 
+        value: learningStyleKey === 'reading/writing' ? 38 : 15 
+      },
+      { 
+        name: 'Auditory learning', 
+        value: learningStyleKey === 'auditory' ? 38 : 15 
+      },
+      { 
+        name: 'Visual Learning', 
+        value: learningStyleKey === 'visual' ? 38 : 15 
+      },
+      { 
+        name: 'Kinesthetic Learning', 
+        value: learningStyleKey === 'kinesthetic' ? 38 : 15 
+      }
     ];
+    
+    // Ensure values add up to 100%
+    const totalValue = learningStyleData.reduce((sum, item) => sum + item.value, 0);
+    learningStyleData.forEach(item => {
+      item.value = Math.round((item.value / totalValue) * 100);
+    });
     
     const learningStyleChartEndY = pdfUtils.addLearningStylePieChart(doc, yPosition, learningStyleData);
     
     // Check if we need to add a new page
-    if (getYPosition(learningStyleChartEndY) > doc.internal.pageSize.height - 40) {
+    if (getYPosition(learningStyleChartEndY) > pageHeight - 40) {
       yPosition = addNewPage();
     } else {
       yPosition = getYPosition(learningStyleChartEndY) + 10;
     }
     
-    // Add learning style analysis
+    // Prepare learning style analysis based on dominant style
+    let learningStyleTitle, learningStyleDescription, learningStyleStrategies;
+    
+    switch(learningStyleKey) {
+      case 'reading/writing':
+        learningStyleTitle = 'Read/Write learning style';
+        learningStyleDescription = [
+          'You learn best through written information, taking notes, and reading texts.',
+          'You excel when information is presented in a text-based format.'
+        ];
+        learningStyleStrategies = [
+          'Take detailed notes during lectures and readings.',
+          'Rewrite information in your own words to reinforce understanding.',
+          'Use lists, dictionaries, and textbooks as primary learning resources.'
+        ];
+        break;
+      case 'auditory':
+        learningStyleTitle = 'Auditory learning style';
+        learningStyleDescription = [
+          'You learn best through listening, discussions, and verbal explanations.',
+          'You excel when information is presented through spoken word and sound.'
+        ];
+        learningStyleStrategies = [
+          'Record lectures and listen to them multiple times.',
+          'Participate in group discussions to reinforce concepts.',
+          'Explain ideas verbally to others to solidify understanding.'
+        ];
+        break;
+      case 'visual':
+        learningStyleTitle = 'Visual learning style';
+        learningStyleDescription = [
+          'You learn best through charts, diagrams, and visual representations.',
+          'You excel when information is presented in a visual format.'
+        ];
+        learningStyleStrategies = [
+          'Use color-coding, highlighting, and visual organizers in notes.',
+          'Create diagrams or mind maps to connect concepts.',
+          'Seek out videos and demonstrations when learning new skills.'
+        ];
+        break;
+      case 'kinesthetic':
+        learningStyleTitle = 'Kinesthetic learning style';
+        learningStyleDescription = [
+          'You learn best through hands-on activities and physical engagement.',
+          'You excel when you can physically interact with the material.'
+        ];
+        learningStyleStrategies = [
+          'Use physical movement or gestures when memorizing information.',
+          'Take frequent breaks during study sessions to move around.',
+          'Seek out practical applications and experiments for theoretical concepts.'
+        ];
+        break;
+      default:
+        learningStyleTitle = 'Multimodal learning style';
+        learningStyleDescription = [
+          'You adapt well to various learning formats and environments.',
+          'You can process information effectively in multiple formats.'
+        ];
+        learningStyleStrategies = [
+          'Use a combination of learning strategies based on the specific material.',
+          'Vary your study methods to maintain engagement and interest.',
+          'Identify which mode works best for different types of content.'
+        ];
+    }
+    
     const learningStyleAnalysisData = {
-      title: 'Read/Write learning style',
-      description: [
-        'Reading and writing learners prefer to take in the information displayed as words.',
-        'These learners strongly prefer primarily text-based learning materials.'
-      ],
-      strategies: [
-        'Re-write your notes after class.',
-        'Use coloured pens and highlighters to focus on key ideas.',
-        'Write notes to yourself in the margins.'
-      ]
+      title: learningStyleTitle,
+      description: learningStyleDescription,
+      strategies: learningStyleStrategies
     };
     
     const learningStyleAnalysisEndY = pdfUtils.addLearningStyleAnalysis(doc, yPosition, learningStyleAnalysisData);
@@ -299,39 +517,53 @@ export const generatePDF = async (
     // Add section title for skills
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Skills and Abilities'));
     
-    // Prepare skills data
+    // Generate skills data based on assessment scores
+    const getSkillLevel = (score: number) => {
+      if (score >= 80) return 'Excellent';
+      if (score >= 70) return 'Good';
+      if (score >= 60) return 'Above Average';
+      if (score >= 50) return 'Average';
+      return 'Developing';
+    };
+    
+    // Calculate overall score as average of all specific aptitudes
+    const aptitudeScores = Object.values(specificAptitudes).filter(score => typeof score === 'number') as number[];
+    const overallScore = aptitudeScores.length > 0 
+      ? Math.round(aptitudeScores.reduce((sum, score) => sum + score, 0) / aptitudeScores.length)
+      : 60;
+    
     const skillsData = [
       {
         name: 'overall',
-        value: 70,
-        level: 'Good',
+        value: overallScore,
+        level: getSkillLevel(overallScore),
         description: []
       },
       {
         name: 'numerical',
-        value: 80,
-        level: 'Good',
+        value: specificAptitudes.numerical || 60,
+        level: getSkillLevel(specificAptitudes.numerical || 60),
         description: [
-          'Your numerical skills are good.',
-          'Numeracy involves an understanding of numerical data and numbers.'
+          `Your numerical ability is ${getSkillLevel(specificAptitudes.numerical || 60).toLowerCase()}.`,
+          'This reflects your capacity to work with numbers and mathematical concepts.'
         ]
       },
       {
         name: 'logical',
-        value: 60,
-        level: 'Average',
+        value: specificAptitudes.analytical || 60,
+        level: getSkillLevel(specificAptitudes.analytical || 60),
         description: [
-          'Your logical skills are average.',
-          'Logical thinking is very important for analytical profiles.'
+          `Your logical reasoning skills are ${getSkillLevel(specificAptitudes.analytical || 60).toLowerCase()}.`,
+          'This reflects your ability to analyze problems and identify patterns.'
         ]
       },
       {
         name: 'verbal',
-        value: 100,
-        level: 'Excellent',
+        value: specificAptitudes.verbal || 60,
+        level: getSkillLevel(specificAptitudes.verbal || 60),
         description: [
-          'Your communication skills are excellent.',
-          'Excellent verbal and written communication helps you to communicate your message effectively.'
+          `Your verbal communication skills are ${getSkillLevel(specificAptitudes.verbal || 60).toLowerCase()}.`,
+          'This reflects your ability to express ideas clearly and understand complex text.'
         ]
       }
     ];
@@ -344,48 +576,135 @@ export const generatePDF = async (
     // Add section title for career clusters
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Clusters'));
     
-    // Prepare clusters data
-    const clustersData = [
-      { name: 'Information Technology', score: 98 },
-      { name: 'Science, Maths and Engineering', score: 98 },
-      { name: 'Manufacturing', score: 84 },
-      { name: 'Accounts and Finance', score: 82 },
-      { name: 'Logistics and Transportation', score: 81 },
-      { name: 'Bio Science and Research', score: 78 },
-      { name: 'Agriculture', score: 74 },
-      { name: 'Health Science', score: 74 }
+    // Generate career clusters based on assessment results
+    const generateClusterScore = (clusterName: string) => {
+      switch(clusterName) {
+        case 'Information Technology':
+          return Math.round((specificAptitudes.technical * 0.4) + (specificAptitudes.analytical * 0.4) + (specificAptitudes.numerical * 0.2));
+        case 'Science, Maths and Engineering':
+          return Math.round((specificAptitudes.analytical * 0.5) + (specificAptitudes.numerical * 0.3) + (specificAptitudes.technical * 0.2));
+        case 'Manufacturing':
+          return Math.round((specificAptitudes.technical * 0.5) + (specificAptitudes.mechanical * 0.5));
+        case 'Accounts and Finance':
+          return Math.round((specificAptitudes.numerical * 0.5) + (specificAptitudes.analytical * 0.3) + (specificAptitudes.detail * 0.2));
+        case 'Logistics and Transportation':
+          return Math.round((specificAptitudes.mechanical * 0.4) + (specificAptitudes.technical * 0.3) + (specificAptitudes.detail * 0.3));
+        case 'Bio Science and Research':
+          return Math.round((specificAptitudes.analytical * 0.5) + (specificAptitudes.detail * 0.3) + (specificAptitudes.technical * 0.2));
+        case 'Agriculture':
+          return Math.round((specificAptitudes.mechanical * 0.4) + (specificAptitudes.technical * 0.3) + (specificAptitudes.analytical * 0.3));
+        case 'Health Science':
+          return Math.round((specificAptitudes.analytical * 0.4) + (specificAptitudes.social * 0.4) + (specificAptitudes.detail * 0.2));
+        case 'Creative Arts':
+          return Math.round((specificAptitudes.creative * 0.7) + (specificAptitudes.social * 0.3));
+        case 'Education':
+          return Math.round((specificAptitudes.social * 0.5) + (specificAptitudes.verbal * 0.3) + (specificAptitudes.leadership * 0.2));
+        case 'Business Management':
+          return Math.round((specificAptitudes.leadership * 0.5) + (specificAptitudes.social * 0.3) + (specificAptitudes.business * 0.2));
+        case 'Media and Communication':
+          return Math.round((specificAptitudes.verbal * 0.4) + (specificAptitudes.creative * 0.4) + (specificAptitudes.social * 0.2));
+        default:
+          return 50; // Default baseline score
+      }
+    };
+    
+    const careerClusterNames = [
+      'Information Technology', 
+      'Science, Maths and Engineering', 
+      'Manufacturing', 
+      'Accounts and Finance',
+      'Logistics and Transportation', 
+      'Bio Science and Research', 
+      'Agriculture', 
+      'Health Science',
+      'Creative Arts',
+      'Education',
+      'Business Management',
+      'Media and Communication'
     ];
+    
+    // Generate scores for all clusters and sort by score
+    let clustersData = careerClusterNames.map(name => ({
+      name,
+      score: generateClusterScore(name)
+    }));
+    
+    // Sort by score in descending order
+    clustersData.sort((a, b) => b.score - a.score);
+    
+    // Take top 8 clusters
+    clustersData = clustersData.slice(0, 8);
     
     const clustersChartEndY = pdfUtils.addCareerClusters(doc, yPosition, clustersData);
     
     // Check if we need to add a new page
-    if (getYPosition(clustersChartEndY) > doc.internal.pageSize.height - 40) {
+    if (getYPosition(clustersChartEndY) > pageHeight - 40) {
       yPosition = addNewPage();
     } else {
       yPosition = getYPosition(clustersChartEndY) + 10;
     }
     
-    // Add selected career clusters
-    const selectedClustersData = [
-      {
-        rank: 1,
-        name: 'Information Technology',
-        description: [
-          'Information technology professionals work with Computer hardware, software or network systems.',
-          'You might design new computer equipment or work on a new computer game.',
-          'Some professionals provide support and manage software or hardware.'
-        ]
-      },
-      {
-        rank: 2,
-        name: 'Science, Maths and Engineering',
-        description: [
-          'Science, math and engineering, professionals do scientific research in laboratories or the field.',
-          'You will plan or design products and systems.',
-          'You will do research and read blueprints.'
-        ]
+    // Add selected career clusters (top 2)
+    const selectedClustersData = clustersData.slice(0, 2).map((cluster, index) => {
+      let description: string[] = [];
+      
+      switch(cluster.name) {
+        case 'Information Technology':
+          description = [
+            'Information technology professionals design, develop, and manage computer systems and networks.',
+            'Careers include software developer, cybersecurity analyst, database administrator, and IT consultant.',
+            'This field offers high growth potential with evolving technologies.'
+          ];
+          break;
+        case 'Science, Maths and Engineering':
+          description = [
+            'Science, math and engineering professionals apply technical knowledge to solve complex problems.',
+            'Careers include research scientist, engineer, data analyst, and mathematician.',
+            'These fields offer intellectually stimulating work with significant impact.'
+          ];
+          break;
+        case 'Manufacturing':
+          description = [
+            'Manufacturing professionals oversee the production of goods through various processes.',
+            'Careers include production manager, quality control specialist, and industrial engineer.',
+            'This field combines technical expertise with practical application.'
+          ];
+          break;
+        case 'Accounts and Finance':
+          description = [
+            'Finance professionals manage, analyze, and advise on financial matters for organizations.',
+            'Careers include accountant, financial analyst, investment advisor, and financial planner.',
+            'This field offers stability and opportunities across various industries.'
+          ];
+          break;
+        case 'Creative Arts':
+          description = [
+            'Creative professionals use artistic talent to express ideas and create experiences.',
+            'Careers include graphic designer, animator, photographer, and fine artist.',
+            'This field allows for personal expression and innovative thinking.'
+          ];
+          break;
+        case 'Education':
+          description = [
+            'Education professionals facilitate learning and development for students of all ages.',
+            'Careers include teacher, educational administrator, curriculum developer, and counselor.',
+            'This field offers the reward of making a significant impact on future generations.'
+          ];
+          break;
+        default:
+          description = [
+            `Professionals in ${cluster.name} apply specialized knowledge to their field.`,
+            'This career cluster offers various paths based on your specific interests and strengths.',
+            'Consider researching specific roles that align with your personal values and goals.'
+          ];
       }
-    ];
+      
+      return {
+        rank: index + 1,
+        name: cluster.name,
+        description
+      };
+    });
     
     const selectedClustersEndY = pdfUtils.addSelectedCareerClusters(doc, yPosition, selectedClustersData);
     
@@ -395,43 +714,91 @@ export const generatePDF = async (
     // Add section title for career paths
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Paths'));
     
-    // Prepare career paths data
-    const careerPathsData = [
-      {
-        careerTitle: 'Biochemistry',
-        category: 'Bio Science and Research',
-        description: 'Biochemist, Bio technologist, Clinical Scientist',
-        psychAnalysis: { score: 100, label: 'Very High' },
-        skillAbilities: { score: 70, label: 'High' },
+    // Use career recommendations from assessment data if available, otherwise generate from clusters
+    let careerPathsData = [];
+    
+    if (careerRecommendations && careerRecommendations.length > 0) {
+      // Use actual career recommendations from assessment
+      careerPathsData = careerRecommendations.slice(0, 2).map(career => ({
+        careerTitle: career.careerTitle || career.title,
+        category: selectedClustersData[0].name, // Associate with top cluster
+        description: career.keySkills?.join(', ') || 'Requires analytical and technical skills',
+        psychAnalysis: { 
+          score: career.suitabilityPercentage || career.match || 90, 
+          label: 'Very High' 
+        },
+        skillAbilities: { 
+          score: overallScore, 
+          label: getSkillLevel(overallScore) 
+        },
         comment: 'Top Choice'
-      },
-      {
-        careerTitle: 'Genetics',
-        category: 'Bio Science and Research',
-        description: 'Genetics Professor, Genetic Research Associate',
-        psychAnalysis: { score: 100, label: 'Very High' },
-        skillAbilities: { score: 73, label: 'High' },
-        comment: 'Top Choice'
-      }
-    ];
+      }));
+    } else {
+      // Generate generic career paths based on top clusters
+      careerPathsData = selectedClustersData.map(cluster => {
+        let careerTitle, description;
+        
+        switch(cluster.name) {
+          case 'Information Technology':
+            careerTitle = 'Software Developer';
+            description = 'Software Engineer, Web Developer, Mobile App Developer';
+            break;
+          case 'Science, Maths and Engineering':
+            careerTitle = 'Data Scientist';
+            description = 'Data Analyst, Research Scientist, Statistician';
+            break;
+          case 'Accounts and Finance':
+            careerTitle = 'Financial Analyst';
+            description = 'Accountant, Investment Advisor, Financial Planner';
+            break;
+          case 'Creative Arts':
+            careerTitle = 'UX/UI Designer';
+            description = 'Graphic Designer, Digital Artist, Product Designer';
+            break;
+          case 'Education':
+            careerTitle = 'Curriculum Developer';
+            description = 'Teacher, Educational Consultant, Instructional Designer';
+            break;
+          default:
+            careerTitle = `${cluster.name} Specialist`;
+            description = `Professional in ${cluster.name} field with specialized expertise`;
+        }
+        
+        return {
+          careerTitle,
+          category: cluster.name,
+          description,
+          psychAnalysis: { score: 90, label: 'Very High' },
+          skillAbilities: { score: overallScore, label: getSkillLevel(overallScore) },
+          comment: 'Top Choice'
+        };
+      });
+    }
     
     const careerPathsEndY = pdfUtils.addCareerPaths(doc, yPosition, careerPathsData);
     
     // Check if we need to add a new page
-    if (getYPosition(careerPathsEndY) > doc.internal.pageSize.height - 40) {
+    if (getYPosition(careerPathsEndY) > pageHeight - 40) {
       yPosition = addNewPage();
     } else {
       yPosition = getYPosition(careerPathsEndY) + 10;
     }
     
     // Add summary sheet
+    const dominantPersonality = personalityType.split(':');
+    const dominantInterests = interestData.slice(0, 2).map(i => i.name).join(' + ');
+    const dominantMotivators = motivatorData.slice(0, 3).map(m => m.name).join(' + ');
+    const dominantLearningStyle = learningStyleTitle;
+    const dominantSkills = `Numerical Ability[${specificAptitudes.numerical || 60}%] + Logical Ability[${specificAptitudes.analytical || 60}%] + Verbal Ability[${specificAptitudes.verbal || 60}%]`;
+    const selectedClusters = clustersData.slice(0, 3).map(c => c.name).join(' + ');
+    
     const summaryData = {
-      careerPersonality: 'Introvert + Sensing + Thinking + Judging',
-      careerInterest: 'Investigative + Realistic + Conventional',
-      careerMotivator: 'Independence + Social Service + Continuous Learning',
-      learningStyle: 'Read & Write Learning',
-      skillsAbilities: 'Numerical Ability[80%] + Logical Ability[60%] + Verbal Ability[100%]',
-      selectedClusters: 'Accounts and Finance + Information Technology + Science, Maths and Engineering'
+      careerPersonality: dominantPersonality.join(' + '),
+      careerInterest: dominantInterests,
+      careerMotivator: dominantMotivators,
+      learningStyle: dominantLearningStyle,
+      skillsAbilities: dominantSkills,
+      selectedClusters: selectedClusters
     };
     
     const summaryEndY = pdfUtils.addSummarySheet(doc, yPosition, summaryData);
@@ -457,6 +824,33 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
   developmentAreas
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [assessmentType, setAssessmentType] = useState<string>('');
+  
+  useEffect(() => {
+    // Fetch the assessment type if not provided in responses
+    const fetchAssessmentType = async () => {
+      if (responses?.assessmentType) {
+        setAssessmentType(responses.assessmentType);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_assessments')
+          .select('assessment_id')
+          .eq('id', reportId)
+          .single();
+          
+        if (data && !error) {
+          setAssessmentType(data.assessment_id);
+        }
+      } catch (error) {
+        console.error('Error fetching assessment type:', error);
+      }
+    };
+    
+    fetchAssessmentType();
+  }, [reportId, responses]);
   
   const handleGeneratePDF = async () => {
     try {
@@ -474,7 +868,7 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
       };
       
       // Determine if this is a junior assessment
-      const isJuniorAssessment = responses?.assessmentType === 'career-analysis-junior' || 
+      const isJuniorAssessment = assessmentType === 'career-analysis-junior' || 
                                 reportId.includes('junior');
       
       // Fetch AI-enhanced content from our API
@@ -519,6 +913,17 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
         enhancedContent
       );
       
+      // Update report_generated_at in the database
+      try {
+        await supabase
+          .from('user_assessments')
+          .update({ report_generated_at: new Date().toISOString() })
+          .eq('id', reportId);
+      } catch (dbError) {
+        console.error('Error updating report generation time:', dbError);
+        // Continue even if update fails
+      }
+      
       toast.success('PDF report generated successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -536,14 +941,14 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
           PDF Report Generation
         </CardTitle>
         <CardDescription>
-          Generate a comprehensive PDF report with your assessment results
+          Generate a comprehensive PDF report with your personalized assessment results
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
         <div className="flex flex-col items-center justify-center space-y-4">
           <p className="text-center text-muted-foreground max-w-lg">
             This report includes your personality profile, career interests, skill analysis, 
-            and personalized recommendations based on your assessment results.
+            and personalized recommendations based on your unique assessment results.
           </p>
           <Button 
             onClick={handleGeneratePDF} 
