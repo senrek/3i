@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { generatePDF } from './ReportPDFGenerator';
+import { Json } from '@/integrations/supabase/types';
 
 interface Assessment {
   id: string;
@@ -15,7 +16,8 @@ interface Assessment {
   report_generated_at: string | null;
   assessment_id: string;
   scores: any;
-  responses: Record<string, string>;
+  responses: Record<string, any>;
+  user_id: string;
 }
 
 const AssessmentHistoryList: React.FC = () => {
@@ -43,7 +45,8 @@ const AssessmentHistoryList: React.FC = () => {
         throw error;
       }
 
-      setAssessments(data || []);
+      // Cast the data to match our Assessment interface
+      setAssessments(data as Assessment[] || []);
     } catch (error) {
       console.error('Error fetching assessments:', error);
       toast.error('Failed to load assessment history');
@@ -113,7 +116,7 @@ const AssessmentHistoryList: React.FC = () => {
   };
 
   // Helper function to analyze responses to determine strengths and development areas
-  const analyzeResponses = (responses: Record<string, string>) => {
+  const analyzeResponses = (responses: Record<string, any>) => {
     // Default values if can't analyze properly
     const defaultStrengths = ['Problem Solving', 'Critical Thinking', 'Adaptability'];
     const defaultDevelopmentAreas = ['Technical Skills', 'Leadership', 'Time Management'];

@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { List, ListItem } from '@/components/ui/list';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RecommendationsListProps {
   responses: Record<string, string> | null;
@@ -11,131 +9,118 @@ interface RecommendationsListProps {
   developmentAreas: string[];
 }
 
-const RecommendationsList: React.FC<RecommendationsListProps> = ({ 
-  responses, 
-  strengthAreas, 
-  developmentAreas 
+const RecommendationsList: React.FC<RecommendationsListProps> = ({
+  responses,
+  strengthAreas,
+  developmentAreas
 }) => {
-  // Generate development recommendations based on development areas
-  const developmentRecommendations = developmentAreas.map(area => {
-    switch (area) {
-      case 'Technical Skills':
-        return 'Take online courses to improve your technical abilities';
-      case 'Leadership':
-        return 'Volunteer for leadership roles in group projects';
-      case 'Critical Thinking':
-        return 'Practice analyzing complex problems and consider multiple solutions';
-      case 'Career Focus':
-        return 'Research specific careers that match your interests';
-      case 'Interpersonal Skills':
-        return 'Join clubs or activities that require teamwork';
-      case 'Time Management':
-        return 'Use planning tools to organize your tasks and priorities';
-      default:
-        return `Focus on developing your ${area} through practice and learning`;
+  // Personalized recommendations based on assessment responses and areas
+  const getPersonalizedRecommendations = () => {
+    const recommendations: string[] = [];
+    
+    // Add recommendations based on strength areas
+    if (strengthAreas.includes('Analytical Thinking')) {
+      recommendations.push('Consider roles that require problem-solving and data analysis');
     }
-  });
-
-  // Generate strength-based recommendations
-  const strengthRecommendations = strengthAreas.map(strength => {
-    switch (strength) {
-      case 'Problem Solving':
-        return 'Pursue challenges that showcase your problem-solving abilities';
-      case 'Critical Thinking':
-        return 'Seek opportunities where analytical skills are valued';
-      case 'Creativity':
-        return 'Explore careers that allow creative expression';
-      case 'Communication Skills':
-        return 'Consider roles that involve presenting or explaining information';
-      case 'Leadership':
-        return 'Look for positions with leadership progression paths';
-      case 'Adaptability':
-        return 'Environments with variety and change would suit your flexible nature';
-      default:
-        return `Leverage your ${strength} in your academic and career choices`;
+    
+    if (strengthAreas.includes('Communication Skills')) {
+      recommendations.push('Look for opportunities that involve presenting information or working in teams');
     }
-  });
-
+    
+    if (strengthAreas.includes('Creativity')) {
+      recommendations.push('Explore careers that reward innovative thinking and creative solutions');
+    }
+    
+    if (strengthAreas.includes('Leadership')) {
+      recommendations.push('Seek leadership roles in group projects or extracurricular activities');
+    }
+    
+    if (strengthAreas.includes('Problem Solving')) {
+      recommendations.push('Consider STEM fields or careers with complex challenges to solve');
+    }
+    
+    // Add recommendations based on development areas
+    if (developmentAreas.includes('Technical Skills')) {
+      recommendations.push('Take online courses to strengthen technical abilities in your field of interest');
+    }
+    
+    if (developmentAreas.includes('Interpersonal Skills')) {
+      recommendations.push('Practice active listening and join activities that promote teamwork');
+    }
+    
+    if (developmentAreas.includes('Career Focus')) {
+      recommendations.push('Research industries thoroughly and arrange informational interviews with professionals');
+    }
+    
+    if (developmentAreas.includes('Critical Thinking')) {
+      recommendations.push('Engage in brain teasers, debates, and critical analysis of current events');
+    }
+    
+    if (developmentAreas.includes('Time Management')) {
+      recommendations.push('Use productivity tools and practice prioritizing tasks');
+    }
+    
+    if (developmentAreas.includes('Leadership')) {
+      recommendations.push('Volunteer for leadership positions in school or community projects');
+    }
+    
+    // Add general recommendations if needed
+    if (recommendations.length < 3) {
+      recommendations.push(
+        'Create a personal development plan with specific goals and timelines',
+        'Build a network of mentors and peers in your areas of interest',
+        'Keep a portfolio of your projects and achievements'
+      );
+    }
+    
+    return recommendations;
+  };
+  
+  const personalizedRecommendations = getPersonalizedRecommendations();
+  
   return (
     <div className="space-y-8">
-      <Card className="border border-border/50 rounded-lg shadow-sm">
-        <CardHeader className="bg-primary/5">
-          <CardTitle className="text-xl">Strengths to Leverage</CardTitle>
-          <CardDescription>
-            Areas where you show significant capabilities
-          </CardDescription>
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Strengths</CardTitle>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {strengthAreas.map((strength, index) => (
-              <Badge key={index} variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                {strength}
-              </Badge>
-            ))}
-          </div>
-          <ScrollArea className="h-[200px] rounded-md border p-4">
-            <List>
-              {strengthRecommendations.map((recommendation, index) => (
-                <ListItem key={index} className="py-2">
-                  {recommendation}
-                </ListItem>
-              ))}
-            </List>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-
-      <Card className="border border-border/50 rounded-lg shadow-sm">
-        <CardHeader className="bg-primary/5">
-          <CardTitle className="text-xl">Development Areas</CardTitle>
-          <CardDescription>
-            Areas with potential for growth and improvement
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {developmentAreas.map((area, index) => (
-              <Badge key={index} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                {area}
-              </Badge>
-            ))}
-          </div>
-          <ScrollArea className="h-[200px] rounded-md border p-4">
-            <List>
-              {developmentRecommendations.map((recommendation, index) => (
-                <ListItem key={index} className="py-2">
-                  {recommendation}
-                </ListItem>
-              ))}
-            </List>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-
-      <Card className="border border-border/50 rounded-lg shadow-sm">
-        <CardHeader className="bg-primary/5">
-          <CardTitle className="text-xl">Next Steps</CardTitle>
-          <CardDescription>
-            Recommended actions to advance your career development
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent>
           <List>
-            <ListItem className="py-2">
-              Research educational pathways that align with your identified strengths and interests
-            </ListItem>
-            <ListItem className="py-2">
-              Schedule an appointment with a career counselor to discuss your assessment results
-            </ListItem>
-            <ListItem className="py-2">
-              Explore extracurricular activities or courses to develop your identified growth areas
-            </ListItem>
-            <ListItem className="py-2">
-              Create a personal development plan with specific goals and timelines
-            </ListItem>
-            <ListItem className="py-2">
-              Connect with professionals in your fields of interest through networking events or informational interviews
-            </ListItem>
+            {strengthAreas.map((strength, index) => (
+              <ListItem key={index} className="py-2">
+                <span className="font-medium text-primary">• {strength}</span>
+              </ListItem>
+            ))}
+          </List>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Areas for Development</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <List>
+            {developmentAreas.map((area, index) => (
+              <ListItem key={index} className="py-2">
+                <span className="font-medium text-amber-600">• {area}</span>
+              </ListItem>
+            ))}
+          </List>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Personalized Recommendations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <List>
+            {personalizedRecommendations.map((recommendation, index) => (
+              <ListItem key={index} className="py-2">
+                <span className="text-gray-700">• {recommendation}</span>
+              </ListItem>
+            ))}
           </List>
         </CardContent>
       </Card>

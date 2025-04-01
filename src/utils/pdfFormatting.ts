@@ -1535,27 +1535,3 @@ export const addSummarySheet = (pdf: jsPDF, summaryData: {
   // Add footer
   addPageFooter(pdf, pdf.getNumberOfPages());
 };
-
-// Export functions
-export {
-  addHeaderWithLogo,
-  addReportTitle,
-  addUserInfo,
-  addDisclaimer,
-  addSectionTitle,
-  addProfilingSection,
-  addPageFooter,
-  addPersonalityTypeChart,
-  addPersonalityAnalysis,
-  addInterestBarChart,
-  addInterestAnalysis,
-  addCareerMotivatorChart,
-  addMotivatorAnalysis,
-  addLearningStylePieChart,
-  addLearningStyleAnalysis,
-  addSkillBarChart,
-  addCareerClusters,
-  addSelectedCareerClusters,
-  addCareerPaths,
-  addSummarySheet
-};
