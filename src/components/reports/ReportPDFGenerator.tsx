@@ -93,10 +93,10 @@ export const generatePDF = async (
     const profilingEndY = pdfUtils.addProfilingSection(doc, yPosition, profilingData);
 
     // Check if we need to add a new page
-    if (profilingEndY > doc.internal.pageSize.height - 40) {
+    if (profilingEndY.lastY > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = profilingEndY + 10;
+      yPosition = profilingEndY.lastY + 10;
     }
 
     // Add section title for personality
@@ -111,10 +111,10 @@ export const generatePDF = async (
     const personalityChartEndY = pdfUtils.addPersonalityTypeChart(doc, yPosition, personalityData, personalityType);
 
     // Check if we need to add a new page
-    if (personalityChartEndY > doc.internal.pageSize.height - 40) {
+    if (personalityChartEndY.lastY > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = personalityChartEndY + 10;
+      yPosition = personalityChartEndY.lastY + 10;
     }
 
     // Add personality analysis
@@ -135,10 +135,10 @@ export const generatePDF = async (
     const interestChartEndY = pdfUtils.addInterestBarChart(doc, yPosition, interestData);
 
     // Check if we need to add a new page
-    if (interestChartEndY > doc.internal.pageSize.height - 40) {
+    if (interestChartEndY.lastY > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = interestChartEndY + 10;
+      yPosition = interestChartEndY.lastY + 10;
     }
 
     // Add interest analysis
@@ -159,10 +159,10 @@ export const generatePDF = async (
     const motivatorChartEndY = pdfUtils.addCareerMotivatorChart(doc, yPosition, motivatorData);
 
     // Check if we need to add a new page
-    if (motivatorChartEndY > doc.internal.pageSize.height - 40) {
+    if (motivatorChartEndY.lastY > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = motivatorChartEndY + 10;
+      yPosition = motivatorChartEndY.lastY + 10;
     }
 
     // Add motivator analysis
@@ -183,10 +183,10 @@ export const generatePDF = async (
     const learningStyleChartEndY = pdfUtils.addLearningStylePieChart(doc, yPosition, learningStyleData);
 
     // Check if we need to add a new page
-    if (learningStyleChartEndY > doc.internal.pageSize.height - 40) {
+    if (learningStyleChartEndY.lastY > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = learningStyleChartEndY + 10;
+      yPosition = learningStyleChartEndY.lastY + 10;
     }
 
     // Add learning style analysis
@@ -219,10 +219,10 @@ export const generatePDF = async (
     const clustersChartEndY = pdfUtils.addCareerClusters(doc, yPosition, clustersData);
 
     // Check if we need to add a new page
-    if (clustersChartEndY > doc.internal.pageSize.height - 40) {
+    if (clustersChartEndY.lastY > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = clustersChartEndY + 10;
+      yPosition = clustersChartEndY.lastY + 10;
     }
 
     // Add selected career clusters
@@ -243,10 +243,10 @@ export const generatePDF = async (
     const careerPathsEndY = pdfUtils.addCareerPaths(doc, yPosition, careerPathsData);
 
     // Check if we need to add a new page
-    if (careerPathsEndY > doc.internal.pageSize.height - 40) {
+    if (careerPathsEndY.lastY > doc.internal.pageSize.height - 40) {
       yPosition = addNewPage();
     } else {
-      yPosition = careerPathsEndY + 10;
+      yPosition = careerPathsEndY.lastY + 10;
     }
 
     // Add summary sheet
