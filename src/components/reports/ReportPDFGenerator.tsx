@@ -1,14 +1,17 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+// Import autotable correctly
+import autoTable from 'jspdf-autotable';
 import { safeRoundedRect, getYPosition, addNewPage, getCareerRecommendationsForClass } from '@/utils/pdfUtils';
 import { toast } from 'sonner';
 
+// Define the autoTable type for jsPDF
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => any;
+    autoTable: typeof autoTable;
     lastAutoTable: {
       finalY: number;
     };

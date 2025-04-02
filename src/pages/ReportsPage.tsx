@@ -6,11 +6,11 @@ import { toast } from 'sonner';
 import ReportHeader from '@/components/reports/ReportHeader';
 import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
-import { generatePDF } from '@/components/reports/ReportPDFGenerator';
+import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
+import Layout from '@/components/layout/Layout';
 
 interface ReportScores {
   aptitude: number;
@@ -249,69 +249,71 @@ const ReportsPage = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <ReportHeader />
+    <Layout>
+      <div className="space-y-8">
+        <ReportHeader />
 
-      {isLoading ? (
-        <LoadingPlaceholder />
-      ) : error ? (
-        <div className="text-center py-12 space-y-4">
-          <h3 className="text-lg font-medium text-red-600">Error loading report data</h3>
-          <p className="text-muted-foreground">{error}</p>
-          <Button asChild>
-            <Link to="/assessments">Go to Assessments</Link>
-          </Button>
-        </div>
-      ) : (
-        <>
-          <ReportSummaryCard 
-            reportData={reportData} 
-            formatDate={formatDate} 
-          />
+        {isLoading ? (
+          <LoadingPlaceholder />
+        ) : error ? (
+          <div className="text-center py-12 space-y-4">
+            <h3 className="text-lg font-medium text-red-600">Error loading report data</h3>
+            <p className="text-muted-foreground">{error}</p>
+            <Button asChild>
+              <Link to="/assessments">Go to Assessments</Link>
+            </Button>
+          </div>
+        ) : (
+          <>
+            <ReportSummaryCard 
+              reportData={reportData} 
+              formatDate={formatDate} 
+            />
 
-          {reportData?.assessmentCompleted && reportData?.scores && (
-            <>
-              <ReportPDFGenerator 
-                reportId={reportData.id} 
-                userName={reportData.userName} 
-                scores={reportData.scores}
-                responses={reportData.responses}
-                strengthAreas={reportData.strengthAreas}
-                developmentAreas={reportData.developmentAreas}
-              />
-              
-              <ReportTabs 
-                reportId={reportData.id} 
-                skillData={[
-                  { name: 'Analytical', value: reportData.scores.aptitude, fullMark: 100 },
-                  { name: 'Communication', value: Math.round(reportData.scores.personality * 0.8), fullMark: 100 },
-                  { name: 'Technical', value: Math.round(reportData.scores.aptitude * 0.9), fullMark: 100 },
-                  { name: 'Creativity', value: Math.round(reportData.scores.interest * 0.7), fullMark: 100 },
-                  { name: 'Leadership', value: Math.round(reportData.scores.personality * 0.6), fullMark: 100 },
-                  { name: 'Problem Solving', value: Math.round(reportData.scores.aptitude * 0.85), fullMark: 100 },
-                ]} 
-                responses={reportData.responses}
-                strengthAreas={reportData.strengthAreas}
-                developmentAreas={reportData.developmentAreas}
-              />
-            </>
-          )}
+            {reportData?.assessmentCompleted && reportData?.scores && (
+              <>
+                <ReportPDFGenerator 
+                  reportId={reportData.id} 
+                  userName={reportData.userName} 
+                  scores={reportData.scores}
+                  responses={reportData.responses}
+                  strengthAreas={reportData.strengthAreas}
+                  developmentAreas={reportData.developmentAreas}
+                />
+                
+                <ReportTabs 
+                  reportId={reportData.id} 
+                  skillData={[
+                    { name: 'Analytical', value: reportData.scores.aptitude, fullMark: 100 },
+                    { name: 'Communication', value: Math.round(reportData.scores.personality * 0.8), fullMark: 100 },
+                    { name: 'Technical', value: Math.round(reportData.scores.aptitude * 0.9), fullMark: 100 },
+                    { name: 'Creativity', value: Math.round(reportData.scores.interest * 0.7), fullMark: 100 },
+                    { name: 'Leadership', value: Math.round(reportData.scores.personality * 0.6), fullMark: 100 },
+                    { name: 'Problem Solving', value: Math.round(reportData.scores.aptitude * 0.85), fullMark: 100 },
+                  ]} 
+                  responses={reportData.responses}
+                  strengthAreas={reportData.strengthAreas}
+                  developmentAreas={reportData.developmentAreas}
+                />
+              </>
+            )}
 
-          {!reportData?.assessmentCompleted && (
-            <div className="text-center py-12 space-y-6">
-              <h3 className="text-xl font-medium">No assessment results found</h3>
-              <p className="text-muted-foreground max-w-lg mx-auto">
-                Complete the Career Analysis Assessment to receive personalized career recommendations,
-                skill analysis, and a comprehensive PDF report for your career planning.
-              </p>
-              <Button asChild size="lg" className="mt-4">
-                <Link to="/assessments/career-analysis">Take Assessment Now</Link>
-              </Button>
-            </div>
-          )}
-        </>
-      )}
-    </div>
+            {!reportData?.assessmentCompleted && (
+              <div className="text-center py-12 space-y-6">
+                <h3 className="text-xl font-medium">No assessment results found</h3>
+                <p className="text-muted-foreground max-w-lg mx-auto">
+                  Complete the Career Analysis Assessment to receive personalized career recommendations,
+                  skill analysis, and a comprehensive PDF report for your career planning.
+                </p>
+                <Button asChild size="lg" className="mt-4">
+                  <Link to="/assessments/career-analysis">Take Assessment Now</Link>
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </Layout>
   );
 };
 
