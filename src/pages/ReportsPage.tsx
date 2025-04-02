@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import ReportHeader from '@/components/reports/ReportHeader';
 import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
-import ReportPDFGenerator, { generatePDF } from '@/components/reports/ReportPDFGenerator';
+import { generatePDF } from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
 
 interface ReportScores {
   aptitude: number;
@@ -71,6 +72,10 @@ const ReportsPage = () => {
           console.warn("Could not fetch profile data:", profileError);
           // Continue with default name handling
         }
+        
+        const userName = profileData 
+          ? `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || user.email
+          : user.email;
         
         const { data: assessments, error: assessmentError } = await supabase
           .from('user_assessments')
