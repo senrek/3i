@@ -6,12 +6,11 @@ import { toast } from 'sonner';
 import ReportHeader from '@/components/reports/ReportHeader';
 import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
-import { generatePDF } from '@/components/reports/ReportPDFGenerator';
+import ReportPDFGenerator, { generatePDF } from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
-// Define a proper type for scores
 interface ReportScores {
   aptitude: number;
   personality: number;
@@ -54,7 +53,6 @@ const ReportsPage = () => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch report data from Supabase
   useEffect(() => {
     const fetchReportData = async () => {
       if (!user) return;
@@ -63,7 +61,6 @@ const ReportsPage = () => {
         setError(null);
         console.log("Fetching report data for user:", user.id);
         
-        // First fetch the user profile to get name information
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('first_name, last_name, email')
@@ -75,7 +72,6 @@ const ReportsPage = () => {
           // Continue with default name handling
         }
         
-        // Then fetch assessment data separately
         const { data: assessments, error: assessmentError } = await supabase
           .from('user_assessments')
           .select('*')
@@ -94,25 +90,15 @@ const ReportsPage = () => {
           const assessment = assessments[0];
           console.log("Working with assessment:", assessment);
           
-          // Construct user name from profile data if available, otherwise use user email
-          const firstName = profileData?.first_name || '';
-          const lastName = profileData?.last_name || '';
-          const userName = (firstName || lastName) 
-            ? `${firstName} ${lastName}`.trim()
-            : user.email || 'User';
-          
-          // Ensure scores has the right structure
           let validScores: ReportScores | null = null;
           let responses: Record<string, string> | null = null;
           let strengthAreas: string[] = [];
           let developmentAreas: string[] = [];
           
           if (assessment.scores) {
-            // Convert from Json to the expected format
             const scoresObj = assessment.scores as Record<string, any>;
             console.log("Raw scores:", scoresObj);
             
-            // Extract values with proper type checking
             try {
               validScores = {
                 aptitude: typeof scoresObj.aptitude === 'number' ? scoresObj.aptitude : 0,
@@ -136,12 +122,10 @@ const ReportsPage = () => {
               responses = assessment.responses as Record<string, string>;
               console.log("Responses sample:", Object.keys(responses).slice(0, 3));
               
-              // Generate insights based on responses
               const aptitudeQuestions = Object.entries(responses).filter(([id]) => id.startsWith('apt_'));
               const personalityQuestions = Object.entries(responses).filter(([id]) => id.startsWith('per_'));
               const interestQuestions = Object.entries(responses).filter(([id]) => id.startsWith('int_'));
               
-              // Generate strength areas based on high-scoring answers (A and B)
               if (aptitudeQuestions.filter(([, val]) => val === 'A' || val === 'B').length > 3) {
                 strengthAreas.push('Analytical Thinking');
               }
@@ -158,7 +142,6 @@ const ReportsPage = () => {
                 strengthAreas.push('Leadership');
               }
               
-              // Generate development areas based on low-scoring answers (C and D)
               if (aptitudeQuestions.filter(([, val]) => val === 'C' || val === 'D').length > 2) {
                 developmentAreas.push('Technical Skills');
               }
@@ -172,7 +155,6 @@ const ReportsPage = () => {
                 developmentAreas.push('Critical Thinking');
               }
               
-              // Ensure we have at least some default values if nothing is detected
               if (strengthAreas.length === 0) {
                 strengthAreas = ['Problem Solving', 'Critical Thinking', 'Adaptability'];
               }
@@ -222,7 +204,6 @@ const ReportsPage = () => {
         setError(errorMessage);
         toast.error(errorMessage);
         
-        // Still set default data to prevent UI breaks
         setReportData({
           id: 'error',
           completedAt: new Date().toISOString(),
@@ -242,12 +223,10 @@ const ReportsPage = () => {
     fetchReportData();
   }, [user]);
 
-  // Format date for display - with error handling
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
       
-      // Check if date is valid
       if (isNaN(date.getTime())) {
         console.warn('Invalid date string:', dateString);
         return 'N/A';
