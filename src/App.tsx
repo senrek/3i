@@ -32,6 +32,7 @@ function App() {
             
             <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
             <Route path="/assessments" element={<RequireAuth><AssessmentsPage /></RequireAuth>} />
+            <Route path="/assessments/career-analysis" element={<RequireAuth><AssessmentTakePage /></RequireAuth>} />
             <Route path="/assessment/:assessmentId" element={<RequireAuth><AssessmentTakePage /></RequireAuth>} />
             <Route path="/reports" element={<RequireAuth><ReportsPage /></RequireAuth>} />
             <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />

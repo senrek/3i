@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SkillRadarChart from './SkillRadarChart';
 import RecommendationsList from './RecommendationsList';
 import AssessmentHistoryList from './AssessmentHistoryList';
+import CareerMatchesTab from './CareerMatchesTab';
 
 interface ReportTabsProps {
   reportId: string;
@@ -37,7 +38,12 @@ const ReportTabs: React.FC<ReportTabsProps> = ({
         <p className="text-muted-foreground">
           Explore career paths that align with your unique skills and interests.
         </p>
-        {/* Career matches content will be implemented in future updates */}
+        <CareerMatchesTab 
+          reportId={reportId} 
+          responses={responses}
+          strengthAreas={strengthAreas}
+          developmentAreas={developmentAreas}
+        />
       </TabsContent>
       
       <TabsContent value="skill-analysis" className="space-y-8">
