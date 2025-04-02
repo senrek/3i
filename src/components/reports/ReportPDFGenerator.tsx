@@ -1,6 +1,11 @@
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { FileDown } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { safeRoundedRect, getYPosition, addNewPage, getCareerRecommendationsForClass } from '@/utils/pdfUtils';
+import { toast } from 'sonner';
 
 // Define types for user info and assessment data
 interface UserInfo {
@@ -11,6 +16,15 @@ interface UserInfo {
   location: string;
   school: string;
   class: string;
+}
+
+interface ReportPDFGeneratorProps {
+  reportId: string;
+  userName: string;
+  scores: any;
+  responses: Record<string, any> | null;
+  strengthAreas: string[];
+  developmentAreas: string[];
 }
 
 // Main function to generate PDF report
@@ -421,3 +435,62 @@ const getScoreDescription = (score: number, isJunior: boolean = false): string =
     return 'Needs Significant Improvement - This is an area requiring dedicated attention';
   }
 };
+
+// Component that renders a button to generate PDF
+const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
+  reportId,
+  userName,
+  scores,
+  responses,
+  strengthAreas,
+  developmentAreas
+}) => {
+  const handleGeneratePDF = async () => {
+    try {
+      // Determine if this is a junior assessment based on class value
+      // We'll extract class from responses if available
+      const userClass = responses?.class || responses?.userClass || '';
+      const isJuniorAssessment = ['8', '9', '10'].includes(userClass);
+      
+      // Prepare user info
+      const userInfo: UserInfo = {
+        name: userName || 'Student',
+        email: responses?.email || '',
+        phone: responses?.phone || '',
+        age: responses?.age || '',
+        location: responses?.location || '',
+        school: responses?.school || '',
+        class: userClass || '',
+      };
+      
+      await generatePDF(
+        reportId,
+        userInfo,
+        scores,
+        responses || {},
+        strengthAreas || [],
+        developmentAreas || [],
+        isJuniorAssessment
+      );
+      
+      toast.success('PDF report generated successfully!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF report. Please try again.');
+    }
+  };
+
+  return (
+    <div className="flex justify-end mb-6">
+      <Button 
+        onClick={handleGeneratePDF}
+        className="flex items-center gap-2"
+      >
+        <FileDown className="h-4 w-4" />
+        Download PDF Report
+      </Button>
+    </div>
+  );
+};
+
+export default ReportPDFGenerator;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { toast } from 'sonner';
 import ReportHeader from '@/components/reports/ReportHeader';
 import LoadingPlaceholder from '@/components/reports/LoadingPlaceholder';
 import ReportSummaryCard from '@/components/reports/ReportSummaryCard';
-import ReportPDFGenerator from '@/components/reports/ReportPDFGenerator';
+import { generatePDF } from '@/components/reports/ReportPDFGenerator';
 import ReportTabs from '@/components/reports/ReportTabs';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
