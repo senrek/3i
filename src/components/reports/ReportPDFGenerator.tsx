@@ -210,7 +210,7 @@ export const generatePDF = async (
     
     doc.setFillColor(secondaryColor);
     // Fix for error on line 100 - providing all 7 required arguments
-    safeRoundedRect(doc, 20, y, 80, 10, 2, 'F');
+    safeRoundedRect(doc, 20, y, 80, 10, 2, 'F', 'F');
     doc.setTextColor('#ffffff');
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -227,7 +227,7 @@ export const generatePDF = async (
     
     doc.setFillColor(secondaryColor);
     // Fix for error on line 170 - providing all 7 required arguments
-    safeRoundedRect(doc, 110, y - 15, 80, 10, 2, 'F');
+    safeRoundedRect(doc, 110, y - 15, 80, 10, 2, 'F', 'F');
     doc.setTextColor('#ffffff');
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
