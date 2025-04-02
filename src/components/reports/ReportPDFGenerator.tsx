@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
@@ -33,15 +32,12 @@ export const generatePDF = async (
     console.log('User info:', userInfo);
     console.log('Scores:', scores);
     
-    // Create new PDF document
     const doc = new jsPDF();
     let currentPage = 1;
     
-    // Store original page size
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
     
-    // Helper function to get the Y position from a result that might be a number or {lastY: number}
     const getYPosition = (result: any): number => {
       if (typeof result === 'number') {
         return result;
@@ -49,50 +45,37 @@ export const generatePDF = async (
       if (result && typeof result.lastY === 'number') {
         return result.lastY;
       }
-      // Default value if result is unexpected
       console.warn('Unexpected Y position result:', result);
       return 20;
     };
     
-    // Helper function to add a new page
     const addNewPage = () => {
       doc.addPage();
       currentPage++;
       
-      // Add header and footer to new page
       const headerEndY = pdfUtils.addHeaderWithLogo(doc);
       pdfUtils.addPageFooter(doc, userInfo.name, currentPage);
       
-      // Return starting Y position for content
       return getYPosition(headerEndY);
     };
     
-    // Start building the report
-    // Add header
     let yPosition = getYPosition(pdfUtils.addHeaderWithLogo(doc));
     
-    // Add report title
     yPosition = getYPosition(pdfUtils.addReportTitle(doc));
     
-    // Add user info
     yPosition = getYPosition(pdfUtils.addUserInfo(doc, userInfo));
     
-    // Add disclaimer
     yPosition = getYPosition(pdfUtils.addDisclaimer(doc, yPosition));
     
-    // Add page footer
     pdfUtils.addPageFooter(doc, userInfo.name, currentPage);
     
-    // Extract data from scores to use for the report sections
     const analysisInsights = scores?.analysisInsights || {};
     const specificAptitudes = analysisInsights?.specificAptitudes || {};
     const personalityTraits = analysisInsights?.personalityTraits || {};
     const careerRecommendations = scores?.careerRecommendations || [];
     
-    // Add section title for profiling
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Planning Profiling'));
     
-    // Determine career planning stage based on scores
     let careerStage = 'Exploratory';
     if (specificAptitudes.leadership > 70 && specificAptitudes.analytical > 65) {
       careerStage = 'Focused';
@@ -102,7 +85,6 @@ export const generatePDF = async (
       careerStage = 'Technical Specialist';
     }
     
-    // Prepare profiling data based on user's scores
     const profilingData = {
       currentStage: careerStage,
       description: enhancedContent?.metadata?.careerDescription || 
@@ -118,23 +100,18 @@ export const generatePDF = async (
       yPosition = getYPosition(profilingEndY) + 10;
     } catch (error) {
       console.error('Error adding profiling section:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Check if we need to add a new page
     if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
     }
     
-    // Add section title for personality
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Personality'));
     
-    // Determine personality type based on scores
     const personalityType = enhancedContent?.metadata?.personalityType || 
       `${personalityTraits.extroverted ? 'Extrovert' : 'Introvert'}:${analysisInsights.aptitudeStyle === 'analytical' ? 'Sensing' : 'Intuitive'}:${personalityTraits.peopleOriented ? 'Feeling' : 'Thinking'}:${personalityTraits.structured ? 'Judging' : 'Perceiving'}`;
     
-    // Prepare personality data with percentages based on user's scores
     const personalityData = {
       introvertExtrovert: { 
         introvert: personalityTraits.extroverted ? 30 : 70, 
@@ -159,16 +136,13 @@ export const generatePDF = async (
       yPosition = getYPosition(personalityChartEndY) + 10;
     } catch (error) {
       console.error('Error adding personality chart:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Check if we need to add a new page
     if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
     }
     
-    // Customize personality analysis descriptions based on personality traits
     const personalityAnalysisData = {
       focusEnergy: personalityTraits.extroverted ? [
         'You thrive on external stimulation and interaction with others.',
@@ -208,23 +182,17 @@ export const generatePDF = async (
       yPosition = getYPosition(personalityAnalysisEndY) + 10;
     } catch (error) {
       console.error('Error adding personality analysis:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Add new page for Interest section
     yPosition = addNewPage();
     
-    // Add section title for interest
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Interest'));
     
-    // Generate interest data based on scores
     const calculateInterestScore = (category: string, baseScore: number) => {
-      // Scale the score to be between 0-100
       return Math.min(100, Math.max(0, baseScore));
     };
     
-    // Create interest profile based on assessment results
     const interestData = [
       { 
         name: 'Investigative', 
@@ -252,7 +220,6 @@ export const generatePDF = async (
       }
     ];
     
-    // Sort interest data by value in descending order
     interestData.sort((a, b) => b.value - a.value);
     
     try {
@@ -260,16 +227,13 @@ export const generatePDF = async (
       yPosition = getYPosition(interestChartEndY) + 10;
     } catch (error) {
       console.error('Error adding interest chart:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Check if we need to add a new page
     if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
     }
     
-    // Prepare interest analysis based on top interests
     const interestAnalysisData = interestData.slice(0, 2).map(interest => {
       let points: string[] = [];
       
@@ -324,17 +288,13 @@ export const generatePDF = async (
       yPosition = getYPosition(interestAnalysisEndY) + 10;
     } catch (error) {
       console.error('Error adding interest analysis:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Add new page for Career Motivator section
     yPosition = addNewPage();
     
-    // Add section title for motivator
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Motivator'));
     
-    // Generate motivator data based on personality traits and interests
     const motivatorData = [
       { 
         name: 'Independence', 
@@ -366,7 +326,6 @@ export const generatePDF = async (
       }
     ];
     
-    // Sort motivator data by value in descending order
     motivatorData.sort((a, b) => b.value - a.value);
     
     try {
@@ -374,16 +333,13 @@ export const generatePDF = async (
       yPosition = getYPosition(motivatorChartEndY) + 10;
     } catch (error) {
       console.error('Error adding motivator chart:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Check if we need to add a new page
     if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
     }
     
-    // Prepare motivator analysis based on top motivators
     const motivatorAnalysisData = motivatorData.slice(0, 2).map(motivator => {
       let points: string[] = [];
       
@@ -438,17 +394,13 @@ export const generatePDF = async (
       yPosition = getYPosition(motivatorAnalysisEndY) + 10;
     } catch (error) {
       console.error('Error adding motivator analysis:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Add new page for Learning Style section
     yPosition = addNewPage();
     
-    // Add section title for learning style
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Learning Style'));
     
-    // Determine learning style percentages based on assessment
     const learningStyleKey = analysisInsights.learningStyle || 'visual';
     const learningStyleData = [
       { 
@@ -469,7 +421,6 @@ export const generatePDF = async (
       }
     ];
     
-    // Ensure values add up to 100%
     const totalValue = learningStyleData.reduce((sum, item) => sum + item.value, 0);
     learningStyleData.forEach(item => {
       item.value = Math.round((item.value / totalValue) * 100);
@@ -480,16 +431,13 @@ export const generatePDF = async (
       yPosition = getYPosition(learningStyleChartEndY) + 10;
     } catch (error) {
       console.error('Error adding learning style chart:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Check if we need to add a new page
     if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
     }
     
-    // Prepare learning style analysis based on dominant style
     let learningStyleTitle, learningStyleDescription, learningStyleStrategies;
     
     switch(learningStyleKey) {
@@ -565,17 +513,13 @@ export const generatePDF = async (
       yPosition = getYPosition(learningStyleAnalysisEndY) + 10;
     } catch (error) {
       console.error('Error adding learning style analysis:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Add new page for Skills section
     yPosition = addNewPage();
     
-    // Add section title for skills
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Skills and Abilities'));
     
-    // Generate skills data based on assessment scores
     const getSkillLevel = (score: number) => {
       if (score >= 80) return 'Excellent';
       if (score >= 70) return 'Good';
@@ -584,7 +528,6 @@ export const generatePDF = async (
       return 'Developing';
     };
     
-    // Calculate overall score as average of all specific aptitudes
     const aptitudeScores = Object.values(specificAptitudes).filter(score => typeof score === 'number') as number[];
     const overallScore = aptitudeScores.length > 0 
       ? Math.round(aptitudeScores.reduce((sum, score) => sum + score, 0) / aptitudeScores.length)
@@ -631,17 +574,13 @@ export const generatePDF = async (
       yPosition = getYPosition(skillsEndY) + 10;
     } catch (error) {
       console.error('Error adding skills chart:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Add new page for Career Clusters section
     yPosition = addNewPage();
     
-    // Add section title for career clusters
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Clusters'));
     
-    // Generate career clusters based on assessment results
     const generateClusterScore = (clusterName: string) => {
       switch(clusterName) {
         case 'Information Technology':
@@ -669,7 +608,7 @@ export const generatePDF = async (
         case 'Media and Communication':
           return Math.round((specificAptitudes.verbal || 50) * 0.4 + (specificAptitudes.creative || 50) * 0.4 + (specificAptitudes.social || 50) * 0.2);
         default:
-          return 50; // Default baseline score
+          return 50;
       }
     };
     
@@ -688,16 +627,13 @@ export const generatePDF = async (
       'Media and Communication'
     ];
     
-    // Generate scores for all clusters and sort by score
     let clustersData = careerClusterNames.map(name => ({
       name,
       score: generateClusterScore(name)
     }));
     
-    // Sort by score in descending order
     clustersData.sort((a, b) => b.score - a.score);
     
-    // Take top 8 clusters
     clustersData = clustersData.slice(0, 8);
     
     try {
@@ -705,16 +641,13 @@ export const generatePDF = async (
       yPosition = getYPosition(clustersChartEndY) + 10;
     } catch (error) {
       console.error('Error adding career clusters chart:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Check if we need to add a new page
     if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
     }
     
-    // Add selected career clusters (top 2)
     const selectedClustersData = clustersData.slice(0, 2).map((cluster, index) => {
       let description: string[] = [];
       
@@ -781,24 +714,19 @@ export const generatePDF = async (
       yPosition = getYPosition(selectedClustersEndY) + 10;
     } catch (error) {
       console.error('Error adding selected career clusters:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Add new page for Career Paths section
     yPosition = addNewPage();
     
-    // Add section title for career paths
     yPosition = getYPosition(pdfUtils.addSectionTitle(doc, yPosition, 'Career Paths'));
     
-    // Use career recommendations from assessment data if available, otherwise generate from clusters
     let careerPathsData = [];
     
     if (careerRecommendations && careerRecommendations.length > 0) {
-      // Use actual career recommendations from assessment
       careerPathsData = careerRecommendations.slice(0, 2).map(career => ({
         careerTitle: career.careerTitle || career.title || "Career Path",
-        category: selectedClustersData[0]?.name || "General", // Associate with top cluster
+        category: selectedClustersData[0]?.name || "General",
         description: career.keySkills?.join(', ') || 'Requires analytical and technical skills',
         psychAnalysis: { 
           score: career.suitabilityPercentage || career.match || 90, 
@@ -811,7 +739,6 @@ export const generatePDF = async (
         comment: 'Top Choice'
       }));
     } else {
-      // Generate generic career paths based on top clusters
       careerPathsData = selectedClustersData.map(cluster => {
         let careerTitle, description;
         
@@ -857,16 +784,13 @@ export const generatePDF = async (
       yPosition = getYPosition(careerPathsEndY) + 10;
     } catch (error) {
       console.error('Error adding career paths:', error);
-      // Continue with next section
       yPosition += 10;
     }
     
-    // Check if we need to add a new page
     if (yPosition > pageHeight - 40) {
       yPosition = addNewPage();
     }
     
-    // Add summary sheet
     const dominantPersonality = personalityType.split(':');
     const dominantInterests = interestData.slice(0, 2).map(i => i.name).join(' + ');
     const dominantMotivators = motivatorData.slice(0, 3).map(m => m.name).join(' + ');
@@ -888,10 +812,9 @@ export const generatePDF = async (
       yPosition = getYPosition(summaryEndY) + 10;
     } catch (error) {
       console.error('Error adding summary sheet:', error);
-      // Proceed to save the PDF anyway
+      yPosition += 10;
     }
     
-    // Save the PDF
     const reportName = `career_report_${reportId}.pdf`;
     doc.save(reportName);
     
@@ -915,7 +838,6 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
   const [assessmentType, setAssessmentType] = useState<string>('');
   
   useEffect(() => {
-    // Fetch the assessment type if not provided in responses
     const fetchAssessmentType = async () => {
       if (responses?.assessmentType) {
         setAssessmentType(responses.assessmentType);
@@ -944,7 +866,6 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
     try {
       setIsGenerating(true);
       
-      // Prepare user info for the PDF
       const userInfo = {
         name: userName,
         email: responses?.email || '',
@@ -955,11 +876,9 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
         class: responses?.class || ''
       };
       
-      // Determine if this is a junior assessment
       const isJuniorAssessment = assessmentType === 'career-analysis-junior' || 
                                 reportId.includes('junior');
       
-      // Fetch AI-enhanced content from our API
       let enhancedContent = null;
       try {
         const response = await fetch('/api/generate-ai-content', {
@@ -989,7 +908,6 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
         // Continue with standard content if AI enhancement fails
       }
       
-      // Generate the PDF
       await generatePDF(
         reportId,
         userInfo,
@@ -1001,7 +919,6 @@ const ReportPDFGenerator: React.FC<ReportPDFGeneratorProps> = ({
         enhancedContent
       );
       
-      // Update report_generated_at in the database
       try {
         await supabase
           .from('user_assessments')

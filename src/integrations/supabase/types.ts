@@ -42,96 +42,12 @@ export type Database = {
         }
         Relationships: []
       }
-      skill_assessments: {
-        Row: {
-          assessment_id: string
-          clerical_score: number
-          completed_at: string | null
-          created_at: string | null
-          id: string
-          leadership_score: number
-          logical_score: number
-          mechanical_score: number
-          numerical_score: number
-          overall_score: number
-          social_score: number
-          spatial_score: number
-          user_id: string
-          verbal_score: number
-        }
-        Insert: {
-          assessment_id: string
-          clerical_score: number
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          leadership_score: number
-          logical_score: number
-          mechanical_score: number
-          numerical_score: number
-          overall_score: number
-          social_score: number
-          spatial_score: number
-          user_id: string
-          verbal_score: number
-        }
-        Update: {
-          assessment_id?: string
-          clerical_score?: number
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          leadership_score?: number
-          logical_score?: number
-          mechanical_score?: number
-          numerical_score?: number
-          overall_score?: number
-          social_score?: number
-          spatial_score?: number
-          user_id?: string
-          verbal_score?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "skill_assessments_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "user_assessments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      skills_assessment_responses: {
-        Row: {
-          answers: Json
-          completed_at: string
-          created_at: string | null
-          id: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          answers: Json
-          completed_at: string
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          answers?: Json
-          completed_at?: string
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       user_assessments: {
         Row: {
           assessment_id: string
+          assessment_type: string
           completed_at: string | null
+          grade_level: number
           id: string
           report_generated_at: string | null
           responses: Json
@@ -140,7 +56,9 @@ export type Database = {
         }
         Insert: {
           assessment_id: string
+          assessment_type?: string
           completed_at?: string | null
+          grade_level?: number
           id?: string
           report_generated_at?: string | null
           responses: Json
@@ -149,7 +67,9 @@ export type Database = {
         }
         Update: {
           assessment_id?: string
+          assessment_type?: string
           completed_at?: string | null
+          grade_level?: number
           id?: string
           report_generated_at?: string | null
           responses?: Json
