@@ -103,6 +103,7 @@ const CareerMatchesTab: React.FC<CareerMatchesTabProps> = ({ reportId, responses
             key={index}
             career={career}
             index={index}
+            reportId={reportId}
           />
         ))}
       </div>

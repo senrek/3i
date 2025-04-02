@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +17,41 @@ interface CareerResultCardProps {
   workNature?: string[];
 }
 
-const CareerResultCard = ({
+interface CareerWithIndexProps {
+  career: {
+    title: string;
+    match: number;
+    description: string;
+    keySkills: string[];
+    educationPathways: string[];
+    workEnvironment: string;
+    growthOpportunities: string;
+  };
+  index: number;
+  reportId: string;
+}
+
+const CareerResultCard = (props: CareerResultCardProps | CareerWithIndexProps) => {
+  if ('career' in props) {
+    const { career, index, reportId } = props;
+    return (
+      <CareerResultCardImpl
+        title={career.title}
+        matchPercentage={career.match}
+        description={career.description}
+        skills={career.keySkills || []}
+        isPrimary={index === 0}
+        reportId={reportId}
+        educationPathways={career.educationPathways || []}
+        workNature={[career.workEnvironment, career.growthOpportunities].filter(Boolean)}
+      />
+    );
+  }
+  
+  return <CareerResultCardImpl {...props} />;
+};
+
+const CareerResultCardImpl = ({
   title,
   matchPercentage,
   description,
@@ -73,11 +106,15 @@ const CareerResultCard = ({
         <div className="space-y-1">
           <p className="text-sm font-medium">Key Skills</p>
           <div className="flex flex-wrap gap-2">
-            {skills.slice(0, 4).map((skill, index) => (
-              <Badge key={index} variant="outline" className="bg-background">
-                {skill}
-              </Badge>
-            ))}
+            {skills && skills.length > 0 ? (
+              skills.slice(0, 4).map((skill, index) => (
+                <Badge key={index} variant="outline" className="bg-background">
+                  {skill}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-muted-foreground">No skills listed</span>
+            )}
           </div>
         </div>
 
