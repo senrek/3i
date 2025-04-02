@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,7 @@ import { FileDown, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { generatePDF } from './ReportPDFGenerator';
 import { Json } from '@/integrations/supabase/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Assessment {
   id: string;
@@ -25,12 +25,30 @@ const AssessmentHistoryList: React.FC = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [generatingPDF, setGeneratingPDF] = useState<string | null>(null);
+  const [userClass, setUserClass] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
     if (user) {
+      fetchUserClass();
       fetchAssessments();
     }
   }, [user]);
+
+  const fetchUserClass = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('class')
+        .eq('id', user?.id)
+        .single();
+        
+      if (error) throw error;
+      setUserClass(data?.class || null);
+    } catch (error) {
+      console.error('Error fetching user class:', error);
+    }
+  };
 
   const fetchAssessments = async () => {
     try {
@@ -298,6 +316,33 @@ const AssessmentHistoryList: React.FC = () => {
     }
   };
 
+  // Filter assessments based on the active tab
+  const getFilteredAssessments = () => {
+    if (activeTab === "all") {
+      return assessments;
+    } else if (activeTab === "junior") {
+      return assessments.filter(assessment => 
+        assessment.assessment_id.includes('junior') || 
+        assessment.responses?.assessment_type === 'career-analysis-junior'
+      );
+    } else if (activeTab === "senior") {
+      return assessments.filter(assessment => 
+        !assessment.assessment_id.includes('junior') && 
+        assessment.responses?.assessment_type !== 'career-analysis-junior'
+      );
+    }
+    return assessments;
+  };
+
+  const filteredAssessments = getFilteredAssessments();
+
+  // Check if the user is in class 8, 9, or 10 to show only junior assessments by default
+  useEffect(() => {
+    if (userClass && ['8', '9', '10'].includes(userClass)) {
+      setActiveTab("junior");
+    }
+  }, [userClass]);
+
   return (
     <Card className="border border-border/50 rounded-lg shadow-sm">
       <CardHeader className="bg-primary/5">
@@ -307,11 +352,19 @@ const AssessmentHistoryList: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="all">All Assessments</TabsTrigger>
+            <TabsTrigger value="junior">Class 8-10 Assessments</TabsTrigger>
+            <TabsTrigger value="senior">Class 11-12 Assessments</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      
         {isLoading ? (
           <div className="flex items-center justify-center h-48">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : assessments.length === 0 ? (
+        ) : filteredAssessments.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">No assessment history</h3>
@@ -331,7 +384,7 @@ const AssessmentHistoryList: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assessments.map((assessment) => (
+                {filteredAssessments.map((assessment) => (
                   <TableRow key={assessment.id}>
                     <TableCell className="font-medium">
                       {formatDate(assessment.completed_at)}
