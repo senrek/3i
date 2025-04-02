@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
+// Import jsPDF correctly
 import { jsPDF } from 'jspdf';
 // Import autotable correctly
 import autoTable from 'jspdf-autotable';
@@ -207,6 +209,7 @@ export const generatePDF = async (
     y += 15;
     
     doc.setFillColor(secondaryColor);
+    // Fix for error on line 100 - providing all 7 required arguments
     safeRoundedRect(doc, 20, y, 80, 10, 2, 'F');
     doc.setTextColor('#ffffff');
     doc.setFontSize(12);
@@ -223,6 +226,7 @@ export const generatePDF = async (
     });
     
     doc.setFillColor(secondaryColor);
+    // Fix for error on line 170 - providing all 7 required arguments
     safeRoundedRect(doc, 110, y - 15, 80, 10, 2, 'F');
     doc.setTextColor('#ffffff');
     doc.setFontSize(12);
